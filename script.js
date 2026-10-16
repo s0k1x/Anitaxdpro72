@@ -2,7 +2,7 @@
 const DATA = {
   nombre: "Anita",
   juego: "Obby Creator",       // el juego donde os conocisteis
-  yoNombre: "Yo",              // la etiqueta de tu cubito en la animación (pon tu nombre o apodo)
+  yoNombre: "Mario",           // la etiqueta de tu cubito en la animación
   intro: "Todo empezó con una partida de Obby Creator. Esto es para recordar lo que vino después.",
 
   // CANDADO: la web no se abre hasta esta fecha y hora (la del móvil de quien la abra).
@@ -28,8 +28,8 @@ const DATA = {
   // Puedes poner todas las etapas que quieras; si pones más de 7 se repiten las escenas.
   // "foto" es opcional: pon el nombre de la imagen (ej: "fotos/1.jpg") o déjalo vacío.
   eventos: [
-    { escena: "obby", cuando: "20 · 08 · 2022", titulo: "Nos conocimos en Obby Creator", texto: "Una partida cualquiera, un obby imposible y dos jugadores que acabaron saltando hasta el final, uno al lado del otro.", foto: "" },
-    { escena: "chat", cuando: "Las primeras semanas", titulo: "Cada día, otra partida", texto: "Dejamos de jugar por jugar: empezamos a hablar de todo, a mandarnos mensajes a todas horas y a no querer que la partida terminara.", foto: "" },
+    { escena: "obby", cuando: "20 · 08 · 2022", titulo: "Nos conocimos en Obby Creator", texto: "Estabas con unos amigos, me uní y os hablé. Hicimos una competición y gané yo. Me metiste en llamada y desde ahí hablamos casi todos los días.", foto: "" },
+    { escena: "chat", cuando: "Las primeras semanas", titulo: "Cada día, otra partida", texto: "Desde esa llamada casi no hubo un día sin hablar: de todo, de nada, a todas horas y sin querer que terminara.", foto: "" },
     { escena: "build", cuando: "Un proyecto en común", titulo: "Construir juntos", texto: "Crear, equivocarnos, rehacerlo todo y reírnos cuando nadie conseguía pasarlo. Lo mejor siempre fue hacerlo contigo.", foto: "" },
     { escena: "noche", cuando: "Noches sin dormir", titulo: "Hasta la madrugada", texto: "Esas conversaciones que se alargaban sin darnos cuenta, cuando ya no importaba ni la hora ni el juego.", foto: "" },
     { escena: "lluvia", cuando: "Cuando más lo necesité", titulo: "Estuviste ahí", texto: "Gracias por quedarte cuando las cosas se pusieron difíciles.", foto: "" },
@@ -44,7 +44,7 @@ const DATA = {
   cartaPrincipal: {
     titulo: "Para ti, Anita",
     texto: "Todo empezó el 20 de agosto de 2022, en una partida de Obby Creator. Desde entonces han pasado muchas partidas, muchas risas y mucha vida.\n\nGracias por cada conversación y por estar siempre.\n\nTe quiero muchísimo.",
-    firma: "Tu amigo"
+    firma: "Mario"
   },
 
   razones: [

@@ -85,6 +85,7 @@
       const A = { name: opts.names.me, c1: '#cfe9ff', c2: '#6fa8ff', dark: '#2b4f99', x: 0, y: 0, sx: 1, sy: 1, k: 1, alpha: 0, run: 0, look: 1, blink: 1.5, say: '', sayT: 0, face: 0, bow: false, sit: false };
       const B = { name: opts.names.her, c1: '#e6dcff', c2: '#9b82ff', dark: '#4a3aa0', x: 0, y: 0, sx: 1, sy: 1, k: 1, alpha: 0, run: 0, look: -1, blink: 2.4, say: '', sayT: 0, face: 0, bow: true, sit: false };
       const chars = [A, B];
+      const mkFriend = (c1, c2, dark, look) => ({ name: '', c1, c2, dark, x: 0, y: 0, sx: 1, sy: 1, k: 1, alpha: 0, run: 0, look, blink: 1 + Math.random() * 2, say: '', sayT: 0, face: 0, bow: false, sit: false });
       const reset = (c, x, y, look) => { c.x = x; c.y = y; c.sx = c.sy = c.k = 1; c.alpha = 0; c.run = 0; c.look = look; c.say = ''; c.sayT = 0; c.face = 0; c.sit = false; };
       const fadeIn = (d) => anim(d || .6, t => { A.alpha = B.alpha = t; });
       const pulse = (c, amt) => anim(.22, t => { const s = Math.sin(t * Math.PI); c.sy = 1 + (amt || .14) * s; c.sx = 1 - (amt || .14) * .6 * s; });
@@ -187,9 +188,11 @@
         const tx = sx, ty = sy - 52 * S * c.k;
         ctx.save(); ctx.globalAlpha = c.alpha;
         ctx.font = `700 ${11 * S}px "DM Sans",system-ui,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        const tw = ctx.measureText(c.name).width + 14 * S;
-        ctx.fillStyle = 'rgba(8,6,16,.62)'; rr(ctx, tx - tw / 2, ty - 9 * S, tw, 18 * S, 9 * S); ctx.fill();
-        ctx.fillStyle = '#efeaff'; ctx.fillText(c.name, tx, ty + .5);
+        if (c.name) {
+          const tw = ctx.measureText(c.name).width + 14 * S;
+          ctx.fillStyle = 'rgba(8,6,16,.62)'; rr(ctx, tx - tw / 2, ty - 9 * S, tw, 18 * S, 9 * S); ctx.fill();
+          ctx.fillStyle = '#efeaff'; ctx.fillText(c.name, tx, ty + .5);
+        }
         if (c.sayT > 0 && c.say) {
           const p = Math.min(1, (1.4 - Math.min(c.sayT, 1.4)) * 8 + .2), a = Math.min(1, c.sayT * 3);
           ctx.globalAlpha = c.alpha * a; ctx.font = `700 ${12.5 * S}px "DM Sans",system-ui,sans-serif`;
@@ -214,6 +217,8 @@
         const s1 = { kind: 'step', cx: 92, w: 44, y: 10, alt: 0 };
         const s2 = { kind: 'step', cx: 166, w: 44, y: 12, alt: 1 };
         const plats = [L, pad, s1, s2];
+        const F1 = mkFriend('#ffd9ee', '#e58fc0', '#8a3a72', -1), F2 = mkFriend('#cdf5e0', '#6fcf9f', '#2f7a5a', -1);
+        let banner = null, call = 0, vol = 0;
         const arrive = () => {
           ring(pad.cx, pad.y, '201,188,255', 70); ring(pad.cx, pad.y, '169,212,255', 46);
           burst(pad.cx, pad.y + 20, 34, PAL, 190, 1.1, 240);
@@ -221,8 +226,13 @@
           anim(.9, t => { pad.flag = smooth(t); });
         };
         return {
-          enter() { cam.x = 36; cam.y = 6; reset(A, L.cx, L.y, 1); reset(B, s1.cx, s1.y, -1); },
-          update(dt) { decay(plats, dt); },
+          enter() {
+            cam.x = 36; cam.y = 6;
+            reset(A, L.cx, L.y, 1); reset(B, s1.cx, s1.y, -1);
+            reset(F1, s2.cx - 10, s2.y, -1); reset(F2, s2.cx + 10, s2.y, -1);
+            chars.push(F1, F2);
+          },
+          update(dt) { decay(plats, dt); if (banner) banner.t += dt; vol = lerp(vol, call > .5 ? 1 : 0, Math.min(1, dt * 5)); },
           bg() {
             const mx = W * .86, my = H * .105;
             const mg = ctx.createRadialGradient(mx, my, 0, mx, my, 70 * S);
@@ -230,7 +240,6 @@
             ctx.fillStyle = mg; ctx.fillRect(mx - 80 * S, my - 80 * S, 160 * S, 160 * S);
             ctx.fillStyle = 'rgba(225,215,255,.2)'; ctx.beginPath(); ctx.arc(mx, my, 15 * S, 0, TAU); ctx.fill();
             drawFarCubes(.35); haze('110,80,220', .16);
-            // lava
             const ly = Y(LAVA);
             const g = ctx.createLinearGradient(0, ly - 40 * S, 0, H);
             g.addColorStop(0, 'rgba(255,80,120,0)'); g.addColorStop(.3, '#ff5577'); g.addColorStop(.6, '#c4204a'); g.addColorStop(1, '#5c0f2c');
@@ -243,14 +252,13 @@
           },
           mid() {
             plats.forEach(plat);
-            // barra giratoria
             const x = X(129), top = Y(22), base = Y(LAVA);
             ctx.fillStyle = '#3a3358'; ctx.fillRect(x - 2.5 * S, top, 5 * S, base - top);
             const a = time * 2.6, len = 40 * S, w = Math.abs(Math.cos(a)) * len;
             ctx.fillStyle = '#ff5c7a'; rr(ctx, x - w / 2, top - 3.5 * S, Math.max(w, 6 * S), 7 * S, 3.5 * S); ctx.fill();
             ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fillRect(x - w / 2 + 2, top - 2.5 * S, Math.max(w - 4, 2), 1.4);
             ctx.fillStyle = '#ffb3c2'; ctx.beginPath(); ctx.arc(x, top, 4 * S, 0, TAU); ctx.fill();
-            // bandera y cartel de la meta
+            // meta: bandera y cartel
             const fx = X(pad.cx + 33), y = Y(pad.y);
             ctx.strokeStyle = '#e9e4fa'; ctx.lineWidth = 1.6 * S; ctx.beginPath(); ctx.moveTo(fx, y); ctx.lineTo(fx, y - 40 * S); ctx.stroke();
             const fy = y - 6 * S - 28 * S * (pad.flag || 0);
@@ -259,45 +267,71 @@
             ctx.fillStyle = 'rgba(8,6,16,.7)'; rr(ctx, sx - 8 * S, y - 22 * S, 16 * S, 14 * S, 3 * S); ctx.fill();
             ctx.strokeStyle = 'rgba(201,188,255,.7)'; ctx.lineWidth = 1; rr(ctx, sx - 8 * S, y - 22 * S, 16 * S, 14 * S, 3 * S); ctx.stroke();
             ctx.fillStyle = '#d6cbff'; ctx.font = `700 ${9 * S}px "DM Sans",system-ui,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText('1', sx, y - 15 * S);
+            ctx.fillText('META', sx, y - 15 * S);
             ctx.strokeStyle = 'rgba(233,228,250,.6)'; ctx.beginPath(); ctx.moveTo(sx, y - 8 * S); ctx.lineTo(sx, y); ctx.stroke();
           },
-          fg() {},
-          async run(i) {
-            await fadeIn(.7);
-            say(A, '¡hola!', 1.2); await wait(.9);
-            say(B, '¡hola!', 1.2); await wait(1.0);
-            await hop(B, pad.cx + 16, pad.y, { h: 54, dur: .6 });
-            say(A, 'voy…', 1.1); await wait(.7);
-            // primer intento: se cae a la lava
-            const x0 = A.x, y0 = A.y; let splashed = false;
-            await anim(.1, t => { A.sy = 1 - .22 * t; A.sx = 1 + .16 * t; });
-            A.face = 1;
-            await anim(1.05, t => {
-              const u = Math.min(1, t / .5);
-              if (t <= .5) { A.x = lerp(x0, -56, smooth(u)); A.y = y0 + 4 * 46 * u * (1 - u) + lerp(0, pad.y - y0, u); }
-              else { const f = (t - .5) / .5; A.x = -56 + f * 10; A.y = pad.y - 330 * f * f; A.run = t * 20; }
-              A.sy = 1.1; A.sx = .94;
-              if (!splashed && A.y < LAVA + 6) {
-                splashed = true;
-                burst(A.x, LAVA + 6, 22, ['#ff5c7a', '#ff9e5e', '#ffd0b0'], 170, .9, 300);
-                shake = 9; flashA = .28; flashCol = '255,70,110'; A.alpha = 0;
+          fg() {
+            // cuenta atrás de la carrera
+            if (banner) {
+              const u = Math.min(1, banner.t / .5), sc = 1 + .5 * (1 - easeOutBack(Math.min(1, banner.t * 4))), al = banner.t > .4 ? clamp((.55 - banner.t) / .15, 0, 1) : 1;
+              ctx.save(); ctx.globalAlpha = al; ctx.translate(X(36), Y(112)); ctx.scale(sc, sc);
+              ctx.font = `800 ${46 * S}px "Bricolage Grotesque","DM Sans",system-ui,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+              ctx.lineWidth = 6 * S; ctx.strokeStyle = 'rgba(60,30,150,.8)'; ctx.strokeText(banner.text, 0, 0);
+              ctx.fillStyle = banner.text === '¡YA!' ? '#ffe29a' : '#ffffff'; ctx.fillText(banner.text, 0, 0); ctx.restore(); void u;
+            }
+            // llamada entre los dos
+            if (call > .01) {
+              const a = call, p0 = [X(A.x), Y(A.y + 46)], p1 = [X((A.x + B.x) / 2), Y(A.y + 118)], p2 = [X(B.x), Y(B.y + 46)];
+              ctx.save(); ctx.globalAlpha = a;
+              ctx.setLineDash([5 * S, 6 * S]); ctx.lineDashOffset = -time * 22; ctx.strokeStyle = 'rgba(169,212,255,.65)'; ctx.lineWidth = 1.6;
+              ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]); ctx.stroke(); ctx.setLineDash([]);
+              for (let k = 0; k < 2; k++) {
+                const u = ((time * .5 + k * .5) % 1), t2 = k ? 1 - u : u;
+                const bx = (1 - t2) * (1 - t2) * p0[0] + 2 * (1 - t2) * t2 * p1[0] + t2 * t2 * p2[0], by = (1 - t2) * (1 - t2) * p0[1] + 2 * (1 - t2) * t2 * p1[1] + t2 * t2 * p2[1];
+                const g = ctx.createRadialGradient(bx, by, 0, bx, by, 9 * S); g.addColorStop(0, 'rgba(255,255,255,.9)'); g.addColorStop(1, 'rgba(169,212,255,0)');
+                ctx.fillStyle = g; ctx.fillRect(bx - 9 * S, by - 9 * S, 18 * S, 18 * S);
               }
-            });
-            A.alpha = 0; A.face = 0; A.run = 0; A.sx = A.sy = 1;
-            await wait(.5);
-            say(B, '¡otra vez!', 1.4);
+              const cx = (p0[0] + p2[0]) / 2, cy = Y(A.y + 84);
+              for (let k = -3; k <= 3; k++) {
+                const h = (4 + 14 * vol * Math.abs(Math.sin(time * 7 + k * .9))) * S;
+                ctx.fillStyle = k % 2 ? 'rgba(201,188,255,.9)' : 'rgba(169,212,255,.9)';
+                rr(ctx, cx + k * 6 * S - 1.6 * S, cy - 20 * S - h / 2, 3.2 * S, h, 1.6 * S); ctx.fill();
+              }
+              ctx.restore();
+              pill('en llamada', cx, cy, 'rgba(8,6,16,.72)', '#efeaff', 11, a);
+            }
+          },
+          async run(i) {
+            // Anita está con sus amigos
+            await anim(.7, t => { B.alpha = F1.alpha = F2.alpha = t; });
+            say(F1, 'jajaja', 1.1); await wait(.7);
+            say(B, '¡ahí va!', 1.1); await wait(1.0);
+            // llega Mario
             A.x = L.cx; A.y = L.y + 70; A.look = 1; ring(L.cx, L.y, '155,130,255', 44);
-            await anim(.45, t => { A.alpha = t; A.y = lerp(L.y + 70, L.y, smooth(t)); });
+            await anim(.5, t => { A.alpha = t; A.y = lerp(L.y + 70, L.y, smooth(t)); });
             A.y = L.y; A.alpha = 1;
             await anim(.18, t => { const b = easeOutBack(t); A.sy = .78 + .22 * b; A.sx = 1.18 - .18 * b; });
             A.sx = A.sy = 1;
-            await wait(.4);
-            await hop(A, pad.cx - 16, pad.y, { h: 60, dur: .62 });
+            say(A, '¡hola!', 1.2); await wait(.6);
+            say(B, '¡hola!', 1.1); say(F1, '¡únete!', 1.3); await wait(1.1);
+            say(A, '¿una carrera?', 1.6); await wait(.9);
+            say(B, '¡vale!', 1.2); hop(F2, F2.x, F2.y, { h: 22, dur: .35 }); await wait(.9);
+            // cuenta atrás y carrera
+            for (const w of ['3', '2', '1', '¡YA!']) { banner = { text: w, t: 0 }; await wait(.55); }
+            banner = null;
+            hop(F1, F1.x, F1.y, { h: 24, dur: .38 });
+            await Promise.all([hop(A, pad.cx - 20, pad.y, { h: 60, dur: .58 }), hop(B, pad.cx + 20, pad.y, { h: 56, dur: .64 })]);
             B.look = -1; A.look = 1;
             arrive();
-            say(A, '¡lo logré!', 1.3);
-            await wait(.5);
+            say(A, '¡gané!', 1.5); hop(F2, F2.x, F2.y, { h: 26, dur: .4 });
+            await wait(.7); say(B, '¡revancha!', 1.4);
+            await wait(1.4);
+            // te mete en llamada
+            say(B, 'te meto en llamada', 1.9); await wait(1.0);
+            ring(0, 30, '169,212,255', 70); burst(0, 50, 18, ['#a9d4ff', '#ffffff', '#c9bcff'], 100, 1, 60);
+            await anim(.5, t => { call = smooth(t); });
+            say(A, 'vale', 1.2);
+            await wait(.8);
             await opts.card.show(i);
             await opts.card.hide();
           }
@@ -442,7 +476,7 @@
         const N_ST = 15, stars = Array.from({ length: N_ST }, (_, k) => { const th = Math.PI - k / (N_ST - 1) * Math.PI; return { x: 108 * Math.cos(th), y: 28 + 98 * Math.sin(th), t0: 1.1 + k * .2, tw: Math.random() * TAU }; });
         let tt = 0, shoot = -1;
         return {
-          enter() { cam.x = 0; cam.y = 0; tt = 0; shoot = -1; reset(A, -16, 0, 1); reset(B, 16, 0, 1); },
+          enter() { cam.x = 0; cam.y = 0; tt = 0; shoot = -1; reset(A, -20, 0, 1); reset(B, 20, 0, 1); },
           update(dt) { tt += dt; if (shoot >= 0) shoot += dt; },
           bg() {
             const g = ctx.createLinearGradient(0, 0, 0, H);
@@ -501,7 +535,7 @@
         const slab = { kind: 'step', cx: 0, w: 330, y: 0, alt: 1, top: '#6f67a8', front: '#25204f' };
         let drops = [], ripples = [], tt = 0, raining = true, um = 1, sunA = 0, rainbowA = 0, cloudX = 0, cloudA = 1, bolt = 0, boltX = 0, nextBolt = 1.4;
         return {
-          enter() { cam.x = 0; cam.y = 0; tt = 0; reset(A, -14, 0, 1); reset(B, 14, 0, 1); },
+          enter() { cam.x = 0; cam.y = 0; tt = 0; reset(A, -18, 0, 1); reset(B, 18, 0, 1); },
           update(dt) {
             tt += dt;
             if (raining) for (let k = 0; k < 3; k++) drops.push({ x: -200 + Math.random() * 400, y: 190 + Math.random() * 60, v: 360 + Math.random() * 120, l: 10 + Math.random() * 8 });
@@ -748,7 +782,7 @@
             await fadeIn(.6);
             await hopBoth(f1.cx - 10, f1.cx + 10, f1.y, { h: 46 });
             await hopBoth(f2.cx - 10, f2.cx + 10, f2.y, { h: 52 });
-            await hopBoth(goal.cx - 16, goal.cx + 16, goal.y, { h: 50 });
+            await hopBoth(goal.cx - 20, goal.cx + 20, goal.y, { h: 50 });
             ring(goal.cx, goal.y, '201,188,255', 80);
             const cardDone = opts.card.showFinal();
             await anim(1.2, t => { goal.open = smooth(t); });
@@ -775,7 +809,7 @@
       /* ---------- Transición en iris entre mundos ---------- */
       async function goto(name) {
         if (cur) { await anim(.5, t => { iris = 1 - smooth(t); }); iris = 0; }
-        particles = []; rings = []; shake = 0;
+        particles = []; rings = []; shake = 0; chars.length = 2;
         cur = (REG[name] || REG.obby)();
         cur.enter();
         await anim(.65, t => { iris = smooth(t); });
