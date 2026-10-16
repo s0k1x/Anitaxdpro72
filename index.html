@@ -15,8 +15,28 @@
 <canvas id="stars" aria-hidden="true"></canvas>
 <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
 
+<!-- -1) CANDADO: la web no se abre hasta la fecha (salvo con código) -->
+<div id="lock" class="screen hidden">
+  <div class="lock-emoji">🔒</div>
+  <h1 class="script lock-title" id="lockTitle"></h1>
+  <p class="lock-sub" id="lockSub"></p>
+  <div class="countdown" id="countdown" aria-live="off">
+    <div class="box"><b id="cdD">0</b><span>días</span></div>
+    <div class="box"><b id="cdH">0</b><span>horas</span></div>
+    <div class="box"><b id="cdM">0</b><span>min</span></div>
+    <div class="box"><b id="cdS">0</b><span>seg</span></div>
+  </div>
+  <p class="lock-note script">Vuelve ese día, merece la pena 💜</p>
+  <button class="lock-link" id="codeToggle" type="button">¿Tienes un código?</button>
+  <div class="code-form hidden" id="codeForm">
+    <input id="codeInput" type="text" placeholder="Código secreto" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Código secreto">
+    <button class="btn btn--purple" id="codeBtn" type="button"><span class="button_top">Abrir 🔓</span></button>
+    <p class="code-msg" id="codeMsg" role="status"></p>
+  </div>
+</div>
+
 <!-- 0) PANTALLA DE INICIO (el toque permite que suene la música en el móvil) -->
-<div id="gate" class="screen">
+<div id="gate" class="screen hidden">
   <div class="gate-emoji">💜</div>
   <h1 class="script gate-title">Tengo algo para ti</h1>
   <p class="gate-sub">Sube el volumen o ponte los cascos 🎧</p>

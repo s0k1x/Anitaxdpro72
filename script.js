@@ -1,6 +1,13 @@
 /* ============ AQUÍ VAN TUS DATOS (edítalos o pásaselos a Claude) ============ */
 const DATA = {
   nombre: "Anita",
+
+  // CANDADO: la web no se abre hasta esta fecha y hora (la del móvil de quien la abra).
+  // Con el código se puede abrir antes (para probarla tú). También vale el enlace: index.html?abrir=TUCODIGO
+  bloqueo: {
+    fecha: "2026-11-01T00:00:00",
+    codigo: "lunallena"
+  },
   intro: "Un rinconcito hecho con cariño para recordarte lo mucho que significas para mí.",
 
   // Opcional: foto redonda en la portada (ej: "fotos/anita.jpg"). Vacío = no se muestra.
@@ -385,13 +392,78 @@ function startMusic() {
   }, 150);
 }
 
+/* ---------- Candado (abre el 1 de noviembre) ---------- */
+const params = new URLSearchParams(location.search);
+const LOCK_KEY = 'homenaje_desbloqueada';
+const target = new Date(DATA.bloqueo.fecha);
+const codeOk = v => !!v && String(v).trim().toLowerCase() === String(DATA.bloqueo.codigo).trim().toLowerCase();
+const store = {
+  get: () => { try { return localStorage.getItem(LOCK_KEY); } catch (e) { return null; } },
+  set: () => { try { localStorage.setItem(LOCK_KEY, '1'); } catch (e) {} }
+};
+
+function isUnlocked() {
+  if (isNaN(target) || Date.now() >= target) return true;   // ya es la fecha (o fecha mal puesta)
+  if (store.get()) return true;                              // ya se abrió antes con el código
+  if (codeOk(params.get('abrir'))) { store.set(); return true; }
+  return false;
+}
+
+let lockTimer = null;
+function showLock() {
+  const fecha = target.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+  $('lockTitle').textContent = 'Todavía no, ' + DATA.nombre + '…';
+  $('lockSub').textContent = 'Esto se abrirá el ' + fecha + '. Hay que esperar un poquito más.';
+  $('lock').classList.remove('hidden');
+  const pad = n => String(n).padStart(2, '0');
+  function tick() {
+    const ms = target - Date.now();
+    if (ms <= 0) { unlockNow(); return; }
+    const t = Math.floor(ms / 1000);
+    $('cdD').textContent = Math.floor(t / 86400);
+    $('cdH').textContent = pad(Math.floor(t % 86400 / 3600));
+    $('cdM').textContent = pad(Math.floor(t % 3600 / 60));
+    $('cdS').textContent = pad(t % 60);
+  }
+  tick();
+  lockTimer = setInterval(tick, 1000);
+}
+
+function unlockNow() {
+  clearInterval(lockTimer);
+  $('lock').classList.add('fade-out');
+  setTimeout(() => { $('lock').classList.add('hidden'); boot(); }, 800);
+}
+
+// Código secreto para abrir antes de tiempo
+$('codeToggle').addEventListener('click', () => {
+  $('codeForm').classList.toggle('hidden');
+  if (!$('codeForm').classList.contains('hidden')) $('codeInput').focus();
+});
+function tryCode() {
+  if (codeOk($('codeInput').value)) {
+    store.set();
+    $('codeMsg').textContent = '';
+    unlockNow();
+  } else {
+    $('codeMsg').textContent = 'Ese código no es correcto';
+    const box = $('codeInput'); box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+  }
+}
+$('codeBtn').addEventListener('click', tryCode);
+$('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryCode(); });
+
 /* ---------- Arranque ---------- */
 render();
-if (new URLSearchParams(location.search).has('directo')) {
-  // Atajo para editar rápido: abre index.html?directo y sale la página sin animación.
-  $('gate').classList.add('hidden');
-  reveal();
-} else {
+
+// Se ejecuta cuando la web ya está desbloqueada
+function boot() {
+  if (params.has('directo')) {
+    // Atajo para editar rápido: index.html?directo&abrir=TUCODIGO → sale la página sin animación.
+    reveal();
+    return;
+  }
+  $('gate').classList.remove('hidden');
   $('start').addEventListener('click', async () => {
     startMusic();
     $('gate').classList.add('fade-out');
@@ -403,3 +475,5 @@ if (new URLSearchParams(location.search).has('directo')) {
     reveal();
   }, { once: true });
 }
+
+if (isUnlocked()) boot(); else showLock();
