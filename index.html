@@ -3,47 +3,54 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#07050d">
-<title>Para ti 💜</title>
+<meta name="theme-color" content="#050409">
+<title>Para ti</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=DM+Sans:wght@400;500;700&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body class="locked">
 
 <canvas id="stars" aria-hidden="true"></canvas>
-<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+<div class="glow" aria-hidden="true"></div>
 
-<!-- -1) CANDADO: la web no se abre hasta la fecha (salvo con código) -->
+<!-- CANDADO: la web no se abre hasta la fecha -->
 <div id="lock" class="screen hidden">
-  <div class="lock-emoji">🔒</div>
-  <h1 class="script lock-title" id="lockTitle"></h1>
+  <button class="lock-icon" id="lockIcon" type="button" tabindex="-1" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/><circle cx="12" cy="15.5" r="1.1" fill="currentColor" stroke="none"/></svg>
+  </button>
+  <h1 class="lock-title" id="lockTitle"></h1>
   <p class="lock-sub" id="lockSub"></p>
   <div class="countdown" id="countdown" aria-live="off">
-    <div class="box"><b id="cdD">0</b><span>días</span></div>
-    <div class="box"><b id="cdH">0</b><span>horas</span></div>
-    <div class="box"><b id="cdM">0</b><span>min</span></div>
-    <div class="box"><b id="cdS">0</b><span>seg</span></div>
+    <div><b id="cdD">0</b><span>días</span></div>
+    <div><b id="cdH">00</b><span>horas</span></div>
+    <div><b id="cdM">00</b><span>min</span></div>
+    <div><b id="cdS">00</b><span>seg</span></div>
   </div>
-  <p class="lock-note script">Vuelve ese día, merece la pena 💜</p>
-  <button class="lock-link" id="codeToggle" type="button">¿Tienes un código?</button>
-  <div class="code-form hidden" id="codeForm">
-    <input id="codeInput" type="text" placeholder="Código secreto" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Código secreto">
-    <button class="btn btn--purple" id="codeBtn" type="button"><span class="button_top">Abrir 🔓</span></button>
+
+  <!-- Cuadro de código (estilo Uiverse by guilhermeyohan). Oculto: se muestra tocando 5 veces el candado -->
+  <div class="login-box hidden" id="codeBox">
+    <div class="user-box">
+      <input id="codeInput" name="codigo" type="password" required autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <label for="codeInput">Código</label>
+    </div>
+    <div class="send-wrap">
+      <button class="send" id="codeBtn" type="button">Abrir<span></span></button>
+    </div>
     <p class="code-msg" id="codeMsg" role="status"></p>
   </div>
 </div>
 
-<!-- 0) PANTALLA DE INICIO (el toque permite que suene la música en el móvil) -->
+<!-- INICIO (el toque permite que suene la música en el móvil) -->
 <div id="gate" class="screen hidden">
-  <div class="gate-emoji">💜</div>
-  <h1 class="script gate-title">Tengo algo para ti</h1>
-  <p class="gate-sub">Sube el volumen o ponte los cascos 🎧</p>
-  <button class="btn btn--purple" id="start" type="button"><span class="button_top">Empezar 💜</span></button>
+  <p class="gate-kicker" id="gateKicker"></p>
+  <h1 class="gate-title">Hay algo<br>para ti.</h1>
+  <p class="gate-sub">Mejor con sonido.</p>
+  <button class="btn btn--purple" id="start" type="button"><span class="button_top">Empezar</span></button>
 </div>
 
-<!-- 1) PANTALLA DE CARGA -->
+<!-- CARGA -->
 <div id="loader" class="screen hidden">
 <div class="loader-wrap">
   <div class="camp">
@@ -112,23 +119,26 @@
     </div>
   </div>
 </div>
-  <p id="loaderText" class="script">Cargando recuerdos…</p>
+  <p id="loaderText">Cargando recuerdos…</p>
   <div class="progress"><div id="barFill"></div></div>
   <span id="pct">0%</span>
 </div>
 
-<!-- 2) ANIMACIÓN DE RECUERDOS -->
+<!-- ANIMACIÓN DE RECUERDOS -->
 <div id="intro" class="screen hidden">
+  <div class="intro-top">
+    <span id="introCount"></span>
+    <button class="btn btn--blue btn--sm" id="skip" type="button"><span class="button_top">Saltar</span></button>
+  </div>
   <div id="scene"></div>
-  <div class="dots" id="dots"></div>
-  <button class="btn btn--blue" id="skip" type="button"><span class="button_top">Saltar</span></button>
+  <div class="intro-bar"><i id="introBar"></i></div>
 </div>
 
-<!-- 3) PÁGINA PRINCIPAL (aparece al acabar la animación) -->
+<!-- PÁGINA PRINCIPAL -->
 <main id="main" class="hidden">
 
   <nav class="nav" id="nav" aria-label="Secciones">
-    <a class="brand" href="#inicio">💜 <span id="navName"></span></a>
+    <a class="brand" href="#inicio" id="navName"></a>
     <div class="links">
       <a href="#historia">Historia</a>
       <a href="#razones">Razones</a>
@@ -137,124 +147,117 @@
     </div>
   </nav>
 
-  <!-- PORTADA -->
   <header class="hero" id="inicio">
+    <div class="hero-meta reveal"><span>Para</span><span id="heroDate"></span></div>
+    <h1 class="hero-name reveal" id="nombre" style="--d:80ms"></h1>
     <div class="hero-photo reveal hidden" id="heroPhoto"></div>
-    <span class="eyebrow reveal">una sorpresa para</span>
-    <h1 class="grad reveal" id="nombre" style="--d:100ms"></h1>
-    <p class="lead reveal" id="introTxt" style="--d:200ms"></p>
-    <div class="counter-wrap reveal hidden" id="counter" style="--d:300ms"></div>
-    <a class="btn btn--purple reveal" href="#carta" style="--d:400ms"><span class="button_top">Abrir mi carta 💌</span></a>
-    <a class="scroll-cue" href="#historia" aria-label="Seguir bajando"></a>
+    <div class="hero-foot reveal" style="--d:180ms">
+      <p class="hero-lead" id="introTxt"></p>
+      <div class="counter hidden" id="counter"></div>
+      <a class="btn btn--purple" href="#carta"><span class="button_top">Leer mi carta</span></a>
+    </div>
   </header>
 
-  <!-- CARTA PRINCIPAL -->
   <section class="sec" id="carta">
     <div class="wrap">
       <div class="sec-head reveal">
-        <span class="eyebrow">Para ti</span>
-        <h2>Una carta <span class="grad">antes de empezar</span></h2>
+        <span class="sec-num">01</span>
+        <h2>Una <em>carta</em></h2>
         <p>Lo primero que quería decirte.</p>
       </div>
       <div class="carta-box">
         <div class="env reveal" id="env" role="button" tabindex="0" aria-label="Abrir el sobre">
           <div class="back"></div>
-          <div class="sheet"><span>💜</span></div>
+          <div class="sheet"><span id="envInitial"></span></div>
           <div class="front"></div>
           <div class="flap"></div>
         </div>
         <p class="env-hint reveal" id="envHint">Toca el sobre para abrirlo</p>
-        <button class="btn btn--purple reveal" id="openLetter" type="button"><span class="button_top">Abrir sobre 💌</span></button>
+        <button class="btn btn--purple reveal" id="openLetter" type="button"><span class="button_top">Abrir sobre</span></button>
         <article class="paper hidden" id="paper"></article>
       </div>
     </div>
   </section>
 
-  <!-- NUESTRA HISTORIA -->
-  <section class="sec alt" id="historia">
+  <section class="sec" id="historia">
     <div class="wrap">
       <div class="sec-head reveal">
-        <span class="eyebrow">01 · Historia</span>
-        <h2>Nuestra <span class="grad">historia</span></h2>
+        <span class="sec-num">02</span>
+        <h2>Nuestra <em>historia</em></h2>
         <p>Los momentos que nos han traído hasta aquí.</p>
       </div>
       <div class="timeline" id="timeline"></div>
     </div>
   </section>
 
-  <!-- RAZONES -->
   <section class="sec" id="razones">
     <div class="wrap">
       <div class="sec-head reveal">
-        <span class="eyebrow">02 · Razones</span>
-        <h2>Por qué <span class="grad">eres especial</span></h2>
+        <span class="sec-num">03</span>
+        <h2>Por qué <em>eres tú</em></h2>
         <p>Algunas de las cosas que más quiero de ti.</p>
       </div>
-      <div class="reasons" id="reasons"></div>
+      <ul class="reasons" id="reasons"></ul>
     </div>
   </section>
 
-  <!-- FOTOS -->
-  <section class="sec alt" id="fotos">
+  <section class="sec" id="fotos">
     <div class="wrap">
       <div class="sec-head reveal">
-        <span class="eyebrow">03 · Fotos</span>
-        <h2>Nuestros <span class="grad">recuerdos</span></h2>
+        <span class="sec-num">04</span>
+        <h2>Nuestros <em>recuerdos</em></h2>
         <p>Toca una foto para verla grande.</p>
       </div>
       <div class="gallery" id="gallery"></div>
     </div>
   </section>
 
-  <!-- CARTAS -->
   <section class="sec" id="cartas">
     <div class="wrap">
       <div class="sec-head reveal">
-        <span class="eyebrow">04 · Cartas</span>
-        <h2>Cosas que <span class="grad">quiero decirte</span></h2>
-        <p>Toca cada sobre para abrirlo.</p>
+        <span class="sec-num">05</span>
+        <h2>Más <em>cartas</em></h2>
+        <p>Para leer con calma, una a una.</p>
       </div>
       <div class="letters" id="letters"></div>
     </div>
   </section>
 
-  <!-- FINAL -->
   <section class="sec final">
     <div class="wrap reveal">
-      <div class="big">💖</div>
-      <h2 id="finalTitle"></h2>
-      <p class="script" id="finalText"></p>
+      <h2 class="final-title" id="finalTitle"></h2>
+      <p class="final-text" id="finalText"></p>
       <div class="final-actions">
-        <button class="btn btn--purple" id="toTop" type="button"><span class="button_top">Volver arriba ↑</span></button>
+        <button class="btn btn--purple" id="toTop" type="button"><span class="button_top">Volver arriba</span></button>
         <button class="btn btn--blue" id="replay" type="button"><span class="button_top">Ver la animación otra vez</span></button>
       </div>
     </div>
   </section>
 
-  <footer class="foot">Hecho con 💜 para <span id="footName"></span></footer>
+  <footer class="foot"><span id="footName"></span><span id="footDate"></span></footer>
 </main>
 
-<audio id="music" loop preload="auto">
-  <!-- Renombra tu canción a cancion.mp3 y ponla junto a index.html -->
-  <source src="cancion.mp3" type="audio/mpeg">
-  <!-- Plan B: el mismo archivo desde tu repositorio de GitHub -->
-  <source src="https://github.com/s0k1x/Anitaxdpro72/raw/8f6493c8cfc845437172e2089eec617f8f720b7f/Marc%2520Segui%25CC%2581%2520-%2520Tiroteo%2520Remix%2520ft.%2520Rauw%2520Alejandro%2520y%2520Pol%2520Granch%2520(Videoclip%2520Oficial)%2520-%2520Marc%2520Segui%25CC%2581.mp3" type="audio/mpeg">
-</audio>
-<button class="btn btn--blue music-btn hidden" id="musicBtn" type="button" aria-label="Activar o silenciar la música"><span class="button_top">🔊</span></button>
+<audio id="music" src="cancion.mp3" loop preload="auto"></audio>
+<button class="btn btn--blue btn--sm music-btn hidden" id="musicBtn" type="button" aria-label="Activar o silenciar la música">
+  <span class="button_top">
+    <svg class="ic-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+    <svg class="ic-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/></svg>
+  </span>
+</button>
 
 <!-- Visor de fotos -->
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Foto">
-  <button class="lb-close" id="lbClose" type="button" aria-label="Cerrar">✕</button>
+  <button class="lb-close" id="lbClose" type="button" aria-label="Cerrar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  </button>
   <div class="lb-body" id="lbBody"></div>
-  <p class="lb-cap script" id="lbCap"></p>
+  <p class="lb-cap" id="lbCap"></p>
   <div class="lb-nav">
-    <button class="btn btn--blue" id="lbPrev" type="button" aria-label="Anterior"><span class="button_top">←</span></button>
+    <button class="btn btn--blue btn--sm" id="lbPrev" type="button" aria-label="Anterior"><span class="button_top">←</span></button>
     <span class="lb-count" id="lbCount"></span>
-    <button class="btn btn--blue" id="lbNext" type="button" aria-label="Siguiente"><span class="button_top">→</span></button>
+    <button class="btn btn--blue btn--sm" id="lbNext" type="button" aria-label="Siguiente"><span class="button_top">→</span></button>
   </div>
 </div>
-
-<div class="burst" id="burst" aria-hidden="true"></div>
 
 <script src="script.js"></script>
 </body>
