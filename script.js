@@ -219,10 +219,40 @@ $('openLetter').addEventListener('click', async () => {
 $('skip').addEventListener('click', skip);
 $('replay').addEventListener('click', () => location.reload());
 
+/* ---------- Música ---------- */
+const music = $('music'), musicBtn = $('musicBtn');
+let musicOk = true;
+const icon = () => { musicBtn.firstElementChild.textContent = music.paused ? '🔇' : '🔊'; };
+music.addEventListener('play', icon);
+music.addEventListener('pause', icon);
+// Si no se encuentra el archivo, se esconde el botón y la web sigue sin sonido.
+music.addEventListener('error', () => { musicOk = false; musicBtn.classList.add('hidden'); }, true);
+musicBtn.addEventListener('click', () => {
+  if (music.paused) music.play().catch(() => {}); else music.pause();
+});
+
+function startMusic() {
+  music.volume = 0;
+  const p = music.play();                 // tiene que ir dentro del toque para que el móvil lo permita
+  if (p) p.catch(() => {});
+  if (musicOk) musicBtn.classList.remove('hidden');
+  let v = 0;                              // subida suave de volumen
+  const fade = setInterval(() => {
+    v = Math.min(v + 0.05, 0.9);
+    music.volume = v;
+    if (v >= 0.9) clearInterval(fade);
+  }, 150);
+}
+
 /* ---------- Arranque ---------- */
 render();
-(async () => {
+$('start').addEventListener('click', async () => {
+  startMusic();
+  $('gate').classList.add('fade-out');
+  await sleep(600);
+  $('gate').classList.add('hidden');
+  $('loader').classList.remove('hidden');
   await runLoader();
   await playIntro();
   reveal();
-})();
+}, { once: true });

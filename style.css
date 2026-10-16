@@ -56,44 +56,133 @@ h1,h2,h3{font-family:'Playfair Display',Georgia,serif;margin:0}
 .screen{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;transition:opacity .8s}
 .screen.fade-out{opacity:0}
 #loader{background:var(--bg)}
-/* Fantasmita de carga (Uiverse by AatreyuShau) sobre un círculo pastel */
-.loader-stage{position:relative;width:240px;height:240px;border-radius:50%;margin-bottom:18px;overflow:hidden;
-  background:radial-gradient(circle at 50% 35%,#d9ccff 0%,var(--purple-soft) 45%,var(--blue) 100%);
-  box-shadow:0 0 70px rgba(167,139,250,.45),0 0 0 6px rgba(167,139,250,.18);
-  display:grid;place-items:center}
-.loader{scale:.75;position:relative;width:200px;height:200px;translate:10px -20px}
-.loader svg{position:absolute;top:0;left:0}
-.head{translate:27px -30px;z-index:3;animation:bob 1s infinite ease-in}
-.bod{translate:0 30px;z-index:3;animation:bob 1s infinite ease-in-out}
-.legr{translate:75px 135px;z-index:0;animation:rstep 1s infinite ease-in;animation-delay:.45s}
-.legl{translate:30px 155px;z-index:3;animation:lstep 1s infinite ease-in}
-@keyframes bob{
-  0%,5%{transform:translateY(0) rotate(3deg)}
-  25%{transform:translateY(5px) rotate(0deg)}
-  50%{transform:translateY(0) rotate(-3deg)}
-  70%{transform:translateY(5px) rotate(0deg)}
-  100%{transform:translateY(0) rotate(3deg)}
+/* Campamento de carga (Uiverse by Admin12121) con cielo en morado/azul pastel */
+.loader-wrap{--s:1;width:calc(400px*var(--s));height:calc(300px*var(--s));margin-bottom:22px}
+@media (max-width:440px){.loader-wrap{--s:.75}}
+@media (max-width:350px){.loader-wrap{--s:.65}}
+@media (max-height:620px){.loader-wrap{--s:.65}}
+.loader-wrap .camp{transform:scale(var(--s));transform-origin:0 0}
+
+@keyframes stageBackground{
+  0%,10%,90%,100%{background-color:#a8d8ff}
+  25%,75%{background-color:#1a1240}
 }
-@keyframes lstep{
-  0%{transform:translateY(0) rotate(-5deg)}
-  33%{transform:translateY(-15px) translate(32px) rotate(35deg)}
-  66%{transform:translateY(0) translate(25px) rotate(-25deg)}
-  100%{transform:translateY(0) rotate(-5deg)}
+@keyframes earthRotation{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes sunrise{
+  0%,10%,90%,100%{box-shadow:0 0 0 25px #c4b5fd,0 0 0 40px #b4a3f5,0 0 0 60px rgba(167,139,250,.6),0 0 0 90px rgba(167,139,250,.3)}
+  25%,75%{box-shadow:0 0 0 0 #c4b5fd,0 0 0 0 #b4a3f5,0 0 0 0 rgba(167,139,250,.6),0 0 0 0 rgba(167,139,250,.3)}
 }
-@keyframes rstep{
-  0%{transform:translateY(0) translate(0) rotate(-5deg)}
-  33%{transform:translateY(-10px) translate(30px) rotate(35deg)}
-  66%{transform:translateY(0) translate(20px) rotate(-25deg)}
-  100%{transform:translateY(0) translate(0) rotate(-5deg)}
+@keyframes moonOrbit{
+  25%{transform:rotate(-60deg)}
+  50%{transform:rotate(-60deg)}
+  75%{transform:rotate(-120deg)}
+  0%,100%{transform:rotate(-180deg)}
 }
-#gnd{translate:-140px 0;rotate:10deg;z-index:-1;filter:blur(.5px) drop-shadow(1px 3px 5px #000);opacity:.25;animation:scroll 5s infinite linear}
-@keyframes scroll{
-  0%{transform:translateY(25px) translate(50px);opacity:0}
-  33%,66%{opacity:.25}
-  to{transform:translateY(-50px) translate(-100px);opacity:0}
+@keyframes nightTime{0%,90%{opacity:0}50%,75%{opacity:1}}
+@keyframes hotPan{0%,90%{background-color:#74667e}50%,75%{background-color:#b2241c}}
+@keyframes heat{0%,90%{box-shadow:inset 0 0 0 0 rgba(255,255,255,.3)}50%,75%{box-shadow:inset 0 -2px 0 0 white}}
+@keyframes smoke{0%,50%,90%,100%{opacity:0}50%,75%{opacity:.7}}
+@keyframes fire{0%,90%,100%{opacity:0}50%,75%{opacity:1}}
+@keyframes treeShake{
+  0%{transform:rotate(0deg)}25%{transform:rotate(-2deg)}40%{transform:rotate(4deg)}
+  50%{transform:rotate(-4deg)}60%{transform:rotate(6deg)}75%{transform:rotate(-6deg)}100%{transform:rotate(0deg)}
 }
+@keyframes fireParticles{
+  0%{height:30%;opacity:1;top:75%}
+  25%{height:25%;opacity:.8;top:40%}
+  50%{height:15%;opacity:.6;top:20%}
+  75%{height:10%;opacity:.3;top:0}
+  100%{opacity:0}
+}
+@keyframes fireLines{0%,25%,75%,100%{bottom:0}50%{bottom:5%}}
+
+.camp{display:flex;margin:0;justify-content:center;align-items:flex-end;width:400px;height:300px;position:relative;
+  border-radius:22px;overflow:hidden;background-color:#a8d8ff;animation:stageBackground 5s ease-in-out infinite;
+  box-shadow:0 0 60px rgba(167,139,250,.4),0 0 0 6px rgba(167,139,250,.18)}
+.camp .forest{display:flex;width:75%;height:90%;position:relative}
+.camp .tree{display:block;width:50%;position:absolute;bottom:0;opacity:.4}
+.camp .tree .branch{width:80%;height:0;margin:0 auto;padding-left:40%;padding-bottom:50%;overflow:hidden}
+.camp .tree .branch:before{content:"";display:block;width:0;height:0;margin-left:-600px;border-left:600px solid transparent;border-right:600px solid transparent;border-bottom:950px solid #000}
+.camp .tree .branch.branch-top{transform-origin:50% 100%;animation:treeShake .5s linear infinite}
+.camp .tree .branch.branch-middle{width:90%;padding-left:45%;padding-bottom:65%;margin:0 auto;margin-top:-25%}
+.camp .tree .branch.branch-bottom{width:100%;padding-left:50%;padding-bottom:80%;margin:0 auto;margin-top:-40%}
+.camp .tree1{width:31%}.camp .tree1 .branch-top{transition-delay:.3s}
+.camp .tree2{width:39%;left:9%}.camp .tree2 .branch-top{transition-delay:.4s}
+.camp .tree3{width:32%;left:24%}.camp .tree3 .branch-top{transition-delay:.5s}
+.camp .tree4{width:37%;left:34%}.camp .tree4 .branch-top{transition-delay:.6s}
+.camp .tree5{width:44%;left:44%}.camp .tree5 .branch-top{transition-delay:.7s}
+.camp .tree6{width:34%;left:61%}.camp .tree6 .branch-top{transition-delay:.2s}
+.camp .tree7{width:24%;left:76%}.camp .tree7 .branch-top{transition-delay:.1s}
+
+.camp .tent{width:60%;height:25%;position:absolute;bottom:-.5%;right:15%;z-index:1;text-align:right}
+.camp .roof{display:inline-block;width:45%;height:100%;margin-right:10%;position:relative;z-index:1;
+  border-top:4px solid #4D4454;border-right:4px solid #4D4454;border-left:4px solid #4D4454;border-top-right-radius:6px;
+  transform:skew(30deg);box-shadow:inset -3px 3px 0 0 #F7B563;background:#f6d484}
+.camp .roof:before{content:"";width:70%;height:70%;position:absolute;top:15%;left:15%;z-index:0;border-radius:10%;background-color:#E78C20}
+.camp .roof:after{content:"";height:75%;width:100%;position:absolute;bottom:0;right:0;z-index:1;
+  background:linear-gradient(to bottom,rgba(231,140,32,.4) 0%,rgba(231,140,32,.4) 64%,rgba(231,140,32,.8) 65%,rgba(231,140,32,.8) 100%)}
+.camp .roof-border-left{display:flex;justify-content:space-between;flex-direction:column;width:1%;height:125%;position:absolute;top:0;left:35.7%;z-index:1;transform-origin:50% 0;transform:rotate(35deg)}
+.camp .roof-border-left .roof-border{display:block;width:100%;border-radius:2px;border:2px solid #4D4454}
+.camp .roof-border-left .roof-border1{height:40%}
+.camp .roof-border-left .roof-border2{height:10%}
+.camp .roof-border-left .roof-border3{height:40%}
+.camp .door{width:55px;height:92px;position:absolute;bottom:2%;overflow:hidden;z-index:0;transform-origin:0 105%}
+.camp .left-door{transform:rotate(35deg);position:absolute;left:13.5%;bottom:-3%;z-index:0}
+.camp .left-door .left-door-inner{width:100%;height:100%;transform-origin:0 105%;transform:rotate(-35deg);position:absolute;top:0;overflow:hidden;background-color:#EDDDC2}
+.camp .left-door .left-door-inner:before{content:"";width:15%;height:100%;position:absolute;top:0;right:0;background:repeating-linear-gradient(#D4BC8B,#D4BC8B 4%,#E0D2A8 5%,#E0D2A8 10%)}
+.camp .left-door .left-door-inner:after{content:"";width:50%;height:100%;position:absolute;top:15%;left:10%;transform:rotate(25deg);background-color:#fff}
+.camp .right-door{height:89px;right:21%;transform-origin:0 105%;transform:rotate(-30deg) scaleX(-1);position:absolute;bottom:-3%;z-index:0}
+.camp .right-door .right-door-inner{width:100%;height:100%;transform-origin:0 120%;transform:rotate(-30deg);position:absolute;bottom:0;overflow:hidden;background-color:#EFE7CF}
+.camp .right-door .right-door-inner:before{content:"";width:50%;height:100%;position:absolute;top:15%;right:-28%;z-index:1;transform:rotate(15deg);background-color:#524A5A}
+.camp .right-door .right-door-inner:after{content:"";width:50%;height:100%;position:absolute;top:15%;right:-20%;transform:rotate(20deg);background-color:#fff}
+
+.camp .floor{width:80%;position:absolute;right:10%;bottom:0;z-index:1}
+.camp .floor .ground{position:absolute;border-radius:2px;border:2px solid #4D4454}
+.camp .floor .ground.ground1{width:65%;left:0}
+.camp .floor .ground.ground2{width:30%;right:0}
+
+.camp .fireplace{display:block;width:24%;height:20%;position:absolute;left:5%}
+.camp .fireplace:before{content:"";display:block;width:8%;position:absolute;bottom:-4px;left:2%;border-radius:2px;border:2px solid #4D4454;background:#4D4454}
+.camp .fireplace .support{display:block;height:105%;width:2px;position:absolute;bottom:-5%;left:10%;border:2px solid #4D4454}
+.camp .fireplace .support:before{content:"";width:100%;height:15%;position:absolute;top:-18%;left:-4px;border-radius:2px;border:2px solid #4D4454;transform-origin:100% 100%;transform:rotate(45deg)}
+.camp .fireplace .support:after{content:"";width:100%;height:15%;position:absolute;top:-18%;left:0;border-radius:2px;border:2px solid #4D4454;transform-origin:0 100%;transform:rotate(-45deg)}
+.camp .fireplace .support:nth-child(1){left:85%}
+.camp .fireplace .bar{width:100%;height:2px;border-radius:2px;border:2px solid #4D4454}
+.camp .fireplace .hanger{display:block;width:2px;height:25%;margin-left:-4px;position:absolute;left:50%;border:2px solid #4D4454}
+.camp .fireplace .pan{display:block;width:25%;height:50%;border-radius:50%;border:4px solid #4D4454;position:absolute;top:25%;left:35%;overflow:hidden;animation:heat 5s linear infinite}
+.camp .fireplace .pan:before{content:"";display:block;height:53%;width:100%;position:absolute;bottom:0;z-index:-1;border-top:4px solid #4D4454;background-color:#74667e;animation:hotPan 5s linear infinite}
+.camp .fireplace .smoke{display:block;width:20%;height:25%;position:absolute;top:25%;left:37%;background-color:white;filter:blur(5px);animation:smoke 5s linear infinite}
+.camp .fireplace .fire{display:block;width:25%;height:120%;position:absolute;bottom:0;left:33%;z-index:1;animation:fire 5s linear infinite}
+.camp .fireplace .fire:before{content:"";display:block;width:100%;height:2px;position:absolute;bottom:-4px;z-index:1;border-radius:2px;border:1px solid #efb54a;background-color:#efb54a}
+.camp .fireplace .fire .line{display:block;width:2px;height:100%;position:absolute;bottom:0;animation:fireLines 1s linear infinite}
+.camp .fireplace .fire .line2{left:50%;margin-left:-1px;animation-delay:.3s}
+.camp .fireplace .fire .line3{right:0;animation-delay:.5s}
+.camp .fireplace .fire .line .particle{height:10%;position:absolute;top:100%;z-index:1;border-radius:2px;border:2px solid #efb54a;animation:fireParticles .5s linear infinite}
+.camp .fireplace .fire .line .particle1{animation-delay:.1s}
+.camp .fireplace .fire .line .particle2{animation-delay:.3s}
+.camp .fireplace .fire .line .particle3{animation-delay:.6s}
+.camp .fireplace .fire .line .particle4{animation-delay:.9s}
+
+.camp .time-wrapper{display:block;width:100%;height:100%;position:absolute;overflow:hidden}
+.camp .time{display:block;width:100%;height:200%;position:absolute;transform-origin:50% 50%;transform:rotate(270deg);animation:earthRotation 5s linear infinite}
+.camp .time .day{display:block;width:20px;height:20px;position:absolute;top:20%;left:40%;border-radius:50%;
+  box-shadow:0 0 0 25px #c4b5fd,0 0 0 40px #b4a3f5,0 0 0 60px rgba(167,139,250,.6),0 0 0 90px rgba(167,139,250,.3);
+  animation:sunrise 5s ease-in-out infinite;background-color:#ef9431}
+.camp .time .night{animation:nightTime 5s ease-in-out infinite}
+.camp .time .night .star{display:block;width:4px;height:4px;position:absolute;bottom:10%;border-radius:50%;background-color:#fff}
+.camp .time .night .star-big{width:6px;height:6px}
+.camp .time .night .star1{right:23%;bottom:25%}
+.camp .time .night .star2{right:35%;bottom:18%}
+.camp .time .night .star3{right:47%;bottom:25%}
+.camp .time .night .star4{right:22%;bottom:20%}
+.camp .time .night .star5{right:18%;bottom:30%}
+.camp .time .night .star6{right:60%;bottom:20%}
+.camp .time .night .star7{right:70%;bottom:23%}
+.camp .time .night .moon{display:block;width:25px;height:25px;position:absolute;bottom:22%;right:33%;border-radius:50%;transform:rotate(-60deg);box-shadow:9px 9px 3px 0 white;filter:blur(1px);animation:moonOrbit 5s ease-in-out infinite}
+.camp .time .night .moon:before{content:"";display:block;width:100%;height:100%;position:absolute;bottom:-9px;left:9px;border-radius:50%;
+  box-shadow:0 0 0 5px rgba(255,255,255,.05),0 0 0 15px rgba(255,255,255,.05),0 0 0 25px rgba(255,255,255,.05),0 0 0 35px rgba(255,255,255,.05);background-color:rgba(255,255,255,.2)}
 #loaderText{font-size:30px;color:var(--blue);margin:8px 0 4px}
-.bar{width:min(260px,70vw);height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin:12px 0 8px}
+.progress{width:min(260px,70vw);height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin:12px 0 8px}
 #barFill{height:100%;width:0;background:linear-gradient(90deg,var(--purple),var(--blue));border-radius:99px}
 #pct{color:var(--muted);font-size:14px}
 @keyframes beat{50%{transform:scale(1.15)}}
@@ -187,5 +276,13 @@ section{padding:72px 22px;max-width:760px;margin:0 auto}
 
 @media (prefers-reduced-motion:reduce){
   .reveal{opacity:1;transform:none}
-  .aurora i,.final .big,.loader-stage *{animation:none}
+  .aurora i,.final .big,.loader-wrap *{animation:none}
 }
+
+/* ===== Pantalla de inicio + botón de música ===== */
+#gate{z-index:25}
+.gate-emoji{font-size:56px;animation:beat 1.4s ease-in-out infinite}
+.gate-title{font-size:clamp(36px,11vw,56px);margin:6px 0 4px;color:var(--blue);font-weight:700}
+.gate-sub{color:var(--muted);margin:0 0 28px}
+.music-btn{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;font-size:15px}
+.music-btn .button_top{padding:.55em .9em}
