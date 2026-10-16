@@ -29,14 +29,14 @@
     <div><b id="cdS">00</b><span>seg</span></div>
   </div>
 
-  <!-- Cuadro de código (estilo Uiverse by guilhermeyohan). Oculto: se muestra tocando 5 veces el candado -->
-  <div class="login-box hidden" id="codeBox">
+  <!-- Cuadro de código (estilo Uiverse by guilhermeyohan) -->
+  <div class="login-box" id="codeBox">
     <div class="user-box">
       <input id="codeInput" name="codigo" type="password" required autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
       <label for="codeInput">Código</label>
     </div>
     <div class="send-wrap">
-      <button class="send" id="codeBtn" type="button">Abrir<span></span></button>
+      <button class="send" id="codeBtn" type="button">Entrar<span></span></button>
     </div>
     <p class="code-msg" id="codeMsg" role="status"></p>
   </div>
@@ -51,7 +51,7 @@
 </div>
 
 <!-- CARGA -->
-<div id="loader" class="screen hidden">
+<div id="loader" class="screen">
 <div class="loader-wrap">
   <div class="camp">
     <div class="forest">
@@ -124,8 +124,9 @@
   <span id="pct">0%</span>
 </div>
 
-<!-- ANIMACIÓN DE RECUERDOS -->
+<!-- ANIMACIÓN: el obby de vuestra historia -->
 <div id="intro" class="screen hidden">
+  <canvas id="obby" aria-hidden="true"></canvas>
   <div class="intro-top">
     <span id="introCount"></span>
     <button class="btn btn--blue btn--sm" id="skip" type="button"><span class="button_top">Saltar</span></button>
@@ -259,6 +260,7 @@
   </div>
 </div>
 
+<script src="obby.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

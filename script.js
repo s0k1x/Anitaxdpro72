@@ -1,12 +1,14 @@
 /* ============ AQUÍ VAN TUS DATOS (edítalos o pásaselos a Claude) ============ */
 const DATA = {
   nombre: "Anita",
-  intro: "Un rinconcito hecho con cariño para recordarte lo mucho que significas para mí.",
+  juego: "Obby Creator",       // el juego donde os conocisteis
+  yoNombre: "Yo",              // la etiqueta de tu cubito en la animación (pon tu nombre o apodo)
+  intro: "Todo empezó con una partida de Obby Creator. Esto es para recordar lo que vino después.",
 
   // CANDADO: la web no se abre hasta esta fecha y hora (la del móvil de quien la abra).
   // "codigoHash" es la huella del código secreto (el código no está escrito aquí).
   // Para cambiar el código, pídeselo a Claude: te devuelve la huella nueva.
-  // Para abrirla antes: toca 5 veces el candado y escribe el código, o usa index.html?abrir=CODIGO
+  // Para abrirla antes: escribe el código en el candado, o usa index.html?abrir=CODIGO
   bloqueo: {
     fecha: "2026-11-01T00:00:00",
     codigoHash: "1im1gaxzis7"
@@ -15,25 +17,25 @@ const DATA = {
   // Opcional: foto en la portada (ej: "fotos/anita.jpg"). Vacío = no se muestra.
   fotoPortada: "",
 
-  // Opcional: fecha en que os hicisteis amigas, formato "AAAA-MM-DD" (ej: "2019-09-01").
-  // Si la pones, la portada muestra cuánto tiempo lleváis juntas. Vacío = no se muestra.
-  amistadDesde: "",
+  // Fecha en que os conocisteis, formato "AAAA-MM-DD". La portada muestra cuánto tiempo ha pasado.
+  amistadDesde: "2022-08-20",
+  amistadNota: "desde el 20 de agosto de 2022, en Obby Creator",
 
-  // Los recuerdos salen primero en la animación y luego en la línea del tiempo.
+  // Cada recuerdo es una ETAPA del obby en la animación y luego sale en la línea del tiempo.
   // "foto" es opcional: pon el nombre de la imagen (ej: "fotos/1.jpg") o déjalo vacío.
   eventos: [
-    { cuando: "El principio", titulo: "El día que nos conocimos", texto: "Aquí va cómo nos conocimos y qué pensé de ti al principio.", foto: "" },
-    { cuando: "Cuando nos hicimos inseparables", titulo: "Nuestra primera aventura", texto: "Ese momento en el que supe que esto iba en serio.", foto: "" },
-    { cuando: "Un día cualquiera", titulo: "Una de nuestras mil risas", texto: "Ese recuerdo absurdo que solo entendemos nosotras.", foto: "" },
-    { cuando: "Cuando más la necesité", titulo: "Estuviste ahí", texto: "Gracias por quedarte cuando las cosas se pusieron difíciles.", foto: "" },
-    { cuando: "Hoy", titulo: "Y aquí seguimos", texto: "Después de tanto tiempo, sigues siendo mi persona favorita.", foto: "" }
+    { cuando: "20 · 08 · 2022", titulo: "Nos conocimos en Obby Creator", texto: "Una partida cualquiera, un obby imposible y dos jugadores que acabaron saltando hasta el final, uno al lado del otro.", foto: "" },
+    { cuando: "Las primeras semanas", titulo: "Cada día, otra partida", texto: "Dejamos de jugar por jugar: empezamos a quedar para hablar, reírnos y no rendirnos en los obbys imposibles.", foto: "" },
+    { cuando: "Un día cualquiera", titulo: "Una de nuestras mil risas", texto: "Ese recuerdo absurdo que solo entendemos nosotros. Cuéntalo aquí con tus palabras.", foto: "" },
+    { cuando: "Cuando más lo necesité", titulo: "Estuviste ahí", texto: "Gracias por quedarte cuando las cosas se pusieron difíciles.", foto: "" },
+    { cuando: "Hoy", titulo: "Y aquí seguimos", texto: "Cuatro años después, sigues siendo mi persona favorita con quien jugar.", foto: "" }
   ],
 
   // La carta que sale al abrir el sobre grande.
   cartaPrincipal: {
     titulo: "Para ti, Anita",
-    texto: "Llevamos muchos años juntas y quería darte algo que te recordara lo importante que eres para mí.\n\nGracias por cada risa, cada conversación y por estar siempre.\n\nTe quiero muchísimo.",
-    firma: "Tu amiga"
+    texto: "Todo empezó el 20 de agosto de 2022, en una partida de Obby Creator. Desde entonces han pasado muchas partidas, muchas risas y mucha vida.\n\nGracias por cada conversación y por estar siempre.\n\nTe quiero muchísimo.",
+    firma: "Tu amigo"
   },
 
   razones: [
@@ -41,7 +43,7 @@ const DATA = {
     { titulo: "Siempre estás", texto: "Aunque pase el tiempo, sé que puedo contar contigo." },
     { titulo: "Eres auténtica", texto: "No cambias por nadie y eso es lo que más admiro." },
     { titulo: "Me entiendes", texto: "A veces ni hace falta que hable para que sepas qué me pasa." },
-    { titulo: "Todo es mejor contigo", texto: "Cualquier plan es mejor si vienes tú." },
+    { titulo: "Todo es mejor contigo", texto: "Cualquier plan es mejor si vienes tú, aunque sea otro obby imposible." },
     { titulo: "Eres de las pocas", texto: "De esas personas que se quedan para siempre." }
   ],
 
@@ -49,7 +51,7 @@ const DATA = {
     { src: "", pie: "Nuestro primer verano" },
     { src: "", pie: "Cara de risa total" },
     { src: "", pie: "Esa noche" },
-    { src: "", pie: "Siempre juntas" },
+    { src: "", pie: "Siempre juntos" },
     { src: "", pie: "Locuras varias" },
     { src: "", pie: "Mi favorita" }
   ],
@@ -57,11 +59,11 @@ const DATA = {
   cartas: [
     { titulo: "Lo que más admiro de ti", sub: "Ábrela primero", texto: "Admiro tu forma de ser, cómo cuidas de los demás y lo valiente que eres, aunque a veces no te des cuenta.\n\nGracias por ser como eres." },
     { titulo: "Mi recuerdo favorito", sub: "Uno de los mejores", texto: "Hay un momento contigo que siempre vuelve a mi cabeza y me hace sonreír.\n\nCuéntalo aquí con tus palabras." },
-    { titulo: "Para cuando tengas un mal día", sub: "Guárdala bien", texto: "Recuerda que eres increíble, que no estás sola y que tienes una amiga que te quiere mucho.\n\nSiempre, siempre, aquí." }
+    { titulo: "Para cuando tengas un mal día", sub: "Guárdala bien", texto: "Recuerda que eres increíble, que no estás sola y que tienes un amigo que te quiere mucho.\n\nSiempre, siempre, aquí." }
   ],
 
   finalTitulo: "Gracias por estos años.",
-  finalTexto: "Por muchos más juntas."
+  finalTexto: "Por muchas partidas más."
 };
 /* ========================================================================== */
 
@@ -81,7 +83,7 @@ const sleep = ms => new Promise(res => {
   function done() { clearTimeout(t); wake = wake.filter(w => w !== done); res(); }
   wake.push(done);
 });
-function skip() { skipped = true; wake.slice().forEach(w => w()); }
+function skip() { skipped = true; wake.slice().forEach(w => w()); if (window.Obby) Obby.skip(); }
 
 /* ---------- Fondo de estrellas (muy sutil) ---------- */
 (function stars() {
@@ -198,7 +200,7 @@ function renderCounter() {
       <div><b data-n="${m}">0</b><span>meses</span></div>
       <div><b data-n="${d}">0</b><span>días</span></div>
     </div>
-    <p class="counter-note">juntas desde ${esc(desde)}</p>`;
+    <p class="counter-note">${esc(DATA.amistadNota || ('desde ' + desde))}</p>`;
   box.classList.remove('hidden');
 }
 
@@ -234,45 +236,75 @@ async function runLoader() {
   $('loader').classList.add('hidden');
 }
 
-/* ---------- Animación de recuerdos ---------- */
+/* ---------- Animación: el obby de vuestra historia ---------- */
 async function type(el, text) {
   if (reduced) { el.textContent = text; return; }
   el.textContent = '';
   for (const ch of text) {
     if (skipped) { el.textContent = text; return; }
     el.textContent += ch;
-    await sleep(24);
+    await sleep(21);
   }
 }
 
-async function playIntro() {
-  const scenes = DATA.eventos.concat([{ cuando: 'Y ahora', titulo: 'Ya está.', texto: 'Pasa, esto es para ti.', foto: '', ultima: true }]);
-  const N = scenes.length;
-  $('intro').classList.remove('hidden', 'fade-out');
+let activeCard = null;
+async function showCard(label, s, hold) {
+  const card = document.createElement('div');
+  card.className = 'scene-card';
+  card.innerHTML = `<p class="sc-stage">${esc(label)}</p><p class="sc-when">${esc(s.cuando)}</p>
+    <h2 class="sc-title">${esc(s.titulo)}</h2><p class="sc-text"></p>`;
+  $('scene').replaceChildren(card);
+  activeCard = card;
+  void card.offsetWidth;
+  card.classList.add('in');
+  await sleep(450);
+  await type(card.querySelector('.sc-text'), s.texto);
+  await sleep(hold == null ? 1300 : hold);
+}
+async function hideCard() {
+  if (!activeCard) return;
+  activeCard.classList.remove('in'); activeCard.classList.add('out');
+  await sleep(550);
+  activeCard = null;
+}
 
-  for (let i = 0; i < N && !skipped; i++) {
-    const s = scenes[i];
-    const card = document.createElement('div');
-    card.className = 'scene-card';
-    card.innerHTML = `
-      ${s.foto ? `<img class="sc-photo" src="${esc(s.foto)}" alt="">`
-               : `<span class="sc-num">${s.ultima ? esc(DATA.nombre.charAt(0)) : pad2(i + 1)}</span>`}
-      <p class="sc-when">${esc(s.cuando)}</p>
-      <h2 class="sc-title">${esc(s.titulo)}</h2>
-      <p class="sc-text"></p>`;
-    $('scene').replaceChildren(card);
-    $('introCount').textContent = pad2(i + 1) + ' / ' + pad2(N);
-    $('introBar').style.width = ((i + 1) / N * 100) + '%';
-    void card.offsetWidth;
-    card.classList.add('in');
-    await sleep(500);
-    await type(card.querySelector('.sc-text'), s.texto);
-    await sleep(1500);
-    card.classList.remove('in'); card.classList.add('out');
-    await sleep(700);
+async function playIntro() {
+  const N = DATA.eventos.length;
+  const fechaCorta = isNaN(new Date(DATA.amistadDesde))
+    ? '' : ' · ' + new Date(DATA.amistadDesde + 'T00:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }).replace(/\//g, '.');
+  $('intro').classList.remove('hidden', 'fade-out');
+  $('introCount').textContent = DATA.juego + fechaCorta;
+
+  if (reduced || !window.Obby) {
+    // Versión sin movimiento: solo las tarjetas con cada recuerdo
+    $('obby').classList.add('hidden');
+    for (let i = 0; i < N && !skipped; i++) {
+      $('introCount').textContent = 'Etapa ' + pad2(i + 1) + ' / ' + pad2(N);
+      $('introBar').style.width = ((i + 1) / N * 100) + '%';
+      await showCard('Etapa ' + pad2(i + 1), DATA.eventos[i]);
+      await hideCard();
+    }
+  } else {
+    await Obby.play({
+      canvas: $('obby'),
+      stages: N,
+      names: { me: DATA.yoNombre || 'Yo', her: DATA.nombre },
+      sleep,
+      card: {
+        show: i => showCard('Etapa ' + pad2(i + 1), DATA.eventos[i]),
+        showFinal: () => showCard('Meta', { cuando: 'Y ahora', titulo: 'Obby completado.', texto: 'Pasa, esto es para ti.' }, 900),
+        hide: hideCard
+      },
+      onStage: i => {
+        $('introCount').textContent = 'Etapa ' + pad2(i + 1) + ' / ' + pad2(N);
+        $('introBar').style.width = ((i + 1) / N * 100) + '%';
+      }
+    });
   }
+  // La página aparece debajo mientras la animación se desvanece
+  reveal();
   $('intro').classList.add('fade-out');
-  await sleep(800);
+  await wait(850);
   $('intro').classList.add('hidden');
 }
 
@@ -431,19 +463,9 @@ function showLock() {
 function unlockNow() {
   clearInterval(lockTimer);
   $('lock').classList.add('fade-out');
-  setTimeout(() => { $('lock').classList.add('hidden'); boot(); }, 800);
+  setTimeout(() => { $('lock').classList.add('hidden'); showGate(); }, 800);
 }
 
-// El cuadro de código está escondido: se muestra tocando 5 veces el candado.
-let taps = 0, tapTimer = null;
-$('lockIcon').addEventListener('click', () => {
-  taps++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { taps = 0; }, 2500);
-  if (taps >= 5) {
-    taps = 0;
-    $('codeBox').classList.remove('hidden');
-    $('codeInput').focus();
-  }
-});
 function tryCode() {
   if (codeOk($('codeInput').value)) {
     store.set();
@@ -460,24 +482,27 @@ $('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryCode
 /* ---------- Arranque ---------- */
 render();
 
-// Se ejecuta cuando la web ya está desbloqueada
-function boot() {
-  if (params.has('directo')) {
-    // Atajo para editar rápido: index.html?directo&abrir=CODIGO → sale la página sin animación.
-    reveal();
-    return;
-  }
+// Pantalla "Empezar": el toque permite que suene la música en el móvil
+function showGate() {
   $('gate').classList.remove('hidden');
   $('start').addEventListener('click', async () => {
     startMusic();
     $('gate').classList.add('fade-out');
     await sleep(600);
     $('gate').classList.add('hidden');
-    $('loader').classList.remove('hidden');
-    await runLoader();
     await playIntro();
-    reveal();
   }, { once: true });
 }
 
-if (isUnlocked()) boot(); else showLock();
+// 1) carga  →  2) candado (si aún no es la fecha) o "Empezar"  →  3) animación  →  4) la página
+async function start() {
+  if (params.has('directo') && isUnlocked()) {
+    // Atajo para editar rápido: index.html?directo&abrir=CODIGO → sale la página sin animación.
+    $('loader').classList.add('hidden');
+    reveal();
+    return;
+  }
+  await runLoader();
+  if (isUnlocked()) showGate(); else showLock();
+}
+start();
