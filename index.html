@@ -3,46 +3,80 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Para ti 💌</title>
+<meta name="theme-color" content="#07050d">
+<title>Para ti 💜</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Nunito:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="locked">
 
-<header class="hero" id="top">
-  <div class="script hi">para ti,</div>
-  <h1 id="nombre">Nombre</h1>
-  <p id="intro">Una pequeña página para recordarte lo mucho que significas para mí.</p>
-  <button class="btn" onclick="document.getElementById('historia').scrollIntoView()">Empezar 💌</button>
-  <div class="scroll-hint">desliza ↓</div>
-</header>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
 
-<section id="historia">
-  <h2 class="title reveal">Nuestra historia</h2>
-  <p class="sub reveal">Los momentos que nos han traído hasta aquí</p>
-  <div class="timeline" id="timeline"></div>
-</section>
+<!-- 1) PANTALLA DE CARGA -->
+<div id="loader" class="screen">
+  <div class="loader-heart">💜</div>
+  <p id="loaderText" class="script">Cargando recuerdos…</p>
+  <div class="bar"><div id="barFill"></div></div>
+  <span id="pct">0%</span>
+</div>
 
-<section id="galeria">
-  <h2 class="title reveal">Nuestros recuerdos</h2>
-  <p class="sub reveal">Toca una foto para verla grande</p>
-  <div class="grid" id="grid"></div>
-</section>
+<!-- 2) ANIMACIÓN DE RECUERDOS -->
+<div id="intro" class="screen hidden">
+  <div id="scene"></div>
+  <div class="dots" id="dots"></div>
+  <button class="btn btn--blue" id="skip" type="button"><span class="button_top">Saltar</span></button>
+</div>
 
-<section id="cartas">
-  <h2 class="title reveal">Cosas que quiero decirte</h2>
-  <p class="sub reveal">Toca cada sobre para abrirlo</p>
-  <div id="letters"></div>
-</section>
+<!-- 3) CONTENIDO PRINCIPAL (aparece al acabar la animación) -->
+<main id="main" class="hidden">
 
-<section class="final reveal">
-  <div class="big">💖</div>
-  <h2 id="finalTitle">Gracias por estos años</h2>
-  <p class="script" id="finalText">Por muchos más juntas.</p>
-</section>
+  <header class="hero">
+    <div class="script hi">para ti,</div>
+    <h1 id="nombre">Nombre</h1>
+    <p id="introTxt" class="lead"></p>
 
-<div class="lb" id="lb" onclick="this.classList.remove('on')"></div>
+    <div class="env" id="env" aria-hidden="true">
+      <div class="back"></div>
+      <div class="sheet"><span>💜</span></div>
+      <div class="front"></div>
+      <div class="flap"></div>
+    </div>
+
+    <button class="btn btn--purple" id="openLetter" type="button"><span class="button_top">Abrir mi carta 💌</span></button>
+    <article class="paper hidden" id="paper"></article>
+  </header>
+
+  <section id="historia">
+    <h2 class="title reveal">Nuestra historia</h2>
+    <p class="sub reveal">Los momentos que nos han traído hasta aquí</p>
+    <div class="timeline" id="timeline"></div>
+  </section>
+
+  <section id="galeria">
+    <h2 class="title reveal">Nuestros recuerdos</h2>
+    <p class="sub reveal">Toca una foto para verla grande</p>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section id="cartas">
+    <h2 class="title reveal">Cosas que quiero decirte</h2>
+    <p class="sub reveal">Toca cada sobre para abrirlo</p>
+    <div id="letters"></div>
+  </section>
+
+  <section class="final reveal">
+    <div class="big">💖</div>
+    <h2 id="finalTitle"></h2>
+    <p class="script" id="finalText"></p>
+    <button class="btn btn--blue" id="replay" type="button"><span class="button_top">Ver la animación otra vez</span></button>
+  </section>
+</main>
+
+<div class="lb" id="lb"></div>
+<div class="burst" id="burst" aria-hidden="true"></div>
 
 <script src="script.js"></script>
 </body>
