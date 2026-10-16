@@ -48,7 +48,8 @@
       let anims = [], particles = [], rings = [];
       let shake = 0, flashA = 0, flashCol = '255,255,255', holdFlash = false;
       let iris = 0, cur = null;
-      let banner = null, callA = 0, callVol = 0;
+      let banner = null, callA = 0, callVol = 0, titleFx = null;
+      const motes = Array.from({ length: 26 }, (_, k) => ({ x: -200 + (k * 61) % 400, y: -20 + (k * 37) % 280, v: 4 + (k % 4) * 2, r: .8 + (k % 3) * .5, ph: k * 1.3 }));
       const cam = { x: 0, y: 0 };
 
       function resize() {
@@ -96,7 +97,7 @@
       const B = { name: opts.names.her, c1: '#e6dcff', c2: '#9b82ff', dark: '#4a3aa0', x: 0, y: 0, sx: 1, sy: 1, k: 1, alpha: 0, run: 0, look: -1, blink: 2.4, say: '', sayT: 0, face: 0, bow: true, sit: false };
       const chars = [A, B];
       const mkFriend = (c1, c2, dark, look) => ({ name: '', c1, c2, dark, x: 0, y: 0, sx: 1, sy: 1, k: 1, alpha: 0, run: 0, look, blink: 1 + Math.random() * 2, say: '', sayT: 0, face: 0, bow: false, sit: false });
-      const reset = (c, x, y, look) => { c.x = x; c.y = y; c.sx = c.sy = c.k = 1; c.alpha = 0; c.run = 0; c.look = look; c.say = ''; c.sayT = 0; c.face = 0; c.sit = false; };
+      const reset = (c, x, y, look) => { c.x = x; c.y = y; c.gy = y; c.sx = c.sy = c.k = 1; c.alpha = 0; c.run = 0; c.look = look; c.say = ''; c.sayT = 0; c.face = 0; c.sit = false; c.sad = false; c.hideTag = false; };
       const fadeIn = (d) => anim(d || .6, t => { A.alpha = B.alpha = t; });
       const pulse = (c, amt) => anim(.22, t => { const s = Math.sin(t * Math.PI); c.sy = 1 + (amt || .14) * s; c.sx = 1 - (amt || .14) * .6 * s; });
 
@@ -111,7 +112,7 @@
           c.y = lerp(y0, ty, t) + 4 * h * t * (1 - t);
           c.sy = 1 + .2 * s; c.sx = 1 - .1 * s; c.run = t * 16;
         });
-        c.x = tx; c.y = ty; c.run = 0;
+        c.x = tx; c.y = ty; c.gy = ty; c.run = 0;
         burst(tx, ty, 5, ['#cfc6f0', '#9a92c4'], 55, .5, 120);
         await anim(.18, t => { const b = easeOutBack(t); c.sy = .78 + .22 * b; c.sx = 1.18 - .18 * b; });
         c.sx = 1; c.sy = 1;
@@ -199,6 +200,9 @@
       function drawChar(c) {
         if (c.alpha <= .01) return;
         const sx = X(c.x), sy = Y(c.y);
+        // sombra en el suelo (más pequeña cuanto más alto salta)
+        { const gy = c.gy == null ? c.y : c.gy, sh = clamp(1 - Math.max(0, c.y - gy) / 140, .25, 1);
+          ctx.save(); ctx.globalAlpha = c.alpha * .4 * sh; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(X(c.x), Y(gy) + 1, 13 * S * c.k * sh, 3 * S * sh, 0, 0, TAU); ctx.fill(); ctx.restore(); }
         ctx.save(); ctx.globalAlpha = c.alpha; ctx.translate(sx, sy);
         const idle = c.run === 0 ? 1 + Math.sin(time * 3 + (c === B ? 1.3 : 0)) * .015 : 1;
         ctx.scale(S * c.sx * c.k, S * c.sy * c.k * idle * (c.sit ? .9 : 1));
@@ -210,7 +214,9 @@
         } else { ctx.translate(0, 6); }
         const g = ctx.createLinearGradient(0, -34, 0, -6); g.addColorStop(0, c.c1); g.addColorStop(1, c.c2);
         ctx.fillStyle = g; rr(ctx, -13, -34, 26, 27, 7); ctx.fill();
+        ctx.strokeStyle = 'rgba(20,10,50,.22)'; ctx.lineWidth = 1; rr(ctx, -13, -34, 26, 27, 7); ctx.stroke();
         ctx.fillStyle = 'rgba(255,255,255,.4)'; rr(ctx, -10, -31, 9, 3, 1.5); ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,30,.10)'; rr(ctx, -13, -14, 26, 7, 6); ctx.fill();
         if (c.bow) {
           ctx.fillStyle = '#fff'; ctx.beginPath();
           ctx.moveTo(6, -35); ctx.lineTo(1, -41); ctx.lineTo(1, -31); ctx.closePath(); ctx.fill();
@@ -221,15 +227,19 @@
         ctx.fillStyle = '#1a1033';
         ctx.beginPath(); ctx.ellipse(-5 + lk, -21, 2.6, eh, 0, 0, TAU); ctx.fill();
         ctx.beginPath(); ctx.ellipse(5 + lk, -21, 2.6, eh, 0, 0, TAU); ctx.fill();
+        if (c.blink >= 0) { ctx.fillStyle = 'rgba(255,255,255,.9)'; for (const ex of [-5, 5]) { ctx.beginPath(); ctx.arc(ex + lk - .9, -22.8, .95, 0, TAU); ctx.fill(); } }
+        ctx.fillStyle = 'rgba(255,120,170,.28)'; for (const ex of [-8.6, 8.6]) { ctx.beginPath(); ctx.ellipse(ex + lk * .4, -15.2, 2.6, 1.5, 0, 0, TAU); ctx.fill(); }
         ctx.strokeStyle = '#1a1033'; ctx.lineWidth = 1.6; ctx.lineCap = 'round'; ctx.beginPath();
-        if (c.face) ctx.ellipse(lk, -13, 2.4, 3, 0, 0, TAU); else ctx.arc(lk, -15, 3.6, .15 * Math.PI, .85 * Math.PI);
+        if (c.face) ctx.ellipse(lk, -13, 2.4, 3, 0, 0, TAU);
+        else if (c.sad) ctx.arc(lk, -10.5, 3.4, 1.18 * Math.PI, 1.82 * Math.PI);
+        else ctx.arc(lk, -15, 3.6, .15 * Math.PI, .85 * Math.PI);
         ctx.stroke();
         ctx.restore();
 
         const tx = sx, ty = sy - 52 * S * c.k;
         ctx.save(); ctx.globalAlpha = c.alpha;
         ctx.font = `700 ${11 * S}px "DM Sans",system-ui,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        if (c.name) {
+        if (c.name && !c.hideTag) {
           const tw = ctx.measureText(c.name).width + 14 * S;
           ctx.fillStyle = 'rgba(8,6,16,.62)'; rr(ctx, tx - tw / 2, ty - 9 * S, tw, 18 * S, 9 * S); ctx.fill();
           ctx.fillStyle = '#efeaff'; ctx.fillText(c.name, tx, ty + .5);
@@ -251,158 +261,6 @@
          ESCENAS (una por etapa)
          Cada escena: enter() · update(dt) · bg() · mid() · fg() · run(i)
          ===================================================== */
-
-      /* ---------- 1 · OBBY CREATOR (concurso: quién construye mejor la casa) ---------- */
-      function contestScene() {
-        const BS = 10, R = 13, HX = [-88, 88];
-        const slab = { kind: 'step', cx: 0, w: 350, y: 0, alt: 1, top: '#8f82d8', front: '#2f2766' };
-        const F1 = mkFriend('#ffd9ee', '#e58fc0', '#8a3a72', 1), F2 = mkFriend('#cdf5e0', '#6fcf9f', '#2f7a5a', -1);
-        // Casa de piedra con forma de cabeza: frente plana, ceja marcada, ojos huecos,
-        // nariz grande que sobresale, boca y puerta abajo.
-        // # piedra · B ceja · N nariz · E ojo · M boca · D puerta · . vacío
-        const ART = [
-          '######',
-          '######',
-          'BBBBBB',
-          '#E##E#',
-          '##NN##',
-          '##NN##NN',
-          '##NN##NN',
-          '##NN##NN',
-          '######',
-          '#MMMM#',
-          '.####.',
-          '.#DD#.',
-          '.#DD#.'
-        ];
-        const PAL2 = [
-          { base: '#9fcdfb', alt: '#b7dcff', brow: '#7fb4ee', nose: '#d6ebff' },
-          { base: '#f7b6d8', alt: '#ffcbe5', brow: '#e08fbc', nose: '#ffe2f0' }
-        ];
-        const cellXY = (h, r, c) => { const side = h === 0 ? 1 : -1; return [HX[h] + side * (c - 2.5) * BS, (R - 1 - r) * BS + BS / 2]; };
-        const houses = [0, 1].map(h => {
-          const blocks = [], holes = [];
-          ART.forEach((row, r) => [...row].forEach((ch, c) => {
-            if (ch === '.') return;
-            const [x, y] = cellXY(h, r, c);
-            if (ch === 'E' || ch === 'M' || ch === 'D') { holes.push({ x, y, ch, c }); return; }
-            const p = PAL2[h];
-            const col = ch === 'B' ? p.brow : ch === 'N' ? p.nose : (r % 2 ? p.alt : p.base);
-            blocks.push({ r, c, tx: x, ty: y, col, st: 0, x: 0, y: 0, rot: 0, sq: 0 });
-          }));
-          return { blocks, holes };
-        });
-        const det = [0, 0], score = [0, 0], NOTA = ['10', '9']; let challenge = 0, scoreFade = 1;
-        return {
-          enter() { cam.x = 0; cam.y = 0; reset(A, -146, 0, 1); reset(B, 10, 0, -1); reset(F2, 36, 0, -1); reset(F1, 62, 0, -1); chars.push(F1, F2); },
-          update(dt) { houses.forEach(hs => hs.blocks.forEach(b => { b.sq = Math.max(0, b.sq - dt * 3); })); },
-          bg() {
-            ctx.strokeStyle = 'rgba(169,212,255,.06)'; ctx.lineWidth = 1;
-            for (let gx = -200; gx <= 200; gx += 26) { ctx.beginPath(); ctx.moveTo(X(gx), 0); ctx.lineTo(X(gx), H); ctx.stroke(); }
-            for (let gy = -80; gy <= 340; gy += 26) { ctx.beginPath(); ctx.moveTo(0, Y(gy)); ctx.lineTo(W, Y(gy)); ctx.stroke(); }
-            drawFarCubes(.2); haze('110,80,220', .16);
-          },
-          mid() {
-            plat(slab);
-            houses.forEach((hs, h) => {
-              hs.blocks.forEach(b => {
-                if (!b.st) return;
-                const s = (BS - .8) * S;
-                ctx.save(); ctx.translate(X(b.x), Y(b.y)); ctx.rotate(b.st === 1 ? b.rot : 0); ctx.scale(1 + .16 * b.sq, 1 - .22 * b.sq);
-                ctx.fillStyle = b.col; rr(ctx, -s / 2, -s / 2, s, s, 1.8 * S); ctx.fill();
-                ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fillRect(-s / 2 + 1.2 * S, -s / 2 + 1.2 * S, s - 2.4 * S, 1.6 * S);
-                ctx.strokeStyle = 'rgba(30,20,80,.4)'; ctx.lineWidth = 1; rr(ctx, -s / 2, -s / 2, s, s, 1.8 * S); ctx.stroke();
-                ctx.restore();
-              });
-              const d = det[h]; if (d <= .01) return;
-              ctx.globalAlpha = d;
-              hs.holes.forEach(o => {
-                const s = BS * S;
-                const ex = X(o.x), ey = Y(o.y);
-                if (o.ch === 'E') {
-                  ctx.fillStyle = '#ffe9a8'; ctx.fillRect(ex - s / 2, ey - s / 2, s, s);                 // ventana encendida
-                  ctx.fillStyle = '#2a1a55'; ctx.fillRect(ex - 2 * S + (h === 0 ? 1.4 : -1.4) * S, ey - 1.6 * S, 4 * S, 4 * S); // pupila hacia el centro
-                } else {
-                  ctx.fillStyle = o.ch === 'D' ? '#241548' : '#150d2c'; ctx.fillRect(ex - s / 2, ey - s / 2, s, s);
-                }
-              });
-              const k0 = hs.holes.filter(o => o.ch === 'D').sort((p, q) => p.c - q.c);
-              if (k0.length) { const o = k0[h === 0 ? 3 : 0]; ctx.fillStyle = '#ffe29a'; ctx.beginPath(); ctx.arc(X(o.x) + (h === 0 ? -3 : 3) * S, Y(o.y + BS * .5), 1.3 * S, 0, TAU); ctx.fill(); }
-              ctx.globalAlpha = 1;
-              const k = score[h]; if (k > .01) {
-                const sc = easeOutBack(Math.min(1, k)), px = X(HX[h] + (h === 0 ? 1 : -1) * BS * 1), py = Y(R * BS + 22);
-                ctx.save(); ctx.globalAlpha = scoreFade; ctx.translate(px, py); ctx.scale(sc, sc);
-                ctx.fillStyle = '#f3f0f9'; rr(ctx, -19 * S, -12 * S, 38 * S, 24 * S, 7 * S); ctx.fill();
-                ctx.lineWidth = 2 * S; ctx.strokeStyle = h === 0 ? '#ffe29a' : '#e58fc0'; rr(ctx, -19 * S, -12 * S, 38 * S, 24 * S, 7 * S); ctx.stroke();
-                ctx.fillStyle = '#1b1530'; ctx.font = `800 ${15 * S}px "Bricolage Grotesque","DM Sans",system-ui,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(NOTA[h], 0, 1); ctx.restore();
-              }
-            });
-            if (challenge > .01) pill('reto: la casa de Calamardo', X(0), Y(172), 'rgba(8,6,16,.72)', '#efeaff', 11.5, challenge);
-          },
-          fg() { drawBanner(X(0), Y(112)); drawCall(92); },
-          async run(i) {
-            // Anita está con sus amigos, en el centro
-            await anim(.6, t => { B.alpha = F1.alpha = F2.alpha = t; });
-            say(F2, 'jajaja', 1.1); await wait(.6);
-            say(B, '¡ahí va!', 1.1); await wait(.8);
-            // llega Mario
-            A.y = 70; ring(A.x, 0, '155,130,255', 44);
-            await anim(.5, t => { A.alpha = t; A.y = lerp(70, 0, smooth(t)); });
-            A.y = 0; A.alpha = 1;
-            await anim(.18, t => { const b = easeOutBack(t); A.sy = .78 + .22 * b; A.sx = 1.18 - .18 * b; });
-            A.sx = A.sy = 1;
-            say(A, '¡hola!', 1.2); await wait(.5);
-            say(B, '¡hola!', 1.1); say(F2, '¡únete!', 1.3); await wait(.9);
-            say(A, '¿un concurso?', 1.6); await wait(.8);
-            // un amigo de Anita acepta y se va a su parcela
-            say(F1, '¡yo juego!', 1.3); await wait(.5);
-            await hop(F1, 146, 0, { h: 44, dur: .7 }); F1.look = -1;
-            anim(.4, t => { challenge = smooth(t); }); await wait(.9);
-            for (const w of ['3', '2', '1', '¡YA!']) { banner = { text: w, t: 0 }; await wait(.45); }
-            banner = null;
-            // a construir: Mario contra el amigo de Anita (se lanzan bloques de dos en dos, de abajo arriba)
-            const build = async (h, who, gap) => {
-              const list = houses[h].blocks.slice().sort((p, q) => q.r - p.r || p.c - q.c), fl = [];
-              for (let k = 0; k < list.length; k += 2) {
-                pulse(who, .2);
-                for (const b of list.slice(k, k + 2)) {
-                  const x0 = who.x, y0 = 36, x1 = b.tx, y1 = b.ty, up = 22 + y1 * .28; b.st = 1; b.x = x0; b.y = y0;
-                  fl.push(anim(.45, t => { b.x = lerp(x0, x1, smooth(t)); b.y = lerp(y0, y1, t) + 4 * up * t * (1 - t); b.rot = t * 6 * (h ? -1 : 1); })
-                    .then(() => { b.st = 2; b.x = x1; b.y = y1; b.sq = 1; if (Math.random() < .35) burst(b.x, b.y - BS / 2, 3, ['#d9d2ff', '#a9d4ff'], 40, .35, 90); }));
-                }
-                await wait(gap);
-              }
-              await Promise.all(fl);
-            };
-            const doneA = build(0, A, .1).then(() => say(A, '¡terminé!', 1.2));
-            const doneB = build(1, F1, .125);
-            await Promise.all([doneA, doneB]);
-            await wait(.3);
-            anim(.7, t => { det[0] = det[1] = smooth(t); });
-            anim(.4, t => { challenge = 1 - smooth(t); });
-            await wait(.9);
-            // Anita y su otro amigo hacen de jurado
-            say(B, 'a ver…', 1.0); say(F2, 'mmm…', 1.0); await wait(1.0);
-            anim(.5, t => { score[1] = t; }); await wait(.5);
-            anim(.5, t => { score[0] = t; });
-            burst(HX[0], R * BS + 16, 36, PARTY, 200, 1.2, 240); ring(HX[0], 0, '255,226,154', 80); shake = 4;
-            say(A, '¡gané!', 1.5); hop(B, B.x, 0, { h: 28, dur: .4 });
-            await wait(.7); say(F1, '¡bien jugado!', 1.5); hop(F2, F2.x, 0, { h: 24, dur: .4 });
-            await wait(1.0);
-            // Anita te mete en llamada: vienes saltando sobre tu casa hasta ella
-            anim(.5, t => { scoreFade = 1 - t; });
-            say(B, 'te meto en llamada', 1.9); await wait(.9);
-            await hop(A, -34, 0, { h: 170, dur: 1.0 }); A.look = 1;
-            ring(-12, 30, '169,212,255', 70);
-            await anim(.5, t => { callA = smooth(t); });
-            say(A, 'vale', 1.2);
-            await wait(.7);
-            await opts.card.show(i);
-            await opts.card.hide();
-          }
-        };
-      }
 
       /* ---------- 3 · CARRERA (retos y revanchas) ---------- */
       function raceScene() {
@@ -1354,9 +1212,324 @@
         };
       }
 
-      const REG = { obby: contestScene, llamada: callScene, corazon: heartScene, rieles: railsScene, exito: hitScene, carrera: raceScene, chat: chatScene, build: buildScene, noche: nightScene, lluvia: rainScene, fiesta: partyScene, hoguera: campScene, portal: portalScene };
+      /* ---------- utilidades de color ---------- */
+      const shade = (hex, f) => {
+        const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+        if (f >= 1) { const k = Math.min(1, f - 1); r += (255 - r) * k; g += (255 - g) * k; b += (255 - b) * k; } else { r *= f; g *= f; b *= f; }
+        return `rgb(${r | 0},${g | 0},${b | 0})`;
+      };
+
+      /* ---------- 1 · OBBY CREATOR (concurso: quién construye mejor la casa) ---------- */
+      function contestScene() {
+        const BS = 9, R = 16, W7 = 7, HX = [-90, 90];
+        const slab = { kind: 'step', cx: 0, w: 350, y: 0, alt: 1, top: '#8f82d8', front: '#2f2766' };
+        const F1 = mkFriend('#ffd9ee', '#e58fc0', '#8a3a72', 1), F2 = mkFriend('#cdf5e0', '#6fcf9f', '#2f7a5a', -1);
+        // Casa de piedra con forma de cabeza (diseño propio): remate, ceja, dos ventanas,
+        // nariz que sobresale, boca y puerta de madera.
+        // T remate · # piedra · B ceja · N nariz · W ventana · M boca · D puerta · . vacío
+        const ART = [
+          '.TTTTT.',
+          'TTTTTTT',
+          '#######',
+          'BBBBBBB',
+          '#WW#WW#',
+          '#WW#WW#',
+          '###N###',
+          '###N###NN',
+          '##NNN##NN',
+          '##NNN##N',
+          '#######',
+          '#MMMMM#',
+          '#######',
+          '.#DDD#.',
+          '.#DDD#.',
+          '.#DDD#.'
+        ];
+        const PAL2 = [{ stone: '#a3cffb', cap: '#6f9fd8', nose: '#cfe6ff' }, { stone: '#f5b3d6', cap: '#d585b2', nose: '#ffd8ec' }];
+        const cellX = (h, c) => HX[h] + (h === 0 ? 1 : -1) * (c - (W7 - 1) / 2) * BS;
+        const cellY = r => (R - 1 - r) * BS + BS / 2;
+        const houses = [0, 1].map(h => {
+          const blocks = []; const L = HX[h] - W7 * BS / 2;
+          ART.forEach((row, r) => [...row].forEach((ch, c) => {
+            if (ch === '.' || ch === 'W' || ch === 'M' || ch === 'D') return;
+            const x = cellX(h, c), y = cellY(r), p = PAL2[h];
+            const lit = 1.1 - clamp((x - L) / (W7 * BS), 0, 1) * .2 + (R - r) * .004;   // luz desde arriba a la izquierda
+            const base = ch === 'T' ? p.cap : ch === 'N' ? p.nose : p.stone;
+            blocks.push({ r, c, tx: x, ty: y, col: shade(base, ch === 'B' ? .86 * lit : lit), st: 0, x: 0, y: 0, rot: 0, sq: 0 });
+          }));
+          return { blocks };
+        });
+        const det = [0, 0], score = [0, 0], NOTA = ['10', '9']; let challenge = 0, scoreFade = 1;
+        function drawBlock(b) {
+          const s = (BS - .6) * S;
+          ctx.save(); ctx.translate(X(b.x), Y(b.y)); ctx.rotate(b.st === 1 ? b.rot : 0); ctx.scale(1 + .16 * b.sq, 1 - .22 * b.sq);
+          ctx.fillStyle = b.col; rr(ctx, -s / 2, -s / 2, s, s, 1.6 * S); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,.32)'; ctx.fillRect(-s / 2 + 1 * S, -s / 2 + .8 * S, s - 2 * S, 1.3 * S);
+          ctx.fillStyle = 'rgba(20,10,60,.22)'; ctx.fillRect(-s / 2 + 1 * S, s / 2 - 1.8 * S, s - 2 * S, 1.2 * S); ctx.fillRect(s / 2 - 1.6 * S, -s / 2 + 1.2 * S, 1 * S, s - 2.4 * S);
+          ctx.restore();
+        }
+        function drawDetails(h) {
+          const d = det[h]; if (d <= .01) return;
+          ctx.save(); ctx.globalAlpha = d;
+          // ventanas (2x2 celdas) con marco, cruz y luz cálida
+          [[1, 4], [4, 4]].forEach(([c0, r0]) => {
+            const xa = Math.min(cellX(h, c0), cellX(h, c0 + 1)) - BS / 2, yt = cellY(r0) + BS / 2;
+            const x = X(xa), y = Y(yt), w = 2 * BS * S, hh = 2 * BS * S;
+            const gl = ctx.createRadialGradient(x + w / 2, y + hh / 2, 0, x + w / 2, y + hh / 2, w * 1.6); gl.addColorStop(0, 'rgba(255,220,140,.45)'); gl.addColorStop(1, 'rgba(255,220,140,0)');
+            ctx.fillStyle = gl; ctx.fillRect(x - w, y - hh, w * 3, hh * 3);
+            ctx.fillStyle = '#3a2a5c'; rr(ctx, x, y, w, hh, 2 * S); ctx.fill();
+            const g = ctx.createLinearGradient(0, y, 0, y + hh); g.addColorStop(0, '#fff3c4'); g.addColorStop(1, '#ffc96b');
+            ctx.fillStyle = g; rr(ctx, x + 1.6 * S, y + 1.6 * S, w - 3.2 * S, hh - 3.2 * S, 1.4 * S); ctx.fill();
+            ctx.fillStyle = '#3a2a5c'; ctx.fillRect(x + w / 2 - .8 * S, y + 1.6 * S, 1.6 * S, hh - 3.2 * S); ctx.fillRect(x + 1.6 * S, y + hh / 2 - .8 * S, w - 3.2 * S, 1.6 * S);
+          });
+          // boca
+          { const xa = Math.min(cellX(h, 1), cellX(h, 5)) - BS / 2, y = Y(cellY(11) + BS / 2); ctx.fillStyle = '#1a1033'; rr(ctx, X(xa) + 1 * S, y + 2 * S, 5 * BS * S - 2 * S, BS * S - 4 * S, 3 * S); ctx.fill(); }
+          // puerta de madera con arco
+          {
+            const xa = Math.min(cellX(h, 2), cellX(h, 4)) - BS / 2, x = X(xa), y = Y(cellY(13) + BS / 2), w = 3 * BS * S, hh = 3 * BS * S;
+            ctx.fillStyle = '#4a2f5e'; ctx.beginPath(); ctx.moveTo(x + 1 * S, y + hh); ctx.lineTo(x + 1 * S, y + w / 2); ctx.arc(x + w / 2, y + w / 2, w / 2 - 1 * S, Math.PI, TAU); ctx.lineTo(x + w - 1 * S, y + hh); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 1; for (let k = 1; k < 3; k++) { ctx.beginPath(); ctx.moveTo(x + w * k / 3, y + w * .35); ctx.lineTo(x + w * k / 3, y + hh); ctx.stroke(); }
+            ctx.fillStyle = '#ffe29a'; dot(x + (h === 0 ? w * .78 : w * .22), y + hh * .62, 1.3 * S);
+            ctx.fillStyle = shade(PAL2[h].cap, .8); rr(ctx, x - 3 * S, y + hh - 1, w + 6 * S, 3 * S, 1.5 * S); ctx.fill();
+          }
+          ctx.restore();
+        }
+        return {
+          enter() { cam.x = 0; cam.y = 0; reset(A, -146, 0, 1); reset(B, 10, 0, -1); reset(F2, 36, 0, -1); reset(F1, 62, 0, -1); chars.push(F1, F2); },
+          update(dt) { houses.forEach(hs => hs.blocks.forEach(b => { b.sq = Math.max(0, b.sq - dt * 3); })); },
+          bg() {
+            ctx.strokeStyle = 'rgba(169,212,255,.05)'; ctx.lineWidth = 1;
+            for (let gx = -200; gx <= 200; gx += 26) { ctx.beginPath(); ctx.moveTo(X(gx), Y(-40)); ctx.lineTo(X(gx), Y(260)); ctx.stroke(); }
+            for (let gy = -40; gy <= 260; gy += 26) { ctx.beginPath(); ctx.moveTo(0, Y(gy)); ctx.lineTo(W, Y(gy)); ctx.stroke(); }
+            drawFarCubes(.2); haze('110,80,220', .16);
+          },
+          mid() {
+            plat(slab);
+            houses.forEach((hs, h) => {
+              ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(X(HX[h]), Y(0) + 2 * S, 40 * S, 4 * S, 0, 0, TAU); ctx.fill();
+              hs.blocks.forEach(b => { if (b.st) drawBlock(b); });
+              drawDetails(h);
+              const k = score[h]; if (k > .01) {
+                const sc = easeOutBack(Math.min(1, k)), px = X(HX[h]), py = Y(R * BS + 22);
+                ctx.save(); ctx.globalAlpha = scoreFade; ctx.translate(px, py); ctx.scale(sc, sc);
+                ctx.fillStyle = '#f3f0f9'; rr(ctx, -19 * S, -12 * S, 38 * S, 24 * S, 7 * S); ctx.fill();
+                ctx.lineWidth = 2 * S; ctx.strokeStyle = h === 0 ? '#ffe29a' : '#e58fc0'; rr(ctx, -19 * S, -12 * S, 38 * S, 24 * S, 7 * S); ctx.stroke();
+                ctx.fillStyle = '#1b1530'; ctx.font = `800 ${15 * S}px "Bricolage Grotesque","DM Sans",system-ui,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(NOTA[h], 0, 1); ctx.restore();
+              }
+            });
+            if (challenge > .01) pill('reto: la casa de Calamardo', X(0), Y(182), 'rgba(8,6,16,.72)', '#efeaff', 11.5, challenge);
+          },
+          fg() { drawBanner(X(0), Y(112)); drawCall(92); },
+          async run(i) {
+            await anim(.6, t => { B.alpha = F1.alpha = F2.alpha = t; });
+            say(F2, 'jajaja', 1.1); await wait(.6);
+            say(B, '¡ahí va!', 1.1); await wait(.8);
+            A.y = 70; ring(A.x, 0, '155,130,255', 44);
+            await anim(.5, t => { A.alpha = t; A.y = lerp(70, 0, smooth(t)); });
+            A.y = 0; A.alpha = 1;
+            await anim(.18, t => { const b = easeOutBack(t); A.sy = .78 + .22 * b; A.sx = 1.18 - .18 * b; });
+            A.sx = A.sy = 1;
+            say(A, '¡hola!', 1.2); await wait(.5);
+            say(B, '¡hola!', 1.1); say(F2, '¡únete!', 1.3); await wait(.9);
+            say(A, '¿un concurso?', 1.6); await wait(.8);
+            say(F1, '¡yo juego!', 1.3); await wait(.5);
+            await hop(F1, 146, 0, { h: 44, dur: .7 }); F1.look = -1;
+            anim(.4, t => { challenge = smooth(t); }); await wait(.9);
+            for (const w of ['3', '2', '1', '¡YA!']) { banner = { text: w, t: 0 }; await wait(.45); }
+            banner = null;
+            const build = async (h, who, gap) => {
+              const list = houses[h].blocks.slice().sort((p, q) => q.r - p.r || p.c - q.c), fl = [];
+              for (let k = 0; k < list.length; k += 3) {
+                pulse(who, .2);
+                for (const b of list.slice(k, k + 3)) {
+                  const x0 = who.x, y0 = 36, x1 = b.tx, y1 = b.ty, up = 22 + y1 * .28; b.st = 1; b.x = x0; b.y = y0;
+                  fl.push(anim(.45, t => { b.x = lerp(x0, x1, smooth(t)); b.y = lerp(y0, y1, t) + 4 * up * t * (1 - t); b.rot = t * 6 * (h ? -1 : 1); })
+                    .then(() => { b.st = 2; b.x = x1; b.y = y1; b.sq = 1; if (Math.random() < .3) burst(b.x, b.y - BS / 2, 3, ['#d9d2ff', '#a9d4ff'], 40, .35, 90); }));
+                }
+                await wait(gap);
+              }
+              await Promise.all(fl);
+            };
+            const doneA = build(0, A, .1).then(() => say(A, '¡terminé!', 1.2));
+            const doneB = build(1, F1, .125);
+            await Promise.all([doneA, doneB]);
+            await wait(.3);
+            anim(.8, t => { det[0] = det[1] = smooth(t); });
+            burst(HX[0], 70, 14, ['#fff3c4', '#ffc96b'], 80, .9, 40); burst(HX[1], 70, 14, ['#fff3c4', '#ffc96b'], 80, .9, 40);
+            anim(.4, t => { challenge = 1 - smooth(t); });
+            await wait(1.0);
+            say(B, 'a ver…', 1.0); say(F2, 'mmm…', 1.0); await wait(1.0);
+            anim(.5, t => { score[1] = t; }); await wait(.5);
+            anim(.5, t => { score[0] = t; });
+            burst(HX[0], R * BS + 16, 36, PARTY, 200, 1.2, 240); ring(HX[0], 0, '255,226,154', 80); shake = 4;
+            say(A, '¡gané!', 1.5); hop(B, B.x, 0, { h: 28, dur: .4 });
+            await wait(.7); say(F1, '¡bien jugado!', 1.5); hop(F2, F2.x, 0, { h: 24, dur: .4 });
+            await wait(1.0);
+            anim(.5, t => { scoreFade = 1 - t; });
+            say(B, 'te meto en llamada', 1.9); await wait(.9);
+            await hop(A, -34, 0, { h: 180, dur: 1.0 }); A.look = 1;
+            ring(-12, 30, '169,212,255', 70);
+            await anim(.5, t => { callA = smooth(t); });
+            say(A, 'vale', 1.2);
+            await wait(.7);
+            await opts.card.show(i);
+            await opts.card.hide();
+          }
+        };
+      }
+
+      /* ---------- 6 · DISTANCIA (dejamos de hablar durante mucho tiempo) ---------- */
+      function distanceScene() {
+        const IA = { kind: 'step', cx: -60, w: 70, y: 0, alt: 1, top: '#8d8aa8', front: '#34314d' };
+        const IB = { kind: 'step', cx: 60, w: 70, y: 0, alt: 0, top: '#9a93b0', front: '#3a3550' };
+        const MONTHS = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+        const flakes = Array.from({ length: 46 }, (_, k) => ({ x: -200 + ((k * 53) % 400), y: (k * 97) % 300, v: 7 + (k % 5) * 3, s: .8 + (k % 3) * .5, ph: k }));
+        let tt = 0, sep = 0, link = 1, tA = 0, tB = 0, mon = 0;
+        return {
+          enter() { cam.x = 0; cam.y = 0; tt = 0; reset(A, -60, 0, 1); reset(B, 60, 0, -1); },
+          update(dt) {
+            tt += dt; IA.cx = lerp(-60, -126, smooth(sep)); IB.cx = lerp(60, 126, smooth(sep));
+            A.x = IA.cx; B.x = IB.cx; A.gy = B.gy = 0;
+            flakes.forEach(f => { f.y -= f.v * dt; f.x += Math.sin(tt + f.ph) * 4 * dt; if (f.y < -40) f.y = 280; });
+            mon = Math.floor(tt * 1.7) % 12;
+          },
+          bg() {
+            ctx.fillStyle = 'rgba(14,14,24,.45)'; ctx.fillRect(0, 0, W, H);
+            // la luna cambia de fase: pasa el tiempo
+            const mx = X(0), my = Y(140), r = 18 * S, ph = (tt * .35) % 1;
+            const mg = ctx.createRadialGradient(mx, my, r * .5, mx, my, r * 3.2); mg.addColorStop(0, 'rgba(200,205,225,.22)'); mg.addColorStop(1, 'rgba(200,205,225,0)');
+            ctx.fillStyle = mg; ctx.fillRect(mx - r * 3.2, my - r * 3.2, r * 6.4, r * 6.4);
+            ctx.save(); ctx.beginPath(); ctx.arc(mx, my, r, 0, TAU); ctx.clip();
+            ctx.fillStyle = 'rgba(40,40,60,.9)'; ctx.fillRect(mx - r, my - r, r * 2, r * 2);
+            ctx.beginPath(); ctx.rect(mx - r * 3, my - r * 3, r * 6, r * 6); ctx.arc(mx + (ph * 2 - 1) * r * 2.1, my, r * 1.02, 0, TAU); ctx.clip('evenodd');
+            ctx.fillStyle = '#d9dcec'; ctx.fillRect(mx - r, my - r, r * 2, r * 2); ctx.restore();
+            drawFarCubes(.15); haze('80,80,110', .14);
+          },
+          mid() {
+            plat(IA); plat(IB);
+            // la llamada se rompe
+            const p0 = [X(A.x), Y(46)], p1 = [X(0), Y(96)], p2 = [X(B.x), Y(46)];
+            const pt = t => [(1 - t) * (1 - t) * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0], (1 - t) * (1 - t) * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1]];
+            ctx.save(); ctx.setLineDash([5 * S, 6 * S]); ctx.strokeStyle = `rgba(169,212,255,${.25 + .35 * link})`; ctx.lineWidth = 1.6;
+            for (const [a, b] of [[0, .5 * link], [1 - .5 * link, 1]]) { if (b - a <= .01) continue; ctx.beginPath(); for (let k = 0; k <= 16; k++) { const q = pt(lerp(a, b, k / 16)); k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); } ctx.stroke(); }
+            ctx.restore();
+            pill('sin hablar · ' + MONTHS[mon], X(0), Y(104), 'rgba(8,6,16,.7)', '#c9c7d8', 11, clamp(1 - link * 1.2, 0, 1));
+          },
+          fg() {
+            ctx.fillStyle = 'rgba(220,225,240,.45)'; flakes.forEach(f => dot(X(f.x), Y(f.y), f.s * S));
+            for (const [c, a] of [[A, tA], [B, tB]]) if (a > .01) {
+              pill('   ', X(c.x), Y(70), `rgba(220,215,240,${.85 * a})`, '#1b1530', 12, a);
+              for (let k = -1; k <= 1; k++) { ctx.fillStyle = `rgba(74,58,160,${a})`; dot(X(c.x + k * 7), Y(70) + Math.sin(time * 9 + k) * 2.4 * S, 1.9 * S); }
+            }
+          },
+          async run(i) {
+            await fadeIn(.7);
+            const card = opts.card.show(i);
+            await wait(.8);
+            A.look = -1; B.look = 1;
+            anim(4.4, t => { sep = t; link = 1 - smooth(Math.min(1, t * 1.5)); });
+            await wait(1.0); A.sad = B.sad = true;
+            await wait(.6);
+            // casi nos escribimos… pero no
+            await anim(.3, t => { tA = t; }); await wait(1.0); await anim(.3, t => { tA = 1 - t; });
+            await wait(.5);
+            await anim(.3, t => { tB = t; }); await wait(1.0); await anim(.3, t => { tB = 1 - t; });
+            await wait(.6); A.look = 1; B.look = -1;
+            await card;
+            await opts.card.hide();
+          }
+        };
+      }
+
+      /* ---------- 7 · REENCUENTRO (volvimos a hablar; mejor que nunca; siempre me ha apoyado) ---------- */
+      function reunionScene() {
+        const IA = { kind: 'step', cx: -126, w: 70, y: 0, alt: 1 }, IB = { kind: 'step', cx: 126, w: 70, y: 0, alt: 0 };
+        const ledge = { kind: 'pad', cx: 64, w: 80, y: 90, glow: 0 };
+        const bridge = []; for (let k = 0; k < 8; k++) bridge.push({ tx: -77 + k * 22, ty: -1, st: 0, x: 0, y: 0, sq: 0, col: k % 2 ? '#c9bcff' : '#a9d4ff' });
+        let color = 0, ledgeA = 0, starA = 0, label = '', labelPop = 1, tt = 0; const notes = [], rockets = [];
+        const setLabel = txt => { label = txt; labelPop = 0; anim(.35, t => { labelPop = t; }); };
+        const fly = (text, from, to) => { const n = { text, x0: from.x, x1: to.x, t: 0 }; notes.push(n); return anim(1.0, t => { n.t = t; }).then(() => { notes.splice(notes.indexOf(n), 1); burst(to.x, 60, 10, ['#ffffff', '#a9d4ff', '#c9bcff'], 70, .6, 60); }); };
+        const firework = (x, y) => { rockets.push({ x, y: 0, ty: y, v: 260 }); };
+        return {
+          enter() { cam.x = 0; cam.y = 0; tt = 0; reset(A, -126, 0, 1); reset(B, 126, 0, -1); A.sad = B.sad = true; },
+          update(dt) {
+            tt += dt; bridge.forEach(b => { b.sq = Math.max(0, b.sq - dt * 3); });
+            for (let k = rockets.length - 1; k >= 0; k--) { const r = rockets[k]; r.y += r.v * dt; if (r.y >= r.ty) { rockets.splice(k, 1); burst(r.x, r.y, 46, PARTY, 170, 1.4, 50); ring(r.x, r.y, '255,240,200', 40); } }
+          },
+          bg() {
+            ctx.fillStyle = `rgba(14,14,24,${.45 * (1 - color)})`; ctx.fillRect(0, 0, W, H);
+            if (color > .01) {
+              const g = ctx.createRadialGradient(X(0), Y(40), 0, X(0), Y(40), 260 * S); g.addColorStop(0, `rgba(255,190,220,${.22 * color})`); g.addColorStop(.5, `rgba(160,130,255,${.14 * color})`); g.addColorStop(1, 'rgba(160,130,255,0)');
+              ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+              for (let k = 0; k < 22; k++) { const sx = ((k * 83) % 330) - 165, sy = 40 + ((k * 57) % 200); sparkle(X(sx), Y(sy), (1.4 + (k % 3)) * S, color * (.25 + .45 * Math.abs(Math.sin(time * 1.6 + k))), '#ffe9f4'); }
+            }
+            drawFarCubes(.2); haze('150,110,240', .14 * color + .06);
+          },
+          mid() {
+            plat(IA); plat(IB);
+            bridge.forEach(b => {
+              if (!b.st) return; const w = 20 * S, h = 8 * S;
+              ctx.save(); ctx.translate(X(b.x), Y(b.y)); ctx.scale(1 + .15 * b.sq, 1 - .25 * b.sq);
+              ctx.fillStyle = b.col; rr(ctx, -w / 2, -h / 2, w, h, 2.5 * S); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.fillRect(-w / 2 + 2 * S, -h / 2 + 1 * S, w - 4 * S, 1.4 * S);
+              ctx.restore();
+            });
+            if (ledgeA > .01) { ctx.save(); ctx.globalAlpha = ledgeA; plat(ledge); ctx.restore(); }
+            if (starA > .01) {
+              const sx = X(ledge.cx), sy = Y(150 + Math.sin(time * 2) * 3), g = ctx.createRadialGradient(sx, sy, 0, sx, sy, 46 * S * starA);
+              g.addColorStop(0, `rgba(255,240,190,${.7 * starA})`); g.addColorStop(1, 'rgba(255,240,190,0)'); ctx.fillStyle = g; ctx.fillRect(sx - 50 * S, sy - 50 * S, 100 * S, 100 * S);
+              star5(sx, sy, 13 * S * easeOutBack(Math.min(1, starA)), '#ffe29a', 1);
+            }
+          },
+          fg() {
+            notes.forEach(n => { const x = lerp(n.x0, n.x1, smooth(n.t)), y = 56 + 70 * 4 * n.t * (1 - n.t); pill(n.text, X(x), Y(y), '#f3f0f9', '#1b1530', 12, 1); sparkle(X(x) + 26 * S * Math.sign(n.x1 - n.x0), Y(y), 4 * S, 1, '#ffffff'); });
+            ctx.fillStyle = '#fff3c4'; rockets.forEach(r => { dot(X(r.x), Y(r.y), 2 * S); ctx.fillStyle = 'rgba(255,243,196,.4)'; dot(X(r.x), Y(r.y - 10), 1.4 * S); ctx.fillStyle = '#fff3c4'; });
+            if (label) pill(label, X(-56), Y(128), 'rgba(8,6,16,.75)', '#efeaff', 12, Math.min(1, labelPop * 1.4));
+          },
+          async run(i) {
+            await fadeIn(.6);
+            const card = opts.card.show(i);
+            await wait(.6);
+            await fly('¿hola?', A, B);
+            await wait(.3);
+            await fly('¡hola!', B, A);
+            A.sad = B.sad = false; anim(1.6, t => { color = smooth(t); });
+            // se tiende un puente
+            const fl = [];
+            for (const b of bridge) {
+              const x1 = b.tx, y1 = b.ty; b.st = 1; b.x = x1; b.y = y1 - 90;
+              fl.push(anim(.45, t => { b.y = lerp(y1 - 90, y1, easeOutBack(t)); }).then(() => { b.st = 2; b.sq = 1; burst(b.x, 2, 3, ['#d9d2ff', '#a9d4ff'], 40, .35, 90); }));
+              await wait(.09);
+            }
+            await Promise.all(fl);
+            // corren a encontrarse
+            await Promise.all([hop(A, -66, 0, { h: 26, dur: .42 }), hop(B, 66, 0, { h: 26, dur: .42 })]);
+            await Promise.all([hop(A, -16, 0, { h: 26, dur: .42 }), hop(B, 16, 0, { h: 26, dur: .42 })]);
+            await anim(.45, t => { const s = Math.sin(t * Math.PI); A.x = -16 + 5 * s; B.x = 16 - 5 * s; A.sx = B.sx = 1 + .14 * s; A.sy = B.sy = 1 - .1 * s; });
+            ring(0, 0, '255,214,230', 80); burst(0, 40, 28, PARTY, 150, 1.2, 80);
+            setLabel('mejor que nunca');
+            await wait(.9);
+            // siempre me ha apoyado: ella le ayuda a subir hasta la estrella
+            anim(.6, t => { ledgeA = t; }); anim(.9, t => { starA = t; });
+            await hop(B, 40, 0, { h: 22, dur: .42 });
+            B.hideTag = true;
+            await hop(A, 40, 34, { h: 34, dur: .5 }); pulse(B, .25);
+            setLabel('siempre me has apoyado');
+            await wait(.7);
+            await hop(A, 48, 90, { h: 36, dur: .55 }); B.hideTag = false;
+            await hop(B, 84, 90, { h: 100, dur: .75 });
+            burst(ledge.cx, 150, 40, ['#ffe29a', '#fff3c4', '#ffffff'], 160, 1.3, 60); ring(ledge.cx, 90, '255,226,154', 70);
+            firework(-90, 170); await wait(.3); firework(110, 190); await wait(.3); firework(-20, 200);
+            hop(A, A.x, 90, { h: 24, dur: .4 }); hop(B, B.x, 90, { h: 24, dur: .4 });
+            await card;
+            await opts.card.hide();
+          }
+        };
+      }
+
+      const REG = { obby: contestScene, llamada: callScene, corazon: heartScene, rieles: railsScene, exito: hitScene, distancia: distanceScene, reencuentro: reunionScene, carrera: raceScene, chat: chatScene, build: buildScene, noche: nightScene, lluvia: rainScene, fiesta: partyScene, hoguera: campScene, portal: portalScene };
       // altura (en unidades del mundo) que necesita cada escena por encima del suelo
-      const TOP = { obby: 166, llamada: 168, corazon: 150, rieles: 112, exito: 165, carrera: 112, chat: 140, build: 150, noche: 138, lluvia: 138, fiesta: 160, hoguera: 80, portal: 110 };
+      const TOP = { distancia: 150, reencuentro: 178, obby: 192, llamada: 168, corazon: 150, rieles: 112, exito: 165, carrera: 112, chat: 140, build: 150, noche: 138, lluvia: 138, fiesta: 160, hoguera: 80, portal: 110 };
 
       /* ---------- Transición en iris entre mundos ---------- */
       async function goto(name, idx) {
@@ -1365,6 +1538,7 @@
         cur = (REG[name] || REG.obby)();
         topY = TOP[name] || 140; cardBot = opts.cardBottom ? opts.cardBottom(idx) : 380; layout();
         cur.enter();
+        titleFx = idx < N ? { text: String(idx + 1).padStart(2, '0'), t: 0 } : null;
         await anim(.65, t => { iris = smooth(t); });
         iris = 1;
         burst(A.x, 20, 10, PAL, 90, .6, 80);
@@ -1380,6 +1554,8 @@
         }
         shake *= Math.pow(.02, dt);
         if (banner) banner.t += dt;
+        if (titleFx) { titleFx.t += dt; if (titleFx.t > 1.6) titleFx = null; }
+        motes.forEach(m => { m.y += m.v * dt; if (m.y > 280) m.y = -20; });
         callVol = lerp(callVol, callA > .5 ? 1 : 0, Math.min(1, dt * 5));
         if (!holdFlash) flashA = Math.max(0, flashA - dt * 1.8);
         for (let i = particles.length - 1; i >= 0; i--) {
@@ -1406,18 +1582,30 @@
           ctx.beginPath(); ctx.arc(W / 2, GROUND - 26 * S, rmax * iris, 0, TAU); ctx.clip();
         }
         if (shake > .2) ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
-        cur.bg(); cur.mid();
+        cur.bg();
+        for (const m of motes) { ctx.fillStyle = `rgba(220,210,255,${.12 + .12 * Math.sin(time * 1.3 + m.ph)})`; ctx.beginPath(); ctx.arc(X(m.x + Math.sin(time * .6 + m.ph) * 8), Y(m.y), m.r * S, 0, TAU); ctx.fill(); }
+        cur.mid();
         for (const r of rings) {
           const a = 1 - r.t / r.life; ctx.strokeStyle = `rgba(${r.c},${a * .9})`; ctx.lineWidth = 2 * S;
           ctx.beginPath(); ctx.ellipse(X(r.x), Y(r.y), r.r * S, r.r * S * .28, 0, 0, TAU); ctx.stroke();
         }
-        chars.forEach(drawChar);
+        chars.slice().sort((p, q) => p.y - q.y).forEach(drawChar);
         cur.fg();
         for (const q of particles) {
           const a = Math.max(0, q.life / q.max); ctx.globalAlpha = a; ctx.fillStyle = q.c;
           ctx.save(); ctx.translate(X(q.x), Y(q.y)); ctx.rotate(q.r); const s = q.s * S * (.5 + a * .5); ctx.fillRect(-s / 2, -s / 2, s, s); ctx.restore();
         }
         ctx.globalAlpha = 1;
+        // viñeta suave (toque de cine)
+        { const vg = ctx.createRadialGradient(W / 2, H * .5, Math.min(W, H) * .35, W / 2, H * .5, Math.max(W, H) * .78); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.42)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H); }
+        // número grande de la etapa al entrar
+        if (titleFx) {
+          const t = titleFx.t, a = t < .3 ? t / .3 : clamp((1.6 - t) / .7, 0, 1);
+          ctx.save(); ctx.globalAlpha = a; ctx.translate(W / 2, GROUND - 92 * S); ctx.scale(1 + t * .06, 1 + t * .06);
+          ctx.font = `800 ${120 * S}px "Bricolage Grotesque","DM Sans",system-ui,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillStyle = 'rgba(201,188,255,.07)'; ctx.fillText(titleFx.text, 0, 0);
+          ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(201,188,255,.55)'; ctx.strokeText(titleFx.text, 0, 0); ctx.restore();
+        }
         ctx.restore();
         if (flashA > .01) { ctx.fillStyle = `rgba(${flashCol},${Math.min(1, flashA)})`; ctx.fillRect(0, 0, W, H); }
       }

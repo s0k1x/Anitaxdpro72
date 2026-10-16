@@ -25,6 +25,7 @@ const DATA = {
   // "escena" es el mundo animado de esa etapa. Opciones:
   //   obby (concurso de construir en Obby Creator) · llamada (horas en llamada, jugar de todo)
   //   corazon (salir y quedar como amigos) · rieles (tren y sustos) · exito (juego famoso y compartir)
+  //   distancia (dejar de hablar) · reencuentro (volver a hablar)
   //   noche (estrellas) · hoguera (tranquilidad) · lluvia (un mal momento y el sol) · fiesta (celebrar)
   //   carrera (carrera en un obby) · build (construir una pirámide)
   // Puedes poner todas las etapas que quieras; si pones más de 7 se repiten las escenas.
@@ -35,8 +36,8 @@ const DATA = {
     { escena: "corazon", cuando: "Más adelante", titulo: "Salimos, y lo dejamos como amigos", texto: "Empecé a gustarte y empezamos a salir. No funcionó, así que lo dejamos como amigos.", foto: "" },
     { escena: "rieles", cuando: "Nuestra época de Rieles Muertos", titulo: "Rieles Muertos", texto: "Empezamos a jugar muchísimo a Rieles Muertos, de Roblox. Un tren, muchos sustos y mil partidas juntos.", foto: "" },
     { escena: "exito", cuando: "Cuando me fue bien", titulo: "Lo compartí con vosotros", texto: "Hice un juego de terror psicológico que se hizo famoso y empecé a ganar dinero. Decidí compartirlo contigo y con más amigos.", foto: "" },
-    { escena: "noche", cuando: "Con el tiempo", titulo: "Hasta la madrugada", texto: "Pasaron los meses y los años entre partidas, charlas hasta tarde y cada vez más recuerdos.", foto: "" },
-    { escena: "hoguera", cuando: "Hoy", titulo: "Y aquí seguimos", texto: "Cuatro años después, sigues siendo mi persona favorita con quien jugar y con quien hablar.", foto: "" }
+    { escena: "distancia", cuando: "Un tiempo después", titulo: "Dejamos de hablar", texto: "Durante mucho tiempo dejamos de hablar. Cada uno por su lado.", foto: "" },
+    { escena: "reencuentro", cuando: "Hoy", titulo: "Mejor que nunca", texto: "Volvimos a hablar y ahora estamos mejor que nunca. Siempre has sido la persona que me ha apoyado en todo.", foto: "" }
   ],
 
   // Velocidad de la animación: 1 = normal (~1 min). 2 = el doble de pausada, 3 = muy pausada (~3 min)...
@@ -51,7 +52,7 @@ const DATA = {
 
   razones: [
     { titulo: "Me haces reír", texto: "Contigo hasta los días malos acaban en risas." },
-    { titulo: "Siempre estás", texto: "Aunque pase el tiempo, sé que puedo contar contigo." },
+    { titulo: "Me apoyas en todo", texto: "Siempre has sido la persona que me ha apoyado en todo." },
     { titulo: "Eres auténtica", texto: "No cambias por nadie y eso es lo que más admiro." },
     { titulo: "Me entiendes", texto: "A veces ni hace falta que hable para que sepas qué me pasa." },
     { titulo: "Todo es mejor contigo", texto: "Cualquier plan es mejor si vienes tú, aunque sea otro obby imposible." },
@@ -289,7 +290,7 @@ async function hideCard() {
   activeCard = null;
 }
 
-const DEFAULT_SCENES = ['obby', 'llamada', 'corazon', 'rieles', 'exito', 'noche', 'hoguera'];
+const DEFAULT_SCENES = ['obby', 'llamada', 'corazon', 'rieles', 'exito', 'distancia', 'reencuentro'];
 
 async function playIntro() {
   // Para probar una sola escena: index.html?abrir=CODIGO&escena=lluvia
