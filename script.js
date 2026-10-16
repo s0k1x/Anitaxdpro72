@@ -23,14 +23,15 @@ const DATA = {
 
   // Cada recuerdo es una ETAPA de la animación y luego sale en la línea del tiempo.
   // "escena" es el mundo animado de esa etapa. Opciones:
-  //   obby (un obby de Roblox) · chat (conversaciones) · build (construir juntos) · noche (estrellas)
+  //   obby (concurso de construir en Obby Creator) · carrera (carrera en un obby) · chat (conversaciones)
+  //   build (construir una pirámide) · noche (estrellas)
   //   lluvia (un mal momento y el sol) · fiesta (celebrar) · hoguera (tranquilidad)
   // Puedes poner todas las etapas que quieras; si pones más de 7 se repiten las escenas.
   // "foto" es opcional: pon el nombre de la imagen (ej: "fotos/1.jpg") o déjalo vacío.
   eventos: [
-    { escena: "obby", cuando: "20 · 08 · 2022", titulo: "Nos conocimos en Obby Creator", texto: "Estabas con unos amigos, me uní y os hablé. Hicimos una competición y gané yo. Me metiste en llamada y desde ahí hablamos casi todos los días.", foto: "" },
+    { escena: "obby", cuando: "20 · 08 · 2022", titulo: "Nos conocimos en Obby Creator", texto: "Estabas con unos amigos y me uní. Hicimos un concurso: quién construía mejor la casa de Calamardo de Bob Esponja. Gané yo, me metiste en llamada y desde ahí hablamos casi todos los días.", foto: "" },
     { escena: "chat", cuando: "Las primeras semanas", titulo: "Cada día, otra partida", texto: "Desde esa llamada casi no hubo un día sin hablar: de todo, de nada, a todas horas y sin querer que terminara.", foto: "" },
-    { escena: "build", cuando: "Un proyecto en común", titulo: "Construir juntos", texto: "Crear, equivocarnos, rehacerlo todo y reírnos cuando nadie conseguía pasarlo. Lo mejor siempre fue hacerlo contigo.", foto: "" },
+    { escena: "carrera", cuando: "Retos y revanchas", titulo: "Siempre una revancha más", texto: "Cada partida acababa en otro reto: quién llegaba antes, quién caía menos y quién ganaba la revancha.", foto: "" },
     { escena: "noche", cuando: "Noches sin dormir", titulo: "Hasta la madrugada", texto: "Esas conversaciones que se alargaban sin darnos cuenta, cuando ya no importaba ni la hora ni el juego.", foto: "" },
     { escena: "lluvia", cuando: "Cuando más lo necesité", titulo: "Estuviste ahí", texto: "Gracias por quedarte cuando las cosas se pusieron difíciles.", foto: "" },
     { escena: "fiesta", cuando: "Las buenas noticias", titulo: "Celebrar contigo", texto: "Cada logro y cada cumpleaños es mejor compartido, aunque sea a través de una pantalla.", foto: "" },
@@ -277,7 +278,7 @@ async function hideCard() {
   activeCard = null;
 }
 
-const DEFAULT_SCENES = ['obby', 'chat', 'build', 'noche', 'lluvia', 'fiesta', 'hoguera'];
+const DEFAULT_SCENES = ['obby', 'chat', 'carrera', 'noche', 'lluvia', 'fiesta', 'hoguera'];
 
 async function playIntro() {
   // Para probar una sola escena: index.html?abrir=CODIGO&escena=lluvia

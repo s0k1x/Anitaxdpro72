@@ -48,6 +48,7 @@
       let anims = [], particles = [], rings = [];
       let shake = 0, flashA = 0, flashCol = '255,255,255', holdFlash = false;
       let iris = 0, cur = null;
+      let banner = null, callA = 0, callVol = 0;
       const cam = { x: 0, y: 0 };
 
       function resize() {
@@ -155,6 +156,37 @@
         ctx.fillStyle = fg; ctx.fillText(text, x, y + .5); ctx.restore();
       }
 
+
+      function drawBanner(cx, cy) {
+        if (!banner) return;
+        const sc = 1 + .5 * (1 - easeOutBack(Math.min(1, banner.t * 4))), al = banner.t > .3 ? clamp((.45 - banner.t) / .15, 0, 1) : 1;
+        ctx.save(); ctx.globalAlpha = al; ctx.translate(cx, cy); ctx.scale(sc, sc);
+        ctx.font = `800 ${46 * S}px "Bricolage Grotesque","DM Sans",system-ui,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.lineWidth = 6 * S; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(60,30,150,.8)'; ctx.strokeText(banner.text, 0, 0);
+        ctx.fillStyle = banner.text === '¡YA!' ? '#ffe29a' : '#ffffff'; ctx.fillText(banner.text, 0, 0); ctx.restore();
+      }
+      function drawCall(apex) {
+        if (callA <= .01) return;
+        const a = callA, p0 = [X(A.x), Y(A.y + 46)], p2 = [X(B.x), Y(B.y + 46)], p1 = [X((A.x + B.x) / 2), Y(A.y + 2 * apex - 46)];
+        ctx.save(); ctx.globalAlpha = a;
+        ctx.setLineDash([5 * S, 6 * S]); ctx.lineDashOffset = -time * 22; ctx.strokeStyle = 'rgba(169,212,255,.65)'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]); ctx.stroke(); ctx.setLineDash([]);
+        for (let k = 0; k < 2; k++) {
+          const u = ((time * .5 + k * .5) % 1), t2 = k ? 1 - u : u;
+          const bx = (1 - t2) * (1 - t2) * p0[0] + 2 * (1 - t2) * t2 * p1[0] + t2 * t2 * p2[0], by = (1 - t2) * (1 - t2) * p0[1] + 2 * (1 - t2) * t2 * p1[1] + t2 * t2 * p2[1];
+          const g = ctx.createRadialGradient(bx, by, 0, bx, by, 9 * S); g.addColorStop(0, 'rgba(255,255,255,.9)'); g.addColorStop(1, 'rgba(169,212,255,0)');
+          ctx.fillStyle = g; ctx.fillRect(bx - 9 * S, by - 9 * S, 18 * S, 18 * S);
+        }
+        const cx = (p0[0] + p2[0]) / 2, cy = Y(A.y + apex + 8);
+        for (let k = -3; k <= 3; k++) {
+          const h = (4 + 14 * callVol * Math.abs(Math.sin(time * 7 + k * .9))) * S;
+          ctx.fillStyle = k % 2 ? 'rgba(201,188,255,.9)' : 'rgba(169,212,255,.9)';
+          rr(ctx, cx + k * 6 * S - 1.6 * S, cy - 20 * S - h / 2, 3.2 * S, h, 1.6 * S); ctx.fill();
+        }
+        ctx.restore();
+        pill('en llamada', cx, cy, 'rgba(8,6,16,.72)', '#efeaff', 11, a);
+      }
+
       function drawChar(c) {
         if (c.alpha <= .01) return;
         const sx = X(c.x), sy = Y(c.y);
@@ -197,9 +229,11 @@
           const p = Math.min(1, (1.4 - Math.min(c.sayT, 1.4)) * 8 + .2), a = Math.min(1, c.sayT * 3);
           ctx.globalAlpha = c.alpha * a; ctx.font = `700 ${12.5 * S}px "DM Sans",system-ui,sans-serif`;
           const bw = ctx.measureText(c.say).width + 18 * S, by = ty - 28 * S - (1 - Math.min(1, p)) * 6 * S;
-          ctx.fillStyle = '#f3f0f9'; rr(ctx, tx - bw / 2, by - 11 * S, bw, 22 * S, 11 * S); ctx.fill();
-          ctx.beginPath(); ctx.moveTo(tx - 4 * S, by + 10.5 * S); ctx.lineTo(tx + 4 * S, by + 10.5 * S); ctx.lineTo(tx, by + 16 * S); ctx.closePath(); ctx.fill();
-          ctx.fillStyle = '#1b1530'; ctx.fillText(c.say, tx, by + .5);
+          const bx = clamp(tx, bw / 2 + 8, W - bw / 2 - 8);   // el globo nunca se sale de la pantalla
+          const tl = clamp(tx, bx - bw / 2 + 12 * S, bx + bw / 2 - 12 * S);
+          ctx.fillStyle = '#f3f0f9'; rr(ctx, bx - bw / 2, by - 11 * S, bw, 22 * S, 11 * S); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(tl - 4 * S, by + 10.5 * S); ctx.lineTo(tl + 4 * S, by + 10.5 * S); ctx.lineTo(tx, by + 16 * S); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#1b1530'; ctx.fillText(c.say, bx, by + .5);
         }
         ctx.restore();
       }
@@ -209,16 +243,127 @@
          Cada escena: enter() · update(dt) · bg() · mid() · fg() · run(i)
          ===================================================== */
 
-      /* ---------- 1 · OBBY (un obby de Roblox) ---------- */
-      function obbyScene() {
+      /* ---------- 1 · OBBY CREATOR (concurso: quién construye mejor la casa) ---------- */
+      function contestScene() {
+        const BS = 18, HX = [-80, 80];
+        const slab = { kind: 'step', cx: 0, w: 340, y: 0, alt: 1, top: '#8f82d8', front: '#2f2766' };
+        const F1 = mkFriend('#ffd9ee', '#e58fc0', '#8a3a72', 1), F2 = mkFriend('#cdf5e0', '#6fcf9f', '#2f7a5a', -1);
+        // casa de piedra con "cabeza": 3 de ancho, 5 de alto, puerta hueca y una nariz que sobresale
+        const plan = [];
+        for (let r = 0; r < 5; r++) for (let c = -1; c <= 1; c++) { if (c === 0 && r < 2) continue; plan.push([r, c]); }
+        plan.push([2, 2]);
+        const COL = [['#a9d4ff', '#bfe3ff', '#8fc3ff'], ['#c9bcff', '#d6cbff', '#b19cff']];
+        const houses = HX.map((cx, h) => {
+          const side = h === 0 ? 1 : -1;
+          return plan.map(([r, c]) => { const nose = (r === 2 && c === 2); return { tx: cx + (nose ? side * 2 : c) * BS, ty: r * BS + BS / 2, col: nose ? COL[h][2] : COL[h][r % 2], st: 0, x: 0, y: 0, rot: 0, sq: 0 }; });
+        });
+        const det = [0, 0], score = [0, 0], NOTA = ['10', '9']; let challenge = 0;
+        return {
+          enter() { cam.x = 0; cam.y = 0; reset(A, -128, 0, 1); reset(B, 128, 0, -1); reset(F1, -18, 0, 1); reset(F2, 18, 0, -1); chars.push(F1, F2); },
+          update(dt) { houses.forEach(hs => hs.forEach(b => { b.sq = Math.max(0, b.sq - dt * 3); })); },
+          bg() {
+            ctx.strokeStyle = 'rgba(169,212,255,.06)'; ctx.lineWidth = 1;
+            for (let gx = -200; gx <= 200; gx += 26) { ctx.beginPath(); ctx.moveTo(X(gx), 0); ctx.lineTo(X(gx), H); ctx.stroke(); }
+            for (let gy = -80; gy <= 340; gy += 26) { ctx.beginPath(); ctx.moveTo(0, Y(gy)); ctx.lineTo(W, Y(gy)); ctx.stroke(); }
+            drawFarCubes(.2); haze('110,80,220', .16);
+          },
+          mid() {
+            plat(slab);
+            houses.forEach((hs, h) => {
+              hs.forEach(b => {
+                if (!b.st) return;
+                const s = (BS - 1.5) * S;
+                ctx.save(); ctx.translate(X(b.x), Y(b.y)); ctx.rotate(b.st === 1 ? b.rot : 0); ctx.scale(1 + .16 * b.sq, 1 - .22 * b.sq);
+                ctx.fillStyle = b.col; rr(ctx, -s / 2, -s / 2, s, s, 3.5 * S); ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,.35)'; rr(ctx, -s / 2 + 2.5 * S, -s / 2 + 2.5 * S, s - 5 * S, 3 * S, 1.5 * S); ctx.fill();
+                ctx.strokeStyle = 'rgba(30,20,80,.45)'; ctx.lineWidth = 1.1; rr(ctx, -s / 2, -s / 2, s, s, 3.5 * S); ctx.stroke();
+                ctx.restore();
+              });
+              const d = det[h]; if (d <= .01) return;
+              const cx = HX[h];
+              ctx.globalAlpha = d;
+              ctx.fillStyle = '#1a1235'; rr(ctx, X(cx) - (BS - 5) / 2 * S, Y(2 * BS - 1), (BS - 5) * S, (2 * BS - 1) * S, 5 * S); ctx.fill();
+              ctx.fillStyle = '#ffe29a'; ctx.beginPath(); ctx.arc(X(cx) + 3 * S, Y(BS * .8), 1.2 * S, 0, TAU); ctx.fill();
+              [-1, 1].forEach(c => { ctx.fillStyle = '#1a1033'; rr(ctx, X(cx + c * BS) - 4.5 * S, Y(3 * BS + BS * .45), 9 * S, 3.4 * S, 1.5 * S); ctx.fill(); });
+              ctx.globalAlpha = 1;
+              // nota del jurado
+              const k = score[h]; if (k > .01) {
+                const sc = easeOutBack(Math.min(1, k)), px = X(cx), py = Y(5 * BS + 18);
+                ctx.save(); ctx.translate(px, py); ctx.scale(sc, sc);
+                ctx.fillStyle = '#f3f0f9'; rr(ctx, -19 * S, -12 * S, 38 * S, 24 * S, 7 * S); ctx.fill();
+                ctx.lineWidth = 2 * S; ctx.strokeStyle = h === 0 ? '#ffe29a' : '#c9bcff'; rr(ctx, -19 * S, -12 * S, 38 * S, 24 * S, 7 * S); ctx.stroke();
+                ctx.fillStyle = '#1b1530'; ctx.font = `800 ${15 * S}px "Bricolage Grotesque","DM Sans",system-ui,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(NOTA[h], 0, 1); ctx.restore();
+              }
+            });
+            if (challenge > .01) pill('reto: la casa de Calamardo', X(0), Y(160), 'rgba(8,6,16,.72)', '#efeaff', 11.5, challenge);
+          },
+          fg() { drawBanner(X(0), Y(112)); drawCall(96); },
+          async run(i) {
+            // Anita está con sus amigos
+            await anim(.6, t => { B.alpha = F1.alpha = F2.alpha = t; });
+            say(F1, 'jajaja', 1.1); await wait(.6);
+            say(B, '¡ahí va!', 1.1); await wait(.8);
+            // llega Mario
+            A.y = 70; ring(A.x, 0, '155,130,255', 44);
+            await anim(.5, t => { A.alpha = t; A.y = lerp(70, 0, smooth(t)); });
+            A.y = 0; A.alpha = 1;
+            await anim(.18, t => { const b = easeOutBack(t); A.sy = .78 + .22 * b; A.sx = 1.18 - .18 * b; });
+            A.sx = A.sy = 1;
+            say(A, '¡hola!', 1.2); await wait(.5);
+            say(B, '¡hola!', 1.1); say(F1, '¡únete!', 1.3); await wait(.9);
+            say(A, '¿un concurso?', 1.6); await wait(.8);
+            say(B, '¡vale!', 1.2); hop(F2, F2.x, 0, { h: 22, dur: .35 }); await wait(.7);
+            anim(.4, t => { challenge = smooth(t); }); await wait(.9);
+            for (const w of ['3', '2', '1', '¡YA!']) { banner = { text: w, t: 0 }; await wait(.45); }
+            banner = null;
+            // a construir: cada uno lanza bloques a su casa
+            const build = async (h, who, gap) => {
+              const fl = [];
+              for (const b of houses[h]) {
+                pulse(who, .2);
+                const x0 = who.x, y0 = 36, x1 = b.tx, y1 = b.ty; b.st = 1; b.x = x0; b.y = y0;
+                fl.push(anim(.45, t => { b.x = lerp(x0, x1, smooth(t)); b.y = lerp(y0, y1, t) + 4 * 40 * t * (1 - t); b.rot = t * 6 * (h ? -1 : 1); })
+                  .then(() => { b.st = 2; b.x = x1; b.y = y1; b.sq = 1; burst(b.x, b.y - BS / 2, 4, ['#d9d2ff', '#a9d4ff'], 45, .4, 90); }));
+                await wait(gap);
+              }
+              await Promise.all(fl);
+            };
+            const doneA = build(0, A, .15).then(() => say(A, '¡terminé!', 1.2));
+            const doneB = build(1, B, .2);
+            await Promise.all([doneA, doneB]);
+            await wait(.3);
+            anim(.7, t => { det[0] = det[1] = smooth(t); });
+            anim(.4, t => { challenge = 1 - smooth(t); });
+            await wait(.9);
+            // el jurado puntúa
+            say(F1, 'a ver…', 1.0); say(F2, 'mmm…', 1.0); await wait(1.0);
+            anim(.5, t => { score[1] = t; }); await wait(.5);
+            anim(.5, t => { score[0] = t; });
+            burst(HX[0], 5 * BS + 16, 36, PARTY, 200, 1.2, 240); ring(HX[0], 0, '255,226,154', 70); shake = 4;
+            say(A, '¡gané!', 1.5); hop(F1, F1.x, 0, { h: 26, dur: .4 });
+            await wait(.7); say(B, '¡revancha!', 1.4); hop(F2, F2.x, 0, { h: 24, dur: .4 });
+            await wait(1.0);
+            // te mete en llamada
+            say(B, 'te meto en llamada', 1.9); await wait(1.0);
+            ring(0, 30, '169,212,255', 70);
+            await anim(.5, t => { callA = smooth(t); });
+            say(A, 'vale', 1.2);
+            await wait(.7);
+            await opts.card.show(i);
+            await opts.card.hide();
+          }
+        };
+      }
+
+      /* ---------- 3 · CARRERA (retos y revanchas) ---------- */
+      function raceScene() {
         const LAVA = -132;
         const L = { kind: 'step', cx: -92, w: 44, y: 10, alt: 1 };
         const pad = { kind: 'pad', cx: 0, w: 80, y: 0, flag: 0, glow: 0, i: 0 };
         const s1 = { kind: 'step', cx: 92, w: 44, y: 10, alt: 0 };
         const s2 = { kind: 'step', cx: 166, w: 44, y: 12, alt: 1 };
         const plats = [L, pad, s1, s2];
-        const F1 = mkFriend('#ffd9ee', '#e58fc0', '#8a3a72', -1), F2 = mkFriend('#cdf5e0', '#6fcf9f', '#2f7a5a', -1);
-        let banner = null, call = 0, vol = 0;
         const arrive = () => {
           ring(pad.cx, pad.y, '201,188,255', 70); ring(pad.cx, pad.y, '169,212,255', 46);
           burst(pad.cx, pad.y + 20, 34, PAL, 190, 1.1, 240);
@@ -226,13 +371,8 @@
           anim(.9, t => { pad.flag = smooth(t); });
         };
         return {
-          enter() {
-            cam.x = 36; cam.y = 6;
-            reset(A, L.cx, L.y, 1); reset(B, s1.cx, s1.y, -1);
-            reset(F1, s2.cx - 10, s2.y, -1); reset(F2, s2.cx + 10, s2.y, -1);
-            chars.push(F1, F2);
-          },
-          update(dt) { decay(plats, dt); if (banner) banner.t += dt; vol = lerp(vol, call > .5 ? 1 : 0, Math.min(1, dt * 5)); },
+          enter() { cam.x = 36; cam.y = 6; reset(A, L.cx, L.y, 1); reset(B, s1.cx, s1.y, -1); },
+          update(dt) { decay(plats, dt); },
           bg() {
             const mx = W * .86, my = H * .105;
             const mg = ctx.createRadialGradient(mx, my, 0, mx, my, 70 * S);
@@ -258,80 +398,30 @@
             ctx.fillStyle = '#ff5c7a'; rr(ctx, x - w / 2, top - 3.5 * S, Math.max(w, 6 * S), 7 * S, 3.5 * S); ctx.fill();
             ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fillRect(x - w / 2 + 2, top - 2.5 * S, Math.max(w - 4, 2), 1.4);
             ctx.fillStyle = '#ffb3c2'; ctx.beginPath(); ctx.arc(x, top, 4 * S, 0, TAU); ctx.fill();
-            // meta: bandera y cartel
             const fx = X(pad.cx + 33), y = Y(pad.y);
             ctx.strokeStyle = '#e9e4fa'; ctx.lineWidth = 1.6 * S; ctx.beginPath(); ctx.moveTo(fx, y); ctx.lineTo(fx, y - 40 * S); ctx.stroke();
             const fy = y - 6 * S - 28 * S * (pad.flag || 0);
             ctx.fillStyle = '#a9d4ff'; ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx + 17 * S, fy + 5.5 * S); ctx.lineTo(fx, fy + 11 * S); ctx.closePath(); ctx.fill();
             const sx = X(pad.cx - 33);
-            ctx.fillStyle = 'rgba(8,6,16,.7)'; rr(ctx, sx - 8 * S, y - 22 * S, 16 * S, 14 * S, 3 * S); ctx.fill();
-            ctx.strokeStyle = 'rgba(201,188,255,.7)'; ctx.lineWidth = 1; rr(ctx, sx - 8 * S, y - 22 * S, 16 * S, 14 * S, 3 * S); ctx.stroke();
-            ctx.fillStyle = '#d6cbff'; ctx.font = `700 ${9 * S}px "DM Sans",system-ui,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'rgba(8,6,16,.7)'; rr(ctx, sx - 11 * S, y - 22 * S, 22 * S, 14 * S, 3 * S); ctx.fill();
+            ctx.strokeStyle = 'rgba(201,188,255,.7)'; ctx.lineWidth = 1; rr(ctx, sx - 11 * S, y - 22 * S, 22 * S, 14 * S, 3 * S); ctx.stroke();
+            ctx.fillStyle = '#d6cbff'; ctx.font = `700 ${8 * S}px "DM Sans",system-ui,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText('META', sx, y - 15 * S);
             ctx.strokeStyle = 'rgba(233,228,250,.6)'; ctx.beginPath(); ctx.moveTo(sx, y - 8 * S); ctx.lineTo(sx, y); ctx.stroke();
           },
-          fg() {
-            // cuenta atrás de la carrera
-            if (banner) {
-              const u = Math.min(1, banner.t / .5), sc = 1 + .5 * (1 - easeOutBack(Math.min(1, banner.t * 4))), al = banner.t > .4 ? clamp((.55 - banner.t) / .15, 0, 1) : 1;
-              ctx.save(); ctx.globalAlpha = al; ctx.translate(X(36), Y(112)); ctx.scale(sc, sc);
-              ctx.font = `800 ${46 * S}px "Bricolage Grotesque","DM Sans",system-ui,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-              ctx.lineWidth = 6 * S; ctx.strokeStyle = 'rgba(60,30,150,.8)'; ctx.strokeText(banner.text, 0, 0);
-              ctx.fillStyle = banner.text === '¡YA!' ? '#ffe29a' : '#ffffff'; ctx.fillText(banner.text, 0, 0); ctx.restore(); void u;
-            }
-            // llamada entre los dos
-            if (call > .01) {
-              const a = call, p0 = [X(A.x), Y(A.y + 46)], p1 = [X((A.x + B.x) / 2), Y(A.y + 118)], p2 = [X(B.x), Y(B.y + 46)];
-              ctx.save(); ctx.globalAlpha = a;
-              ctx.setLineDash([5 * S, 6 * S]); ctx.lineDashOffset = -time * 22; ctx.strokeStyle = 'rgba(169,212,255,.65)'; ctx.lineWidth = 1.6;
-              ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]); ctx.stroke(); ctx.setLineDash([]);
-              for (let k = 0; k < 2; k++) {
-                const u = ((time * .5 + k * .5) % 1), t2 = k ? 1 - u : u;
-                const bx = (1 - t2) * (1 - t2) * p0[0] + 2 * (1 - t2) * t2 * p1[0] + t2 * t2 * p2[0], by = (1 - t2) * (1 - t2) * p0[1] + 2 * (1 - t2) * t2 * p1[1] + t2 * t2 * p2[1];
-                const g = ctx.createRadialGradient(bx, by, 0, bx, by, 9 * S); g.addColorStop(0, 'rgba(255,255,255,.9)'); g.addColorStop(1, 'rgba(169,212,255,0)');
-                ctx.fillStyle = g; ctx.fillRect(bx - 9 * S, by - 9 * S, 18 * S, 18 * S);
-              }
-              const cx = (p0[0] + p2[0]) / 2, cy = Y(A.y + 84);
-              for (let k = -3; k <= 3; k++) {
-                const h = (4 + 14 * vol * Math.abs(Math.sin(time * 7 + k * .9))) * S;
-                ctx.fillStyle = k % 2 ? 'rgba(201,188,255,.9)' : 'rgba(169,212,255,.9)';
-                rr(ctx, cx + k * 6 * S - 1.6 * S, cy - 20 * S - h / 2, 3.2 * S, h, 1.6 * S); ctx.fill();
-              }
-              ctx.restore();
-              pill('en llamada', cx, cy, 'rgba(8,6,16,.72)', '#efeaff', 11, a);
-            }
-          },
+          fg() { drawBanner(X(36), Y(112)); },
           async run(i) {
-            // Anita está con sus amigos
-            await anim(.7, t => { B.alpha = F1.alpha = F2.alpha = t; });
-            say(F1, 'jajaja', 1.1); await wait(.7);
-            say(B, '¡ahí va!', 1.1); await wait(1.0);
-            // llega Mario
-            A.x = L.cx; A.y = L.y + 70; A.look = 1; ring(L.cx, L.y, '155,130,255', 44);
-            await anim(.5, t => { A.alpha = t; A.y = lerp(L.y + 70, L.y, smooth(t)); });
-            A.y = L.y; A.alpha = 1;
-            await anim(.18, t => { const b = easeOutBack(t); A.sy = .78 + .22 * b; A.sx = 1.18 - .18 * b; });
-            A.sx = A.sy = 1;
-            say(A, '¡hola!', 1.2); await wait(.6);
-            say(B, '¡hola!', 1.1); say(F1, '¡únete!', 1.3); await wait(1.1);
-            say(A, '¿una carrera?', 1.6); await wait(.9);
-            say(B, '¡vale!', 1.2); hop(F2, F2.x, F2.y, { h: 22, dur: .35 }); await wait(.9);
-            // cuenta atrás y carrera
-            for (const w of ['3', '2', '1', '¡YA!']) { banner = { text: w, t: 0 }; await wait(.55); }
+            await anim(.7, t => { A.alpha = B.alpha = t; });
+            say(B, '¿otra carrera?', 1.5); await wait(1.0);
+            say(A, '¡dale!', 1.2); await wait(.8);
+            for (const w of ['3', '2', '1', '¡YA!']) { banner = { text: w, t: 0 }; await wait(.45); }
             banner = null;
-            hop(F1, F1.x, F1.y, { h: 24, dur: .38 });
-            await Promise.all([hop(A, pad.cx - 20, pad.y, { h: 60, dur: .58 }), hop(B, pad.cx + 20, pad.y, { h: 56, dur: .64 })]);
+            await Promise.all([hop(A, pad.cx - 20, pad.y, { h: 60, dur: .64 }), hop(B, pad.cx + 20, pad.y, { h: 56, dur: .58 })]);
             B.look = -1; A.look = 1;
             arrive();
-            say(A, '¡gané!', 1.5); hop(F2, F2.x, F2.y, { h: 26, dur: .4 });
-            await wait(.7); say(B, '¡revancha!', 1.4);
-            await wait(1.4);
-            // te mete en llamada
-            say(B, 'te meto en llamada', 1.9); await wait(1.0);
-            ring(0, 30, '169,212,255', 70); burst(0, 50, 18, ['#a9d4ff', '#ffffff', '#c9bcff'], 100, 1, 60);
-            await anim(.5, t => { call = smooth(t); });
-            say(A, 'vale', 1.2);
-            await wait(.8);
+            say(B, '¡gané!', 1.1);
+            await wait(1.2); say(A, '¡revancha!', 1.4);
+            await wait(1.0);
             await opts.card.show(i);
             await opts.card.hide();
           }
@@ -804,12 +894,12 @@
         };
       }
 
-      const REG = { obby: obbyScene, chat: chatScene, build: buildScene, noche: nightScene, lluvia: rainScene, fiesta: partyScene, hoguera: campScene, portal: portalScene };
+      const REG = { obby: contestScene, carrera: raceScene, chat: chatScene, build: buildScene, noche: nightScene, lluvia: rainScene, fiesta: partyScene, hoguera: campScene, portal: portalScene };
 
       /* ---------- Transición en iris entre mundos ---------- */
       async function goto(name) {
         if (cur) { await anim(.5, t => { iris = 1 - smooth(t); }); iris = 0; }
-        particles = []; rings = []; shake = 0; chars.length = 2;
+        particles = []; rings = []; shake = 0; chars.length = 2; banner = null; callA = 0;
         cur = (REG[name] || REG.obby)();
         cur.enter();
         await anim(.65, t => { iris = smooth(t); });
@@ -826,6 +916,8 @@
           if (p >= 1) { anims.splice(i, 1); a.res(); }
         }
         shake *= Math.pow(.02, dt);
+        if (banner) banner.t += dt;
+        callVol = lerp(callVol, callA > .5 ? 1 : 0, Math.min(1, dt * 5));
         if (!holdFlash) flashA = Math.max(0, flashA - dt * 1.8);
         for (let i = particles.length - 1; i >= 0; i--) {
           const q = particles[i]; q.life -= dt; if (q.life <= 0) { particles.splice(i, 1); continue; }
