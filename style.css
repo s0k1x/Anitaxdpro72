@@ -55,7 +55,7 @@ h1,h2,h3{font-family:'Playfair Display',Georgia,serif;margin:0}
 /* ===== Pantallas (carga + intro) ===== */
 .screen{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;transition:opacity .8s}
 .screen.fade-out{opacity:0}
-#loader{background:var(--bg)}
+#loader{background:transparent}
 /* Campamento de carga (Uiverse by Admin12121) con cielo en morado/azul pastel */
 .loader-wrap{--s:1;width:calc(400px*var(--s));height:calc(300px*var(--s));margin-bottom:22px}
 @media (max-width:440px){.loader-wrap{--s:.75}}
@@ -64,8 +64,8 @@ h1,h2,h3{font-family:'Playfair Display',Georgia,serif;margin:0}
 .loader-wrap .camp{transform:scale(var(--s));transform-origin:0 0}
 
 @keyframes stageBackground{
-  0%,10%,90%,100%{background-color:#a8d8ff}
-  25%,75%{background-color:#1a1240}
+  0%,10%,90%,100%{background-color:#9db4f0}
+  25%,75%{background-color:#120d2b}
 }
 @keyframes earthRotation{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes sunrise{
@@ -97,8 +97,11 @@ h1,h2,h3{font-family:'Playfair Display',Georgia,serif;margin:0}
 @keyframes fireLines{0%,25%,75%,100%{bottom:0}50%{bottom:5%}}
 
 .camp{display:flex;margin:0;justify-content:center;align-items:flex-end;width:400px;height:300px;position:relative;
-  border-radius:22px;overflow:hidden;background-color:#a8d8ff;animation:stageBackground 5s ease-in-out infinite;
-  box-shadow:0 0 60px rgba(167,139,250,.4),0 0 0 6px rgba(167,139,250,.18)}
+  overflow:hidden;background-color:#9db4f0;animation:stageBackground 5s ease-in-out infinite;
+  -webkit-mask-image:radial-gradient(ellipse 70% 72% at 50% 52%,#000 62%,transparent 100%);
+  mask-image:radial-gradient(ellipse 70% 72% at 50% 52%,#000 62%,transparent 100%)}
+.loader-wrap{position:relative}
+.loader-wrap::before{content:"";position:absolute;inset:-14%;z-index:-1;pointer-events:none;background:radial-gradient(closest-side,rgba(167,139,250,.30),rgba(120,160,240,.12) 60%,transparent);filter:blur(12px)}
 .camp .forest{display:flex;width:75%;height:90%;position:relative}
 .camp .tree{display:block;width:50%;position:absolute;bottom:0;opacity:.4}
 .camp .tree .branch{width:80%;height:0;margin:0 auto;padding-left:40%;padding-bottom:50%;overflow:hidden}
