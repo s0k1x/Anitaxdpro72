@@ -29,7 +29,7 @@ const DATA = {
   // Puedes poner todas las etapas que quieras; si pones más de 7 se repiten las escenas.
   // "foto" es opcional: pon el nombre de la imagen (ej: "fotos/1.jpg") o déjalo vacío.
   eventos: [
-    { escena: "obby", cuando: "20 · 08 · 2022", titulo: "Nos conocimos en Obby Creator", texto: "Estabas con unos amigos y me uní. Hicimos un concurso: quién construía mejor la casa de Calamardo de Bob Esponja. Gané yo, me metiste en llamada y desde ahí hablamos casi todos los días.", foto: "" },
+    { escena: "obby", cuando: "20 · 08 · 2022", titulo: "Nos conocimos en Obby Creator", texto: "Estabas con unos amigos y me uní. Hice un concurso con uno de ellos: quién construía mejor la casa de Calamardo de Bob Esponja. Gané, me metiste en llamada y desde ahí hablamos casi todos los días.", foto: "" },
     { escena: "chat", cuando: "Las primeras semanas", titulo: "Cada día, otra partida", texto: "Desde esa llamada casi no hubo un día sin hablar: de todo, de nada, a todas horas y sin querer que terminara.", foto: "" },
     { escena: "carrera", cuando: "Retos y revanchas", titulo: "Siempre una revancha más", texto: "Cada partida acababa en otro reto: quién llegaba antes, quién caía menos y quién ganaba la revancha.", foto: "" },
     { escena: "noche", cuando: "Noches sin dormir", titulo: "Hasta la madrugada", texto: "Esas conversaciones que se alargaban sin darnos cuenta, cuando ya no importaba ni la hora ni el juego.", foto: "" },

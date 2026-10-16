@@ -245,22 +245,48 @@
 
       /* ---------- 1 · OBBY CREATOR (concurso: quién construye mejor la casa) ---------- */
       function contestScene() {
-        const BS = 18, HX = [-80, 80];
-        const slab = { kind: 'step', cx: 0, w: 340, y: 0, alt: 1, top: '#8f82d8', front: '#2f2766' };
+        const BS = 10, R = 13, HX = [-88, 88];
+        const slab = { kind: 'step', cx: 0, w: 350, y: 0, alt: 1, top: '#8f82d8', front: '#2f2766' };
         const F1 = mkFriend('#ffd9ee', '#e58fc0', '#8a3a72', 1), F2 = mkFriend('#cdf5e0', '#6fcf9f', '#2f7a5a', -1);
-        // casa de piedra con "cabeza": 3 de ancho, 5 de alto, puerta hueca y una nariz que sobresale
-        const plan = [];
-        for (let r = 0; r < 5; r++) for (let c = -1; c <= 1; c++) { if (c === 0 && r < 2) continue; plan.push([r, c]); }
-        plan.push([2, 2]);
-        const COL = [['#a9d4ff', '#bfe3ff', '#8fc3ff'], ['#c9bcff', '#d6cbff', '#b19cff']];
-        const houses = HX.map((cx, h) => {
-          const side = h === 0 ? 1 : -1;
-          return plan.map(([r, c]) => { const nose = (r === 2 && c === 2); return { tx: cx + (nose ? side * 2 : c) * BS, ty: r * BS + BS / 2, col: nose ? COL[h][2] : COL[h][r % 2], st: 0, x: 0, y: 0, rot: 0, sq: 0 }; });
+        // Casa de piedra con forma de cabeza: frente plana, ceja marcada, ojos huecos,
+        // nariz grande que sobresale, boca y puerta abajo.
+        // # piedra · B ceja · N nariz · E ojo · M boca · D puerta · . vacío
+        const ART = [
+          '######',
+          '######',
+          'BBBBBB',
+          '#E##E#',
+          '##NN##',
+          '##NN##NN',
+          '##NN##NN',
+          '##NN##NN',
+          '######',
+          '#MMMM#',
+          '.####.',
+          '.#DD#.',
+          '.#DD#.'
+        ];
+        const PAL2 = [
+          { base: '#9fcdfb', alt: '#b7dcff', brow: '#7fb4ee', nose: '#d6ebff' },
+          { base: '#f7b6d8', alt: '#ffcbe5', brow: '#e08fbc', nose: '#ffe2f0' }
+        ];
+        const cellXY = (h, r, c) => { const side = h === 0 ? 1 : -1; return [HX[h] + side * (c - 2.5) * BS, (R - 1 - r) * BS + BS / 2]; };
+        const houses = [0, 1].map(h => {
+          const blocks = [], holes = [];
+          ART.forEach((row, r) => [...row].forEach((ch, c) => {
+            if (ch === '.') return;
+            const [x, y] = cellXY(h, r, c);
+            if (ch === 'E' || ch === 'M' || ch === 'D') { holes.push({ x, y, ch, c }); return; }
+            const p = PAL2[h];
+            const col = ch === 'B' ? p.brow : ch === 'N' ? p.nose : (r % 2 ? p.alt : p.base);
+            blocks.push({ r, c, tx: x, ty: y, col, st: 0, x: 0, y: 0, rot: 0, sq: 0 });
+          }));
+          return { blocks, holes };
         });
-        const det = [0, 0], score = [0, 0], NOTA = ['10', '9']; let challenge = 0;
+        const det = [0, 0], score = [0, 0], NOTA = ['10', '9']; let challenge = 0, scoreFade = 1;
         return {
-          enter() { cam.x = 0; cam.y = 0; reset(A, -128, 0, 1); reset(B, 128, 0, -1); reset(F1, -18, 0, 1); reset(F2, 18, 0, -1); chars.push(F1, F2); },
-          update(dt) { houses.forEach(hs => hs.forEach(b => { b.sq = Math.max(0, b.sq - dt * 3); })); },
+          enter() { cam.x = 0; cam.y = 0; reset(A, -146, 0, 1); reset(B, 10, 0, -1); reset(F2, 36, 0, -1); reset(F1, 62, 0, -1); chars.push(F1, F2); },
+          update(dt) { houses.forEach(hs => hs.blocks.forEach(b => { b.sq = Math.max(0, b.sq - dt * 3); })); },
           bg() {
             ctx.strokeStyle = 'rgba(169,212,255,.06)'; ctx.lineWidth = 1;
             for (let gx = -200; gx <= 200; gx += 26) { ctx.beginPath(); ctx.moveTo(X(gx), 0); ctx.lineTo(X(gx), H); ctx.stroke(); }
@@ -270,39 +296,46 @@
           mid() {
             plat(slab);
             houses.forEach((hs, h) => {
-              hs.forEach(b => {
+              hs.blocks.forEach(b => {
                 if (!b.st) return;
-                const s = (BS - 1.5) * S;
+                const s = (BS - .8) * S;
                 ctx.save(); ctx.translate(X(b.x), Y(b.y)); ctx.rotate(b.st === 1 ? b.rot : 0); ctx.scale(1 + .16 * b.sq, 1 - .22 * b.sq);
-                ctx.fillStyle = b.col; rr(ctx, -s / 2, -s / 2, s, s, 3.5 * S); ctx.fill();
-                ctx.fillStyle = 'rgba(255,255,255,.35)'; rr(ctx, -s / 2 + 2.5 * S, -s / 2 + 2.5 * S, s - 5 * S, 3 * S, 1.5 * S); ctx.fill();
-                ctx.strokeStyle = 'rgba(30,20,80,.45)'; ctx.lineWidth = 1.1; rr(ctx, -s / 2, -s / 2, s, s, 3.5 * S); ctx.stroke();
+                ctx.fillStyle = b.col; rr(ctx, -s / 2, -s / 2, s, s, 1.8 * S); ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fillRect(-s / 2 + 1.2 * S, -s / 2 + 1.2 * S, s - 2.4 * S, 1.6 * S);
+                ctx.strokeStyle = 'rgba(30,20,80,.4)'; ctx.lineWidth = 1; rr(ctx, -s / 2, -s / 2, s, s, 1.8 * S); ctx.stroke();
                 ctx.restore();
               });
               const d = det[h]; if (d <= .01) return;
-              const cx = HX[h];
               ctx.globalAlpha = d;
-              ctx.fillStyle = '#1a1235'; rr(ctx, X(cx) - (BS - 5) / 2 * S, Y(2 * BS - 1), (BS - 5) * S, (2 * BS - 1) * S, 5 * S); ctx.fill();
-              ctx.fillStyle = '#ffe29a'; ctx.beginPath(); ctx.arc(X(cx) + 3 * S, Y(BS * .8), 1.2 * S, 0, TAU); ctx.fill();
-              [-1, 1].forEach(c => { ctx.fillStyle = '#1a1033'; rr(ctx, X(cx + c * BS) - 4.5 * S, Y(3 * BS + BS * .45), 9 * S, 3.4 * S, 1.5 * S); ctx.fill(); });
+              hs.holes.forEach(o => {
+                const s = BS * S;
+                const ex = X(o.x), ey = Y(o.y);
+                if (o.ch === 'E') {
+                  ctx.fillStyle = '#ffe9a8'; ctx.fillRect(ex - s / 2, ey - s / 2, s, s);                 // ventana encendida
+                  ctx.fillStyle = '#2a1a55'; ctx.fillRect(ex - 2 * S + (h === 0 ? 1.4 : -1.4) * S, ey - 1.6 * S, 4 * S, 4 * S); // pupila hacia el centro
+                } else {
+                  ctx.fillStyle = o.ch === 'D' ? '#241548' : '#150d2c'; ctx.fillRect(ex - s / 2, ey - s / 2, s, s);
+                }
+              });
+              const k0 = hs.holes.filter(o => o.ch === 'D').sort((p, q) => p.c - q.c);
+              if (k0.length) { const o = k0[h === 0 ? 3 : 0]; ctx.fillStyle = '#ffe29a'; ctx.beginPath(); ctx.arc(X(o.x) + (h === 0 ? -3 : 3) * S, Y(o.y + BS * .5), 1.3 * S, 0, TAU); ctx.fill(); }
               ctx.globalAlpha = 1;
-              // nota del jurado
               const k = score[h]; if (k > .01) {
-                const sc = easeOutBack(Math.min(1, k)), px = X(cx), py = Y(5 * BS + 18);
-                ctx.save(); ctx.translate(px, py); ctx.scale(sc, sc);
+                const sc = easeOutBack(Math.min(1, k)), px = X(HX[h] + (h === 0 ? 1 : -1) * BS * 1), py = Y(R * BS + 22);
+                ctx.save(); ctx.globalAlpha = scoreFade; ctx.translate(px, py); ctx.scale(sc, sc);
                 ctx.fillStyle = '#f3f0f9'; rr(ctx, -19 * S, -12 * S, 38 * S, 24 * S, 7 * S); ctx.fill();
-                ctx.lineWidth = 2 * S; ctx.strokeStyle = h === 0 ? '#ffe29a' : '#c9bcff'; rr(ctx, -19 * S, -12 * S, 38 * S, 24 * S, 7 * S); ctx.stroke();
+                ctx.lineWidth = 2 * S; ctx.strokeStyle = h === 0 ? '#ffe29a' : '#e58fc0'; rr(ctx, -19 * S, -12 * S, 38 * S, 24 * S, 7 * S); ctx.stroke();
                 ctx.fillStyle = '#1b1530'; ctx.font = `800 ${15 * S}px "Bricolage Grotesque","DM Sans",system-ui,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillText(NOTA[h], 0, 1); ctx.restore();
               }
             });
-            if (challenge > .01) pill('reto: la casa de Calamardo', X(0), Y(160), 'rgba(8,6,16,.72)', '#efeaff', 11.5, challenge);
+            if (challenge > .01) pill('reto: la casa de Calamardo', X(0), Y(172), 'rgba(8,6,16,.72)', '#efeaff', 11.5, challenge);
           },
-          fg() { drawBanner(X(0), Y(112)); drawCall(96); },
+          fg() { drawBanner(X(0), Y(112)); drawCall(92); },
           async run(i) {
-            // Anita está con sus amigos
+            // Anita está con sus amigos, en el centro
             await anim(.6, t => { B.alpha = F1.alpha = F2.alpha = t; });
-            say(F1, 'jajaja', 1.1); await wait(.6);
+            say(F2, 'jajaja', 1.1); await wait(.6);
             say(B, '¡ahí va!', 1.1); await wait(.8);
             // llega Mario
             A.y = 70; ring(A.x, 0, '155,130,255', 44);
@@ -311,42 +344,48 @@
             await anim(.18, t => { const b = easeOutBack(t); A.sy = .78 + .22 * b; A.sx = 1.18 - .18 * b; });
             A.sx = A.sy = 1;
             say(A, '¡hola!', 1.2); await wait(.5);
-            say(B, '¡hola!', 1.1); say(F1, '¡únete!', 1.3); await wait(.9);
+            say(B, '¡hola!', 1.1); say(F2, '¡únete!', 1.3); await wait(.9);
             say(A, '¿un concurso?', 1.6); await wait(.8);
-            say(B, '¡vale!', 1.2); hop(F2, F2.x, 0, { h: 22, dur: .35 }); await wait(.7);
+            // un amigo de Anita acepta y se va a su parcela
+            say(F1, '¡yo juego!', 1.3); await wait(.5);
+            await hop(F1, 146, 0, { h: 44, dur: .7 }); F1.look = -1;
             anim(.4, t => { challenge = smooth(t); }); await wait(.9);
             for (const w of ['3', '2', '1', '¡YA!']) { banner = { text: w, t: 0 }; await wait(.45); }
             banner = null;
-            // a construir: cada uno lanza bloques a su casa
+            // a construir: Mario contra el amigo de Anita (se lanzan bloques de dos en dos, de abajo arriba)
             const build = async (h, who, gap) => {
-              const fl = [];
-              for (const b of houses[h]) {
+              const list = houses[h].blocks.slice().sort((p, q) => q.r - p.r || p.c - q.c), fl = [];
+              for (let k = 0; k < list.length; k += 2) {
                 pulse(who, .2);
-                const x0 = who.x, y0 = 36, x1 = b.tx, y1 = b.ty; b.st = 1; b.x = x0; b.y = y0;
-                fl.push(anim(.45, t => { b.x = lerp(x0, x1, smooth(t)); b.y = lerp(y0, y1, t) + 4 * 40 * t * (1 - t); b.rot = t * 6 * (h ? -1 : 1); })
-                  .then(() => { b.st = 2; b.x = x1; b.y = y1; b.sq = 1; burst(b.x, b.y - BS / 2, 4, ['#d9d2ff', '#a9d4ff'], 45, .4, 90); }));
+                for (const b of list.slice(k, k + 2)) {
+                  const x0 = who.x, y0 = 36, x1 = b.tx, y1 = b.ty, up = 22 + y1 * .28; b.st = 1; b.x = x0; b.y = y0;
+                  fl.push(anim(.45, t => { b.x = lerp(x0, x1, smooth(t)); b.y = lerp(y0, y1, t) + 4 * up * t * (1 - t); b.rot = t * 6 * (h ? -1 : 1); })
+                    .then(() => { b.st = 2; b.x = x1; b.y = y1; b.sq = 1; if (Math.random() < .35) burst(b.x, b.y - BS / 2, 3, ['#d9d2ff', '#a9d4ff'], 40, .35, 90); }));
+                }
                 await wait(gap);
               }
               await Promise.all(fl);
             };
-            const doneA = build(0, A, .15).then(() => say(A, '¡terminé!', 1.2));
-            const doneB = build(1, B, .2);
+            const doneA = build(0, A, .1).then(() => say(A, '¡terminé!', 1.2));
+            const doneB = build(1, F1, .125);
             await Promise.all([doneA, doneB]);
             await wait(.3);
             anim(.7, t => { det[0] = det[1] = smooth(t); });
             anim(.4, t => { challenge = 1 - smooth(t); });
             await wait(.9);
-            // el jurado puntúa
-            say(F1, 'a ver…', 1.0); say(F2, 'mmm…', 1.0); await wait(1.0);
+            // Anita y su otro amigo hacen de jurado
+            say(B, 'a ver…', 1.0); say(F2, 'mmm…', 1.0); await wait(1.0);
             anim(.5, t => { score[1] = t; }); await wait(.5);
             anim(.5, t => { score[0] = t; });
-            burst(HX[0], 5 * BS + 16, 36, PARTY, 200, 1.2, 240); ring(HX[0], 0, '255,226,154', 70); shake = 4;
-            say(A, '¡gané!', 1.5); hop(F1, F1.x, 0, { h: 26, dur: .4 });
-            await wait(.7); say(B, '¡revancha!', 1.4); hop(F2, F2.x, 0, { h: 24, dur: .4 });
+            burst(HX[0], R * BS + 16, 36, PARTY, 200, 1.2, 240); ring(HX[0], 0, '255,226,154', 80); shake = 4;
+            say(A, '¡gané!', 1.5); hop(B, B.x, 0, { h: 28, dur: .4 });
+            await wait(.7); say(F1, '¡bien jugado!', 1.5); hop(F2, F2.x, 0, { h: 24, dur: .4 });
             await wait(1.0);
-            // te mete en llamada
-            say(B, 'te meto en llamada', 1.9); await wait(1.0);
-            ring(0, 30, '169,212,255', 70);
+            // Anita te mete en llamada: vienes saltando sobre tu casa hasta ella
+            anim(.5, t => { scoreFade = 1 - t; });
+            say(B, 'te meto en llamada', 1.9); await wait(.9);
+            await hop(A, -24, 0, { h: 170, dur: 1.0 }); A.look = 1;
+            ring(-7, 30, '169,212,255', 70);
             await anim(.5, t => { callA = smooth(t); });
             say(A, 'vale', 1.2);
             await wait(.7);
