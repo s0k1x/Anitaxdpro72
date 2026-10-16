@@ -21,15 +21,24 @@ const DATA = {
   amistadDesde: "2022-08-20",
   amistadNota: "desde el 20 de agosto de 2022, en Obby Creator",
 
-  // Cada recuerdo es una ETAPA del obby en la animación y luego sale en la línea del tiempo.
+  // Cada recuerdo es una ETAPA de la animación y luego sale en la línea del tiempo.
+  // "escena" es el mundo animado de esa etapa. Opciones:
+  //   obby (un obby de Roblox) · chat (conversaciones) · build (construir juntos) · noche (estrellas)
+  //   lluvia (un mal momento y el sol) · fiesta (celebrar) · hoguera (tranquilidad)
+  // Puedes poner todas las etapas que quieras; si pones más de 7 se repiten las escenas.
   // "foto" es opcional: pon el nombre de la imagen (ej: "fotos/1.jpg") o déjalo vacío.
   eventos: [
-    { cuando: "20 · 08 · 2022", titulo: "Nos conocimos en Obby Creator", texto: "Una partida cualquiera, un obby imposible y dos jugadores que acabaron saltando hasta el final, uno al lado del otro.", foto: "" },
-    { cuando: "Las primeras semanas", titulo: "Cada día, otra partida", texto: "Dejamos de jugar por jugar: empezamos a quedar para hablar, reírnos y no rendirnos en los obbys imposibles.", foto: "" },
-    { cuando: "Un día cualquiera", titulo: "Una de nuestras mil risas", texto: "Ese recuerdo absurdo que solo entendemos nosotros. Cuéntalo aquí con tus palabras.", foto: "" },
-    { cuando: "Cuando más lo necesité", titulo: "Estuviste ahí", texto: "Gracias por quedarte cuando las cosas se pusieron difíciles.", foto: "" },
-    { cuando: "Hoy", titulo: "Y aquí seguimos", texto: "Cuatro años después, sigues siendo mi persona favorita con quien jugar.", foto: "" }
+    { escena: "obby", cuando: "20 · 08 · 2022", titulo: "Nos conocimos en Obby Creator", texto: "Una partida cualquiera, un obby imposible y dos jugadores que acabaron saltando hasta el final, uno al lado del otro.", foto: "" },
+    { escena: "chat", cuando: "Las primeras semanas", titulo: "Cada día, otra partida", texto: "Dejamos de jugar por jugar: empezamos a hablar de todo, a mandarnos mensajes a todas horas y a no querer que la partida terminara.", foto: "" },
+    { escena: "build", cuando: "Un proyecto en común", titulo: "Construir juntos", texto: "Crear, equivocarnos, rehacerlo todo y reírnos cuando nadie conseguía pasarlo. Lo mejor siempre fue hacerlo contigo.", foto: "" },
+    { escena: "noche", cuando: "Noches sin dormir", titulo: "Hasta la madrugada", texto: "Esas conversaciones que se alargaban sin darnos cuenta, cuando ya no importaba ni la hora ni el juego.", foto: "" },
+    { escena: "lluvia", cuando: "Cuando más lo necesité", titulo: "Estuviste ahí", texto: "Gracias por quedarte cuando las cosas se pusieron difíciles.", foto: "" },
+    { escena: "fiesta", cuando: "Las buenas noticias", titulo: "Celebrar contigo", texto: "Cada logro y cada cumpleaños es mejor compartido, aunque sea a través de una pantalla.", foto: "" },
+    { escena: "hoguera", cuando: "Hoy", titulo: "Y aquí seguimos", texto: "Cuatro años después, sigues siendo mi persona favorita con quien jugar y con quien hablar.", foto: "" }
   ],
+
+  // Velocidad de la animación: 1 = normal (~1 min). 2 = el doble de pausada, 3 = muy pausada (~3 min)...
+  ritmo: 1,
 
   // La carta que sale al abrir el sobre grande.
   cartaPrincipal: {
@@ -243,7 +252,7 @@ async function type(el, text) {
   for (const ch of text) {
     if (skipped) { el.textContent = text; return; }
     el.textContent += ch;
-    await sleep(21);
+    await sleep(21 * (DATA.ritmo || 1));
   }
 }
 
@@ -259,7 +268,7 @@ async function showCard(label, s, hold) {
   card.classList.add('in');
   await sleep(450);
   await type(card.querySelector('.sc-text'), s.texto);
-  await sleep(hold == null ? 1300 : hold);
+  await sleep((hold == null ? 1300 : hold) * (DATA.ritmo || 1));
 }
 async function hideCard() {
   if (!activeCard) return;
@@ -268,36 +277,45 @@ async function hideCard() {
   activeCard = null;
 }
 
+const DEFAULT_SCENES = ['obby', 'chat', 'build', 'noche', 'lluvia', 'fiesta', 'hoguera'];
+
 async function playIntro() {
-  const N = DATA.eventos.length;
+  // Para probar una sola escena: index.html?abrir=CODIGO&escena=lluvia
+  let order = DATA.eventos.map((e, i) => i);
+  const forced = params.get('escena');
+  if (forced) { const k = DATA.eventos.findIndex(e => e.escena === forced); if (k >= 0) order = [k]; }
+  const evs = order.map(i => DATA.eventos[i]);
+  const N = evs.length;
   const fechaCorta = isNaN(new Date(DATA.amistadDesde))
     ? '' : ' · ' + new Date(DATA.amistadDesde + 'T00:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }).replace(/\//g, '.');
   $('intro').classList.remove('hidden', 'fade-out');
   $('introCount').textContent = DATA.juego + fechaCorta;
+  const label = j => 'Etapa ' + pad2(order[j] + 1);
 
   if (reduced || !window.Obby) {
     // Versión sin movimiento: solo las tarjetas con cada recuerdo
     $('obby').classList.add('hidden');
     for (let i = 0; i < N && !skipped; i++) {
-      $('introCount').textContent = 'Etapa ' + pad2(i + 1) + ' / ' + pad2(N);
+      $('introCount').textContent = label(i) + ' / ' + pad2(DATA.eventos.length);
       $('introBar').style.width = ((i + 1) / N * 100) + '%';
-      await showCard('Etapa ' + pad2(i + 1), DATA.eventos[i]);
+      await showCard(label(i), evs[i]);
       await hideCard();
     }
   } else {
     await Obby.play({
       canvas: $('obby'),
-      stages: N,
+      scenes: evs.map((e, i) => e.escena || DEFAULT_SCENES[order[i] % DEFAULT_SCENES.length]),
       names: { me: DATA.yoNombre || 'Yo', her: DATA.nombre },
       sleep,
+      pace: DATA.ritmo || 1,
       card: {
-        show: i => showCard('Etapa ' + pad2(i + 1), DATA.eventos[i]),
+        show: j => showCard(label(j), evs[j]),
         showFinal: () => showCard('Meta', { cuando: 'Y ahora', titulo: 'Obby completado.', texto: 'Pasa, esto es para ti.' }, 900),
         hide: hideCard
       },
-      onStage: i => {
-        $('introCount').textContent = 'Etapa ' + pad2(i + 1) + ' / ' + pad2(N);
-        $('introBar').style.width = ((i + 1) / N * 100) + '%';
+      onStage: j => {
+        $('introCount').textContent = label(j) + ' / ' + pad2(DATA.eventos.length);
+        $('introBar').style.width = ((j + 1) / N * 100) + '%';
       }
     });
   }
