@@ -240,6 +240,7 @@ a{color:inherit}
   padding:calc(18px + env(safe-area-inset-top,0px)) 22px 0}
 #introCount{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-variant-numeric:tabular-nums}
 #scene{position:absolute;z-index:2;left:24px;right:24px;top:calc(84px + env(safe-area-inset-top,0px));max-width:520px;pointer-events:none}
+#sceneMeasure{position:absolute;z-index:-1;left:24px;right:24px;top:calc(84px + env(safe-area-inset-top,0px));max-width:520px;visibility:hidden;pointer-events:none}
 .scene-card{opacity:0;transform:translateY(14px);transition:opacity .7s ease,transform .7s ease}
 .scene-card.in{opacity:1;transform:none}
 .scene-card.out{opacity:0;transform:translateY(-12px)}

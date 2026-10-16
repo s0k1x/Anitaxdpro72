@@ -23,18 +23,19 @@ const DATA = {
 
   // Cada recuerdo es una ETAPA de la animación y luego sale en la línea del tiempo.
   // "escena" es el mundo animado de esa etapa. Opciones:
-  //   obby (concurso de construir en Obby Creator) · carrera (carrera en un obby) · chat (conversaciones)
-  //   build (construir una pirámide) · noche (estrellas)
-  //   lluvia (un mal momento y el sol) · fiesta (celebrar) · hoguera (tranquilidad)
+  //   obby (concurso de construir en Obby Creator) · llamada (horas en llamada, jugar de todo)
+  //   corazon (salir y quedar como amigos) · rieles (tren y sustos) · exito (juego famoso y compartir)
+  //   noche (estrellas) · hoguera (tranquilidad) · lluvia (un mal momento y el sol) · fiesta (celebrar)
+  //   carrera (carrera en un obby) · build (construir una pirámide)
   // Puedes poner todas las etapas que quieras; si pones más de 7 se repiten las escenas.
   // "foto" es opcional: pon el nombre de la imagen (ej: "fotos/1.jpg") o déjalo vacío.
   eventos: [
     { escena: "obby", cuando: "20 · 08 · 2022", titulo: "Nos conocimos en Obby Creator", texto: "Estabas con unos amigos y me uní. Hice un concurso con uno de ellos: quién construía mejor la casa de Calamardo de Bob Esponja. Gané, me metiste en llamada y desde ahí hablamos casi todos los días.", foto: "" },
-    { escena: "chat", cuando: "Las primeras semanas", titulo: "Cada día, otra partida", texto: "Desde esa llamada casi no hubo un día sin hablar: de todo, de nada, a todas horas y sin querer que terminara.", foto: "" },
-    { escena: "carrera", cuando: "Retos y revanchas", titulo: "Siempre una revancha más", texto: "Cada partida acababa en otro reto: quién llegaba antes, quién caía menos y quién ganaba la revancha.", foto: "" },
-    { escena: "noche", cuando: "Noches sin dormir", titulo: "Hasta la madrugada", texto: "Esas conversaciones que se alargaban sin darnos cuenta, cuando ya no importaba ni la hora ni el juego.", foto: "" },
-    { escena: "lluvia", cuando: "Cuando más lo necesité", titulo: "Estuviste ahí", texto: "Gracias por quedarte cuando las cosas se pusieron difíciles.", foto: "" },
-    { escena: "fiesta", cuando: "Las buenas noticias", titulo: "Celebrar contigo", texto: "Cada logro y cada cumpleaños es mejor compartido, aunque sea a través de una pantalla.", foto: "" },
+    { escena: "llamada", cuando: "Después de aquella llamada", titulo: "Horas y horas en llamada", texto: "Pasábamos horas y horas en llamada. Jugábamos a todo lo que se nos ponía por delante.", foto: "" },
+    { escena: "corazon", cuando: "Más adelante", titulo: "Salimos, y lo dejamos como amigos", texto: "Empecé a gustarte y empezamos a salir. No funcionó, así que lo dejamos como amigos.", foto: "" },
+    { escena: "rieles", cuando: "Nuestra época de Rieles Muertos", titulo: "Rieles Muertos", texto: "Empezamos a jugar muchísimo a Rieles Muertos, de Roblox. Un tren, muchos sustos y mil partidas juntos.", foto: "" },
+    { escena: "exito", cuando: "Cuando me fue bien", titulo: "Lo compartí con vosotros", texto: "Hice un juego de terror psicológico que se hizo famoso y empecé a ganar dinero. Decidí compartirlo contigo y con más amigos.", foto: "" },
+    { escena: "noche", cuando: "Con el tiempo", titulo: "Hasta la madrugada", texto: "Pasaron los meses y los años entre partidas, charlas hasta tarde y cada vez más recuerdos.", foto: "" },
     { escena: "hoguera", cuando: "Hoy", titulo: "Y aquí seguimos", texto: "Cuatro años después, sigues siendo mi persona favorita con quien jugar y con quien hablar.", foto: "" }
   ],
 
@@ -258,6 +259,14 @@ async function type(el, text) {
 }
 
 let activeCard = null;
+// Altura que ocupará la tarjeta (con todo el texto): la escena se coloca debajo para no taparla.
+function measureCard(label, s) {
+  const box = $('sceneMeasure');
+  box.innerHTML = `<div class="scene-card in"><p class="sc-stage">${esc(label)}</p><p class="sc-when">${esc(s.cuando)}</p>
+    <h2 class="sc-title">${esc(s.titulo)}</h2><p class="sc-text">${esc(s.texto)}</p></div>`;
+  return box.firstElementChild.getBoundingClientRect().bottom;
+}
+
 async function showCard(label, s, hold) {
   const card = document.createElement('div');
   card.className = 'scene-card';
@@ -265,6 +274,8 @@ async function showCard(label, s, hold) {
     <h2 class="sc-title">${esc(s.titulo)}</h2><p class="sc-text"></p>`;
   $('scene').replaceChildren(card);
   activeCard = card;
+  // fija la altura del texto desde el principio (así no "crece" al escribirse)
+  const tp = card.querySelector('.sc-text'); tp.textContent = s.texto; tp.style.minHeight = tp.offsetHeight + 'px'; tp.textContent = '';
   void card.offsetWidth;
   card.classList.add('in');
   await sleep(450);
@@ -278,7 +289,7 @@ async function hideCard() {
   activeCard = null;
 }
 
-const DEFAULT_SCENES = ['obby', 'chat', 'carrera', 'noche', 'lluvia', 'fiesta', 'hoguera'];
+const DEFAULT_SCENES = ['obby', 'llamada', 'corazon', 'rieles', 'exito', 'noche', 'hoguera'];
 
 async function playIntro() {
   // Para probar una sola escena: index.html?abrir=CODIGO&escena=lluvia
@@ -309,6 +320,7 @@ async function playIntro() {
       names: { me: DATA.yoNombre || 'Yo', her: DATA.nombre },
       sleep,
       pace: DATA.ritmo || 1,
+      cardBottom: j => j >= N ? measureCard('Meta', { cuando: 'Y ahora', titulo: 'Obby completado.', texto: 'Pasa, esto es para ti.' }) : measureCard(label(j), evs[j]),
       card: {
         show: j => showCard(label(j), evs[j]),
         showFinal: () => showCard('Meta', { cuando: 'Y ahora', titulo: 'Obby completado.', texto: 'Pasa, esto es para ti.' }, 900),
