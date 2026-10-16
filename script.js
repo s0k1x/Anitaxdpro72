@@ -1,7 +1,14 @@
 /* ============ AQUÍ VAN TUS DATOS (edítalos o pásaselos a Claude) ============ */
 const DATA = {
   nombre: "Anita",
-  intro: "Una pequeña sorpresa para recordarte lo mucho que significas para mí.",
+  intro: "Un rinconcito hecho con cariño para recordarte lo mucho que significas para mí.",
+
+  // Opcional: foto redonda en la portada (ej: "fotos/anita.jpg"). Vacío = no se muestra.
+  fotoPortada: "",
+
+  // Opcional: fecha en que os hicisteis amigas, formato "AAAA-MM-DD" (ej: "2019-09-01").
+  // Si la pones, la portada muestra cuánto tiempo lleváis juntas. Vacío = no se muestra.
+  amistadDesde: "",
 
   // Los recuerdos salen primero en la animación y luego en la línea del tiempo.
   // "foto" es opcional: pon el nombre de la imagen (ej: "fotos/1.jpg") o déjalo vacío.
@@ -16,16 +23,26 @@ const DATA = {
   // La carta que sale al abrir el sobre grande.
   cartaPrincipal: {
     titulo: "Para ti, Anita",
-    texto: "Llevamos muchos años juntas y quería darte algo que te recordara lo importante que eres para mí.\n\nGracias por cada risa, cada conversación y por estar siempre.\n\nTe quiero muchísimo."
+    texto: "Llevamos muchos años juntas y quería darte algo que te recordara lo importante que eres para mí.\n\nGracias por cada risa, cada conversación y por estar siempre.\n\nTe quiero muchísimo.",
+    firma: "Tu amiga"
   },
 
+  razones: [
+    { emoji: "😂", titulo: "Me haces reír", texto: "Contigo hasta los días malos acaban en risas." },
+    { emoji: "🫶", titulo: "Siempre estás", texto: "Aunque pase el tiempo, sé que puedo contar contigo." },
+    { emoji: "🌟", titulo: "Eres auténtica", texto: "No cambias por nadie y eso es lo que más admiro." },
+    { emoji: "🧠", titulo: "Me entiendes", texto: "A veces ni hace falta que hable para que sepas qué me pasa." },
+    { emoji: "🎉", titulo: "Todo es mejor contigo", texto: "Cualquier plan es mejor si vienes tú." },
+    { emoji: "💌", titulo: "Eres de las pocas", texto: "De esas personas que se quedan para siempre." }
+  ],
+
   fotos: [
-    { src: "", pie: "Nuestro primer verano", ratio: 1 },
-    { src: "", pie: "Cara de risa total", ratio: 1.3 },
-    { src: "", pie: "Esa noche", ratio: 0.8 },
-    { src: "", pie: "Siempre juntas", ratio: 1 },
-    { src: "", pie: "Locuras varias", ratio: 1.2 },
-    { src: "", pie: "Mi favorita", ratio: 0.9 }
+    { src: "", pie: "Nuestro primer verano" },
+    { src: "", pie: "Cara de risa total" },
+    { src: "", pie: "Esa noche" },
+    { src: "", pie: "Siempre juntas" },
+    { src: "", pie: "Locuras varias" },
+    { src: "", pie: "Mi favorita" }
   ],
 
   cartas: [
@@ -41,9 +58,10 @@ const DATA = {
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const wait = ms => new Promise(r => setTimeout(r, ms));
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* ---------- Esperas que se pueden saltar ---------- */
+/* ---------- Esperas que se pueden saltar (solo la animación inicial) ---------- */
 let skipped = false, wake = [];
 const sleep = ms => new Promise(res => {
   if (skipped) return res();
@@ -81,43 +99,107 @@ function skip() { skipped = true; wake.slice().forEach(w => w()); }
   resize(); draw();
 })();
 
-/* ---------- Pintar contenido principal ---------- */
+/* ---------- Pintar la página ---------- */
+const stagger = i => `style="--d:${Math.min(i, 6) * 80}ms"`;
+
 function render() {
-  $('nombre').textContent = DATA.nombre;
+  const nombre = DATA.nombre;
+  document.title = 'Para ' + nombre + ' 💜';
+  $('navName').textContent = nombre;
+  $('footName').textContent = nombre;
+  $('nombre').textContent = nombre;
   $('introTxt').textContent = DATA.intro;
-  document.title = 'Para ' + DATA.nombre + ' 💜';
   $('finalTitle').textContent = DATA.finalTitulo;
   $('finalText').textContent = DATA.finalTexto;
 
-  $('paper').innerHTML = `<h3>${esc(DATA.cartaPrincipal.titulo)}</h3><div>${esc(DATA.cartaPrincipal.texto)}</div>`;
+  // Foto de portada (opcional)
+  if (DATA.fotoPortada) {
+    $('heroPhoto').innerHTML = `<img src="${esc(DATA.fotoPortada)}" alt="${esc(nombre)}">`;
+    $('heroPhoto').classList.remove('hidden');
+  }
 
-  $('timeline').innerHTML = DATA.eventos.map(e =>
-    `<div class="event reveal"><div class="when">${esc(e.cuando)}</div><h3>${esc(e.titulo)}</h3><p>${esc(e.texto)}</p></div>`).join('');
+  // Carta principal
+  const cp = DATA.cartaPrincipal;
+  $('paper').innerHTML = `<h3>${esc(cp.titulo)}</h3><div class="body">${esc(cp.texto)}</div>` +
+    (cp.firma ? `<div class="sign">— ${esc(cp.firma)}</div>` : '');
 
-  $('grid').innerHTML = DATA.fotos.map((f, i) => `
-    <figure class="ph reveal" data-i="${i}">
-      ${f.src ? `<img src="${esc(f.src)}" alt="${esc(f.pie)}" loading="lazy">` : `<div class="img" style="--r:${f.ratio || 1}">📷</div>`}
-      <figcaption>${esc(f.pie)}</figcaption>
-    </figure>`).join('');
-
-  $('letters').innerHTML = DATA.cartas.map(c => `
-    <div class="letter reveal">
-      <button type="button" aria-expanded="false"><span class="env-i">💌</span>
-        <span><div class="lt">${esc(c.titulo)}</div><div class="ls">${esc(c.sub || '')}</div></span></button>
-      <div class="body"><div>${esc(c.texto)}</div></div>
+  // Línea del tiempo
+  $('timeline').innerHTML = DATA.eventos.map((e, i) => `
+    <div class="tl-item reveal">
+      <div class="tl-dot">${esc(e.emoji || '💜')}</div>
+      <div class="tl-card">
+        ${e.foto ? `<img src="${esc(e.foto)}" alt="${esc(e.titulo)}" loading="lazy">` : ''}
+        <span class="tl-when">${esc(e.cuando)}</span>
+        <h3>${esc(e.titulo)}</h3>
+        <p>${esc(e.texto)}</p>
+      </div>
     </div>`).join('');
 
-  document.querySelectorAll('.ph').forEach(el => el.addEventListener('click', () => {
-    const f = DATA.fotos[el.dataset.i];
-    $('lb').innerHTML = (f.src ? `<img src="${esc(f.src)}" alt="">` : `<div class="big">📷</div>`) + `<p>${esc(f.pie)}</p>`;
-    $('lb').classList.add('on');
-  }));
-  $('lb').addEventListener('click', () => $('lb').classList.remove('on'));
+  // Razones
+  $('reasons').innerHTML = DATA.razones.map((r, i) => `
+    <div class="reason reveal" ${stagger(i % 3)}>
+      <div class="ico">${esc(r.emoji)}</div>
+      <div><h3>${esc(r.titulo)}</h3><p>${esc(r.texto)}</p></div>
+    </div>`).join('');
 
-  document.querySelectorAll('.letter button').forEach(b => b.addEventListener('click', () => {
+  // Galería
+  $('gallery').innerHTML = DATA.fotos.map((f, i) => f.src
+    ? `<button class="photo reveal" type="button" data-i="${i}" ${stagger(i % 3)} aria-label="${esc(f.pie)}">
+         <img src="${esc(f.src)}" alt="${esc(f.pie)}" loading="lazy"><span class="cap">${esc(f.pie)}</span></button>`
+    : `<button class="photo empty reveal" type="button" data-i="${i}" ${stagger(i % 3)} aria-label="${esc(f.pie)}">
+         <span class="em">📷</span><span class="hint">Tu foto aquí</span><span class="cap">${esc(f.pie)}</span></button>`).join('');
+
+  // Cartas
+  $('letters').innerHTML = DATA.cartas.map((c, i) => `
+    <div class="letter reveal" ${stagger(i)}>
+      <button class="letter-head" type="button" aria-expanded="false">
+        <span class="ico">💌</span>
+        <span class="txt"><span class="lt">${esc(c.titulo)}</span><br><span class="ls">${esc(c.sub || '')}</span></span>
+        <span class="chev">⌄</span>
+      </button>
+      <div class="panel"><div>${esc(c.texto)}</div></div>
+    </div>`).join('');
+
+  document.querySelectorAll('.letter-head').forEach(b => b.addEventListener('click', () => {
     const l = b.parentElement; l.classList.toggle('open');
     b.setAttribute('aria-expanded', l.classList.contains('open'));
   }));
+  document.querySelectorAll('.photo').forEach(el => el.addEventListener('click', () => openLb(+el.dataset.i)));
+
+  renderCounter();
+}
+
+/* ---------- Contador de amistad (opcional) ---------- */
+function renderCounter() {
+  const box = $('counter');
+  if (!DATA.amistadDesde) return;
+  const from = new Date(DATA.amistadDesde + 'T00:00:00'), now = new Date();
+  if (isNaN(from) || from > now) return;
+  let y = now.getFullYear() - from.getFullYear(), m = now.getMonth() - from.getMonth(), d = now.getDate() - from.getDate();
+  if (d < 0) { m--; d += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+  if (m < 0) { y--; m += 12; }
+  const desde = from.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+  box.innerHTML = `
+    <div class="counter">
+      <div class="box"><b data-n="${y}">0</b><span>años</span></div>
+      <div class="box"><b data-n="${m}">0</b><span>meses</span></div>
+      <div class="box"><b data-n="${d}">0</b><span>días</span></div>
+    </div>
+    <p class="counter-note">juntas desde ${esc(desde)}</p>`;
+  box.classList.remove('hidden');
+}
+
+function countUp() {
+  document.querySelectorAll('.counter b[data-n]').forEach(el => {
+    const target = +el.dataset.n;
+    if (reduced || !target) { el.textContent = target; return; }
+    const t0 = performance.now(), dur = 1400;
+    (function tick(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) requestAnimationFrame(tick);
+    })(t0);
+  });
 }
 
 /* ---------- 1) Pantalla de carga ---------- */
@@ -180,7 +262,7 @@ async function playIntro() {
   $('intro').classList.add('hidden');
 }
 
-/* ---------- 3) Revelar la web ---------- */
+/* ---------- 3) Revelar la página ---------- */
 function burst() {
   const icons = ['💜', '💙', '✨', '🤍', '💫'], box = $('burst');
   for (let i = 0; i < 28; i++) {
@@ -195,29 +277,88 @@ function burst() {
   }
 }
 
+function setupScroll() {
+  // Aparecer al hacer scroll
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add('in'); io.unobserve(e.target);
+    if (e.target.id === 'counter') countUp();
+  }), { threshold: .12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Barra de navegación: aparece al bajar y marca la sección actual
+  const nav = $('nav'), links = [...nav.querySelectorAll('.links a')];
+  const onScroll = () => nav.classList.toggle('show', scrollY > innerHeight * .5);
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  const sections = links.map(a => document.querySelector(a.getAttribute('href')));
+  const spy = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id));
+  }), { rootMargin: '-40% 0px -55% 0px' });
+  sections.forEach(s => s && spy.observe(s));
+}
+
 function reveal() {
   document.body.classList.remove('locked');
   $('main').classList.remove('hidden');
   scrollTo(0, 0);
   requestAnimationFrame(() => requestAnimationFrame(() => $('main').classList.add('show')));
   if (!reduced) burst();
-  const io = new IntersectionObserver(es => es.forEach(e => {
-    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-  }), { threshold: .15 });
-  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  setupScroll();
 }
 
 /* ---------- Sobre / carta principal ---------- */
-$('openLetter').addEventListener('click', async () => {
+let opened = false;
+async function openEnvelope() {
+  if (opened) return;
+  opened = true;
   $('openLetter').classList.add('hidden');
+  $('envHint').classList.add('hidden');
   $('env').classList.add('open');
-  await new Promise(r => setTimeout(r, 1300));
+  await wait(1300);
   $('paper').classList.remove('hidden');
-  $('paper').scrollIntoView({ behavior: 'smooth', block: 'center' });
-});
+  $('paper').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+}
+$('openLetter').addEventListener('click', openEnvelope);
+$('env').addEventListener('click', openEnvelope);
+$('env').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEnvelope(); } });
 
+/* ---------- Visor de fotos ---------- */
+let cur = 0;
+function showPhoto(i) {
+  const n = DATA.fotos.length;
+  cur = (i + n) % n;
+  const f = DATA.fotos[cur];
+  $('lbBody').innerHTML = f.src
+    ? `<img src="${esc(f.src)}" alt="${esc(f.pie)}">`
+    : `<div class="lb-empty">📷<span>Tu foto aquí</span></div>`;
+  $('lbCap').textContent = f.pie;
+  $('lbCount').textContent = (cur + 1) + ' / ' + n;
+}
+function openLb(i) { showPhoto(i); $('lb').classList.add('on'); document.body.classList.add('noscroll'); }
+function closeLb() { $('lb').classList.remove('on'); document.body.classList.remove('noscroll'); }
+$('lbClose').addEventListener('click', closeLb);
+$('lbPrev').addEventListener('click', () => showPhoto(cur - 1));
+$('lbNext').addEventListener('click', () => showPhoto(cur + 1));
+$('lb').addEventListener('click', e => { if (e.target === $('lb') || e.target === $('lbBody')) closeLb(); });
+addEventListener('keydown', e => {
+  if (!$('lb').classList.contains('on')) return;
+  if (e.key === 'Escape') closeLb();
+  if (e.key === 'ArrowLeft') showPhoto(cur - 1);
+  if (e.key === 'ArrowRight') showPhoto(cur + 1);
+});
+let tx = null;
+$('lb').addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+$('lb').addEventListener('touchend', e => {
+  if (tx === null) return;
+  const dx = e.changedTouches[0].clientX - tx; tx = null;
+  if (Math.abs(dx) > 50) showPhoto(cur + (dx < 0 ? 1 : -1));
+}, { passive: true });
+
+/* ---------- Botones del final ---------- */
+$('toTop').addEventListener('click', () => scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }));
+$('replay').addEventListener('click', () => location.href = location.pathname);
 $('skip').addEventListener('click', skip);
-$('replay').addEventListener('click', () => location.reload());
 
 /* ---------- Música ---------- */
 const music = $('music'), musicBtn = $('musicBtn');
@@ -246,13 +387,19 @@ function startMusic() {
 
 /* ---------- Arranque ---------- */
 render();
-$('start').addEventListener('click', async () => {
-  startMusic();
-  $('gate').classList.add('fade-out');
-  await sleep(600);
+if (new URLSearchParams(location.search).has('directo')) {
+  // Atajo para editar rápido: abre index.html?directo y sale la página sin animación.
   $('gate').classList.add('hidden');
-  $('loader').classList.remove('hidden');
-  await runLoader();
-  await playIntro();
   reveal();
-}, { once: true });
+} else {
+  $('start').addEventListener('click', async () => {
+    startMusic();
+    $('gate').classList.add('fade-out');
+    await sleep(600);
+    $('gate').classList.add('hidden');
+    $('loader').classList.remove('hidden');
+    await runLoader();
+    await playIntro();
+    reveal();
+  }, { once: true });
+}
