@@ -138,6 +138,7 @@
         const press = p.tramp ? 0 : (p.press || 0) * 3 * S;
         ctx.fillStyle = pal[1]; rr(ctx, x, y + th * .5 + press, w, fh + th * .5, 4 * S); ctx.fill();
         ctx.fillStyle = pal[0]; rr(ctx, x, y + press, w, th, 3 * S); ctx.fill();
+        ctx.strokeStyle = 'rgba(14,8,40,.55)'; ctx.lineWidth = 1.3; rr(ctx, x, y + press, w, th + fh, 4 * S); ctx.stroke();
         ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(x + 3 * S, y + press + 1, w - 6 * S, 1.2);
         if ((p.glow || 0) > .02) { ctx.strokeStyle = `rgba(255,255,255,${p.glow * .9})`; ctx.lineWidth = 2; rr(ctx, x - 1, y - 1 + press, w + 2, th + fh + 2, 4 * S); ctx.stroke(); }
       }
@@ -225,9 +226,9 @@
         } else { ctx.translate(0, 6); }
         const g = ctx.createLinearGradient(0, -34, 0, -6); g.addColorStop(0, c.c1); g.addColorStop(1, c.c2);
         ctx.fillStyle = g; rr(ctx, -13, -34, 26, 27, 7); ctx.fill();
-        if (look.style === 'cel') { ctx.strokeStyle = 'rgba(12,8,36,.92)'; ctx.lineWidth = 2.2; }
+        if (look.style === 'cel') { ctx.strokeStyle = look.rim || 'rgba(12,8,36,.92)'; ctx.lineWidth = 2.2; if (look.rim) { ctx.shadowColor = look.rim; ctx.shadowBlur = 6; } }
         else if (look.style === 'neon') { ctx.strokeStyle = rgba(look.accent, .95); ctx.lineWidth = 1.8; ctx.shadowColor = look.accent; ctx.shadowBlur = 10; }
-        else { ctx.strokeStyle = 'rgba(20,10,50,.22)'; ctx.lineWidth = 1; }
+        else { ctx.strokeStyle = 'rgba(20,10,50,.5)'; ctx.lineWidth = 1.5; }
         rr(ctx, -13, -34, 26, 27, 7); ctx.stroke(); ctx.shadowBlur = 0;
         ctx.fillStyle = 'rgba(255,255,255,.4)'; rr(ctx, -10, -31, 9, 3, 1.5); ctx.fill();
         ctx.fillStyle = 'rgba(0,0,30,.10)'; rr(ctx, -13, -14, 26, 7, 6); ctx.fill();
@@ -1057,7 +1058,7 @@
             tt += dt; dist += speed * 110 * dt;
             enemies.forEach(e => { if (e.alive) e.x += 62 * dt; }); while (enemies.length && !enemies[0].alive && enemies.length > 6) enemies.shift();
             coins.forEach(c => { c.y += c.vy * dt; c.vy -= 240 * dt; c.a -= dt * .5; }); while (coins.length && coins[0].a <= 0) coins.shift();
-            if (speed > .2 && Math.random() < dt * 4) puffs.push({ x: 46, y: 76, r: 3, a: .6 });
+            if (speed > .2 && Math.random() < dt * 4) puffs.push({ x: 98, y: 84, r: 3, a: .65 });
             puffs.forEach(p => { p.x -= (40 + speed * 50) * dt; p.y += 18 * dt; p.r += 7 * dt; p.a -= dt * .45; }); while (puffs.length && puffs[0].a <= 0) puffs.shift();
             A.gun = Math.max(0, (A.gun || 0) - dt); B.gun = Math.max(0, (B.gun || 0) - dt);
           },
@@ -1104,18 +1105,26 @@
             ctx.fillStyle = '#5a4a3a'; rr(ctx, wl, Y(14), ww, 8 * S, 2 * S); ctx.fill();
             ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(wl + 3 * S, Y(14) + 1, ww - 6 * S, 1.4);
             [-100, -66, -32, -2].forEach(wx => wheel(X(wx), Y(7), 7 * S, -dist * .12));
-            // locomotora
+            // locomotora (mira hacia la derecha: chimenea y faro delante, cabina detrás, junto al vagón)
             const lx = X(10);
-            ctx.fillStyle = '#22262e'; rr(ctx, lx, Y(46), 100 * S, 38 * S, 8 * S); ctx.fill();            // caldera
-            ctx.fillStyle = '#2e333c'; rr(ctx, lx + 62 * S, Y(66), 38 * S, 58 * S, 4 * S); ctx.fill();    // cabina
-            ctx.fillStyle = '#ffe9a8'; rr(ctx, lx + 70 * S, Y(56), 14 * S, 12 * S, 2 * S); ctx.fill();     // ventana
-            ctx.fillStyle = '#14171c'; ctx.beginPath(); ctx.moveTo(lx + 26 * S, Y(46)); ctx.lineTo(lx + 22 * S, Y(70)); ctx.lineTo(lx + 44 * S, Y(70)); ctx.lineTo(lx + 40 * S, Y(46)); ctx.closePath(); ctx.fill(); // chimenea
-            rr(ctx, lx + 19 * S, Y(76), 28 * S, 6 * S, 2 * S); ctx.fill();
-            ctx.fillStyle = '#b8893f'; ctx.fillRect(lx, Y(20), 100 * S, 3 * S);
-            [18, 50, 84].forEach(wx => wheel(lx + wx * S, Y(8), 9 * S, -dist * .1));
-            const hx = lx + 104 * S, hy = Y(32), hg = ctx.createRadialGradient(hx, hy, 0, hx, hy, 60 * S); hg.addColorStop(0, 'rgba(255,233,168,.55)'); hg.addColorStop(1, 'rgba(255,233,168,0)');
+            ctx.fillStyle = '#3a4150'; rr(ctx, lx + 30 * S, Y(46), 74 * S, 38 * S, 8 * S); ctx.fill();                       // caldera
+            ctx.fillStyle = 'rgba(255,255,255,.14)'; rr(ctx, lx + 36 * S, Y(43), 62 * S, 4 * S, 2 * S); ctx.fill();          // brillo
+            ctx.fillStyle = '#b8893f'; ctx.fillRect(lx + 30 * S, Y(20), 74 * S, 3 * S); ctx.fillRect(lx + 62 * S, Y(46), 3 * S, 38 * S); // franjas de latón
+            ctx.fillStyle = '#4b5365'; rr(ctx, lx, Y(68), 40 * S, 60 * S, 4 * S); ctx.fill();                                // cabina (atrás)
+            ctx.fillStyle = '#1b1f27'; rr(ctx, lx - 3 * S, Y(70), 46 * S, 5 * S, 2 * S); ctx.fill();                          // techo de la cabina
+            ctx.fillStyle = '#ffe9a8'; rr(ctx, lx + 10 * S, Y(58), 16 * S, 14 * S, 2 * S); ctx.fill();                       // ventana encendida
+            ctx.fillStyle = '#6b7280'; ctx.fillRect(lx + 17.2 * S, Y(58), 1.6 * S, 14 * S);
+            ctx.fillStyle = '#14171c'; ctx.beginPath(); ctx.moveTo(lx + 84 * S, Y(46)); ctx.lineTo(lx + 82 * S, Y(72)); ctx.lineTo(lx + 98 * S, Y(72)); ctx.lineTo(lx + 96 * S, Y(46)); ctx.closePath(); ctx.fill(); // chimenea (delante)
+            rr(ctx, lx + 77 * S, Y(79), 28 * S, 7 * S, 2.5 * S); ctx.fill();
+            ctx.fillStyle = '#2a2f3a'; rr(ctx, lx + 52 * S, Y(53), 16 * S, 9 * S, 4.5 * S); ctx.fill();                       // domo de vapor
+            ctx.fillStyle = '#3a404d'; ctx.beginPath(); ctx.moveTo(lx + 104 * S, Y(15)); ctx.lineTo(lx + 126 * S, Y(0)); ctx.lineTo(lx + 104 * S, Y(0)); ctx.closePath(); ctx.fill(); // quitapiedras
+            ctx.strokeStyle = '#b8893f'; ctx.lineWidth = 1.2 * S; for (let k = 1; k < 4; k++) { ctx.beginPath(); ctx.moveTo(lx + (104 + k * 5) * S, Y(0)); ctx.lineTo(lx + 104 * S, Y(15 - k * 3.5)); ctx.stroke(); }
+            [18, 52, 88].forEach(wx => wheel(lx + wx * S, Y(8), 9 * S, -dist * .1));
+            ctx.strokeStyle = '#b8893f'; ctx.lineWidth = 2 * S; ctx.beginPath(); ctx.moveTo(lx + 18 * S, Y(8)); ctx.lineTo(lx + 88 * S, Y(8)); ctx.stroke(); // biela
+            const hx = lx + 108 * S, hy = Y(34), hg = ctx.createRadialGradient(hx, hy, 0, hx, hy, 60 * S); hg.addColorStop(0, 'rgba(255,233,168,.6)'); hg.addColorStop(1, 'rgba(255,233,168,0)');
             ctx.fillStyle = hg; ctx.fillRect(hx - 60 * S, hy - 60 * S, 120 * S, 120 * S);
-            ctx.fillStyle = '#ffe9a8'; dot(hx, hy, 4 * S);
+            ctx.fillStyle = '#14171c'; rr(ctx, lx + 102 * S, Y(40), 8 * S, 12 * S, 2 * S); ctx.fill();                        // carcasa del faro (delante)
+            ctx.fillStyle = '#ffe9a8'; dot(hx - 1.5 * S, hy, 3.6 * S);
             puffs.forEach(p => { ctx.fillStyle = `rgba(210,200,240,${Math.max(0, p.a)})`; dot(X(p.x), Y(p.y), p.r * S); });
             // enganche
             ctx.fillStyle = '#8a6a45'; ctx.fillRect(X(6), Y(11), 6 * S, 2 * S);
@@ -1642,9 +1651,9 @@
         obby: { trans: 'iris', hat: 'hardhat', fade: '#0b2c6b', accent: '#9bd8ff', scrim: .74, scrimCol: '6,22,58', style: 'cel', vignette: ['10,30,80', .26], grade: [['soft-light', '#ffe7b0', .1]], bloom: .05, mote: '255,255,255' },
         llamada: { trans: 'wipe', hat: 'phones', fade: '#12002e', accent: '#ff7ad9', scrim: .4, style: 'neon', vignette: ['20,0,40', .5], grade: [['overlay', '#7a2cff', .16]], scan: .08, bloom: .32, grain: .03, mote: '255,160,240' },
         corazon: { trans: 'fade', hat: 'scarf', fade: '#ffe3cf', accent: '#ffb48a', scrim: .42, scrimCol: '44,10,56', style: 'plush', vignette: ['70,10,60', .34], grade: [['soft-light', '#ffb199', .3]], bloom: .3, grain: .05, mote: '255,210,225' },
-        rieles: { trans: 'burn', hat: 'cowboy', card: 'bottom', fade: '#f0c27c', accent: '#e6b87c', scrim: .5, scrimCol: '8,12,18', style: 'cel', vignette: ['0,0,0', .62], grade: [['saturation', '#808080', .6], ['multiply', '#d8b684', .55]], grain: .1, scratches: true, letterbox: .075, weave: true, mote: '210,180,130' },
-        exito: { trans: 'glitch', hat: 'torch', fade: '#000000', accent: '#ff4f66', scrim: .5, scrimCol: '0,0,0', style: 'cel', pixel: 3, chroma: 2, glitch: true, vignette: ['0,0,0', .72], grade: [['saturation', '#808080', .45], ['multiply', '#d6a8a8', .4]], scan: .15, grain: .1, mote: null },
-        distancia: { trans: 'fade', hat: 'beanie', fade: '#dfe8f5', accent: '#a9c4e8', scrim: .5, scrimCol: '8,12,26', style: 'plush', vignette: ['8,14,30', .5], grade: [['saturation', '#808080', .6], ['soft-light', '#9bb4d8', .25]], grain: .035, mote: '235,242,255', zoom: t => 1.05 - .16 * smooth(clamp((t - .8) / 4.6, 0, 1)) },
+        rieles: { trans: 'burn', hat: 'cowboy', card: 'bottom', fade: '#f0c27c', accent: '#e6b87c', scrim: .5, scrimCol: '8,12,18', style: 'cel', vignette: ['0,0,0', .62], grade: [['saturation', '#808080', .55], ['multiply', '#e6c796', .4]], grain: .05, rim: '#ffd9a0', scratches: true, letterbox: .075, weave: true, mote: '210,180,130' },
+        exito: { trans: 'glitch', hat: 'torch', fade: '#000000', accent: '#ff4f66', scrim: .5, scrimCol: '0,0,0', style: 'cel', pixel: 3, chroma: 2, glitch: true, vignette: ['0,0,0', .72], grade: [['saturation', '#808080', .45], ['multiply', '#d6a8a8', .4]], scan: .13, grain: .05, mote: null, rim: '#ff8a9a' },
+        distancia: { trans: 'fade', hat: 'beanie', fade: '#dfe8f5', accent: '#a9c4e8', scrim: .5, scrimCol: '8,12,26', style: 'cel', vignette: ['8,14,30', .5], grade: [['saturation', '#808080', .6], ['soft-light', '#9bb4d8', .25]], grain: .035, mote: '235,242,255', zoom: t => 1.05 - .16 * smooth(clamp((t - .8) / 4.6, 0, 1)) },
         reencuentro: { trans: 'bang', hat: 'star', fade: '#ffffff', accent: '#7dffd8', scrim: .36, style: 'plush', vignette: ['4,0,30', .4], bloom: .42, grain: .03, mote: '255,235,255', zoom: t => 1 + .05 * smooth(clamp((t - 8) / 3.5, 0, 1)) },
         portal: { trans: 'bang', fade: '#ffffff', accent: '#c9bcff', scrim: .3, style: 'plush', vignette: ['4,0,30', .45], bloom: .3 }
       };

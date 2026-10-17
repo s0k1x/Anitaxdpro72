@@ -40,6 +40,15 @@ const DATA = {
     { escena: "reencuentro", cuando: "Hoy", titulo: "Mejor que nunca", texto: "Volvimos a hablar y ahora estamos mejor que nunca. Siempre has sido la persona que me ha apoyado en todo.", foto: "" }
   ],
 
+  // REGALO: lo que se entrega al ganar el juego (tarjeta de Nitro de 1 mes).
+  // "enlace": el enlace de canje (botón "Canjear"). "codigo": el código para copiar. Puedes poner uno, los dos o ninguno.
+  regalo: {
+    titulo: "1 mes de <em>Nitro</em>",
+    duracion: "1 MES",
+    enlace: "",
+    codigo: ""
+  },
+
   // Velocidad de la animación: 1 = normal (~1 min). 2 = el doble de pausada, 3 = muy pausada (~3 min)...
   ritmo: 1,
 
@@ -347,10 +356,9 @@ async function playIntro() {
   if (window.Juego && !params.has('sinjuego') && !gifted()) {
     $('intro').classList.add('hidden');
     await playGame();
-    reveal();
-    $('game').classList.add('fade-out');
-    await wait(850);
     $('game').classList.add('hidden');
+    await showGift(true);
+    reveal();
     return;
   }
   // (sin juego) La página aparece debajo mientras la animación se desvanece
@@ -361,6 +369,54 @@ async function playIntro() {
 }
 
 /* ---------- El último reto: un obby para ganarse el regalo ---------- */
+/* ---------- El regalo: tarjeta de Nitro ---------- */
+function confetti(cv, ms) {
+  const c = cv.getContext('2d'), dpr = Math.min(devicePixelRatio || 1, 2);
+  const w = cv.clientWidth, h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr; c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cols = ['#ffe27a', '#ff8fbc', '#7df3ff', '#c9bcff', '#ffffff', '#9bffb8'];
+  const ps = Array.from({ length: 130 }, () => ({ x: w / 2 + (Math.random() - .5) * 60, y: h * .42, vx: (Math.random() - .5) * 560, vy: -260 - Math.random() * 520, r: Math.random() * 6, vr: (Math.random() - .5) * 14, s: 5 + Math.random() * 6, c: cols[(Math.random() * cols.length) | 0], life: 2.2 + Math.random() * 1.6 }));
+  let last = performance.now(), t0 = last;
+  (function f(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now; c.clearRect(0, 0, w, h);
+    for (const p of ps) { p.life -= dt; p.vy += 760 * dt; p.vx *= (1 - .7 * dt); p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt; if (p.life <= 0) continue; c.save(); c.globalAlpha = Math.min(1, p.life); c.translate(p.x, p.y); c.rotate(p.r); c.fillStyle = p.c; c.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); c.restore(); }
+    if (now - t0 < ms) requestAnimationFrame(f); else c.clearRect(0, 0, w, h);
+  })(last);
+}
+
+function showGift(first) {
+  return new Promise(resolve => {
+    const R = DATA.regalo || {}, g = $('gift'), wrap = $('nitroWrap'), card = $('nitro');
+    $('giftKicker').textContent = first ? '¡Lo has conseguido!' : 'Tu regalo';
+    $('giftTitle').innerHTML = R.titulo || '1 mes de <em>Nitro</em>';
+    $('nitroPill').textContent = R.duracion || '1 MES';
+    $('nitroTo').textContent = DATA.nombre; $('nitroFrom').textContent = DATA.yoNombre || '';
+    $('giftNote').textContent = (R.enlace || R.codigo) ? 'Canjéalo cuando quieras. ¡Te lo has ganado!' : 'Un mes de Nitro, solo para ti. ¡Te lo has ganado!';
+    const box = $('giftCodeBox'); box.classList.toggle('hidden', !R.codigo); $('giftCodeTxt').textContent = R.codigo || '';
+    const link = $('giftLink'); link.classList.toggle('hidden', !R.enlace); if (R.enlace) link.href = R.enlace;
+    $('giftCopy').onclick = async () => {
+      try { await navigator.clipboard.writeText(R.codigo); } catch (e) { const t = document.createElement('textarea'); t.value = R.codigo; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (_) {} t.remove(); }
+      $('giftCopy').textContent = '¡Copiado!'; setTimeout(() => { $('giftCopy').textContent = 'Copiar'; }, 1600);
+    };
+    // aparece con destello, giro de la tarjeta y confeti
+    document.body.classList.add('in-game');
+    g.classList.remove('hidden', 'fade-out');
+    wrap.style.animation = 'none'; void wrap.offsetWidth; wrap.style.animation = '';
+    setTimeout(() => confetti($('giftCv'), 4200), 650);
+    // la tarjeta se inclina con el dedo / el ratón y, si nadie la toca, se mece sola
+    let touching = false, running = true;
+    const tilt = (px, py) => { card.style.setProperty('--ry', ((px - .5) * 26) + 'deg'); card.style.setProperty('--rx', ((.5 - py) * 22) + 'deg'); card.style.setProperty('--mx', (px * 100) + '%'); card.style.setProperty('--my', (py * 100) + '%'); };
+    const move = e => { const r = wrap.getBoundingClientRect(); touching = true; tilt(clamp01((e.clientX - r.left) / r.width), clamp01((e.clientY - r.top) / r.height)); };
+    const clamp01 = v => Math.max(0, Math.min(1, v));
+    const leave = () => { touching = false; };
+    g.addEventListener('pointermove', move); g.addEventListener('pointerup', leave); g.addEventListener('pointercancel', leave); g.addEventListener('pointerleave', leave);
+    (function idle(now) { if (!running) return; if (!touching) tilt(.5 + Math.sin(now / 1500) * .32, .5 + Math.cos(now / 1900) * .28); requestAnimationFrame(idle); })(performance.now());
+    $('giftNext').onclick = async () => {
+      running = false; g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', leave); g.removeEventListener('pointercancel', leave); g.removeEventListener('pointerleave', leave);
+      g.classList.add('fade-out'); await wait(700); g.classList.add('hidden'); document.body.classList.remove('in-game'); resolve();
+    };
+  });
+}
+
 const GIFT_KEY = 'homenaje_regalo_ganado';
 const gifted = () => { try { return !!localStorage.getItem(GIFT_KEY); } catch (e) { return false; } };
 async function playGame() {
@@ -451,6 +507,7 @@ $('lb').addEventListener('touchend', e => {
 }, { passive: true });
 
 /* ---------- Botones del final ---------- */
+$('seeGift').addEventListener('click', () => showGift(false));
 $('toTop').addEventListener('click', () => scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }));
 $('replay').addEventListener('click', () => location.href = location.pathname);
 $('skip').addEventListener('click', skip);
@@ -572,8 +629,9 @@ async function start() {
   await runLoader();
   if (params.has('juego') && isUnlocked()) {
     // Atajo para probar el juego: index.html?juego&abrir=CODIGO  (cp=1..5 empieza en un punto de control, estrellas = ya las tiene)
-    await playGame(); reveal(); $('game').classList.add('hidden'); return;
+    await playGame(); $('game').classList.add('hidden'); await showGift(true); reveal(); return;
   }
+  if (params.has('regalo') && isUnlocked()) { await showGift(true); reveal(); return; }   // para ver la tarjeta: index.html?regalo&abrir=CODIGO
   if (isUnlocked()) showGate(); else showLock();
 }
 start();

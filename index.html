@@ -160,7 +160,7 @@
   <div class="g-card" id="gIntro">
     <p class="g-kicker">Nivel final</p>
     <h2>Un último reto</h2>
-    <p>Te hemos teletransportado a un obby. Llega hasta la caja del regalo… pero solo se abre si recoges <b>las 7 estrellas ★</b>. Cuidado con la lava, las barras y las trampas.</p>
+    <p>Te hemos teletransportado a un obby. Llega hasta la caja del regalo… pero solo se abre si recoges <b>al menos 5 de las 7 estrellas ★</b>. Las monedas te marcan el camino de los saltos. Cuidado con la lava, las barras y los pinchos.</p>
     <p class="g-keys">Mantén ◀ ▶ para moverte y SALTAR para saltar. En ordenador: flechas y espacio.</p>
     <button class="btn btn--purple" id="gStart" type="button"><span class="button_top">¡Vamos!</span></button>
   </div>
@@ -170,6 +170,44 @@
     <p id="gWinStats"></p>
     <p>Te lo has ganado tú solita. Ábrelo.</p>
     <button class="btn btn--purple" id="gWinBtn" type="button"><span class="button_top">Abrir mi regalo</span></button>
+  </div>
+</div>
+
+<!-- REGALO: la tarjeta de Nitro -->
+<div id="gift" class="screen hidden">
+  <div class="gift-rays" aria-hidden="true"></div>
+  <canvas id="giftCv" aria-hidden="true"></canvas>
+  <div class="gift-inner">
+    <p class="gift-kicker" id="giftKicker">¡Lo has conseguido!</p>
+    <h2 class="gift-title" id="giftTitle"></h2>
+    <div class="nitro-wrap" id="nitroWrap">
+      <div class="nitro" id="nitro">
+        <div class="nitro-bg"></div>
+        <div class="nitro-lines"></div>
+        <div class="nitro-holo"></div>
+        <div class="nitro-top"><span class="nitro-word">NITRO</span><span class="nitro-pill" id="nitroPill">1 MES</span></div>
+        <svg class="nitro-gem" viewBox="0 0 120 120" aria-hidden="true">
+          <defs>
+            <linearGradient id="gmA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#cfc4ff"/><stop offset="1" stop-color="#7d8bff"/></linearGradient>
+            <linearGradient id="gmB" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#6a55ff"/><stop offset="1" stop-color="#b8f0ff"/></linearGradient>
+          </defs>
+          <polygon points="30,24 90,24 110,48 10,48" fill="url(#gmA)"/>
+          <polygon points="10,48 110,48 60,104" fill="url(#gmB)"/>
+          <polygon points="30,24 45,48 60,24" fill="rgba(255,255,255,.55)"/>
+          <polygon points="60,24 75,48 90,24" fill="rgba(255,255,255,.3)"/>
+          <polygon points="45,48 75,48 60,104" fill="rgba(255,255,255,.28)"/>
+          <polyline points="30,24 90,24 110,48 60,104 10,48 30,24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.6" stroke-linejoin="round"/>
+        </svg>
+        <div class="nitro-bottom"><div><small>PARA</small><b id="nitroTo"></b></div><div class="r"><small>DE</small><b id="nitroFrom"></b></div></div>
+        <div class="nitro-shine"></div>
+      </div>
+    </div>
+    <p class="gift-note" id="giftNote"></p>
+    <div class="gift-code hidden" id="giftCodeBox"><code id="giftCodeTxt"></code><button class="gift-copy" id="giftCopy" type="button">Copiar</button></div>
+    <div class="gift-actions">
+      <a class="btn btn--purple hidden" id="giftLink" target="_blank" rel="noopener"><span class="button_top">Canjear mi Nitro</span></a>
+      <button class="btn btn--blue" id="giftNext" type="button"><span class="button_top">Ver todo lo que hay para ti</span></button>
+    </div>
   </div>
 </div>
 
@@ -267,6 +305,7 @@
       <h2 class="final-title" id="finalTitle"></h2>
       <p class="final-text" id="finalText"></p>
       <div class="final-actions">
+        <button class="btn btn--purple" id="seeGift" type="button"><span class="button_top">Ver mi regalo</span></button>
         <button class="btn btn--purple" id="toTop" type="button"><span class="button_top">Volver arriba</span></button>
         <button class="btn btn--blue" id="replay" type="button"><span class="button_top">Ver la animación otra vez</span></button>
       </div>

@@ -576,3 +576,38 @@ input,textarea{-webkit-user-select:text;user-select:text}
 .g-count{position:absolute;inset:0;display:grid;place-items:center;font:800 clamp(80px,28vw,150px)/1 var(--display);color:#fff;text-shadow:0 0 34px rgba(201,188,255,.9),0 4px 0 rgba(0,0,0,.35);pointer-events:none;z-index:5;opacity:0}
 .g-count.pop{animation:gpop .6s ease-out}
 @keyframes gpop{0%{transform:scale(1.9);opacity:0}25%{opacity:1}100%{transform:scale(1);opacity:0}}
+
+
+/* =====================================================
+   REGALO · tarjeta de Nitro (holográfica, con inclinación)
+   ===================================================== */
+#gift{z-index:29;background:radial-gradient(90% 60% at 50% 38%,#2c1b72 0%,#120a40 55%,#070419 100%);padding:0;overflow:hidden;touch-action:none}
+.gift-rays{position:absolute;left:50%;top:38%;width:170vmax;height:170vmax;margin:-85vmax 0 0 -85vmax;background:repeating-conic-gradient(from 0deg,rgba(255,226,154,.16) 0 5deg,rgba(255,226,154,0) 5deg 20deg);-webkit-mask-image:radial-gradient(closest-side,#000 8%,transparent 62%);mask-image:radial-gradient(closest-side,#000 8%,transparent 62%);animation:raysSpin 50s linear infinite}
+@keyframes raysSpin{to{transform:rotate(360deg)}}
+#giftCv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+.gift-inner{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(92vw,420px);padding:0 4px}
+.gift-kicker{font-size:12.5px;letter-spacing:.22em;text-transform:uppercase;color:#ffe27a;font-weight:800}
+.gift-title{font-size:clamp(34px,10.5vw,50px);line-height:1;letter-spacing:-.04em;color:#fff;text-align:center;text-shadow:0 2px 24px rgba(125,100,255,.7)}
+.gift-title em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:-.02em;color:#d9d1ff}
+.nitro-wrap{width:min(86vw,350px);perspective:900px;margin:6px 0 4px;animation:cardIn 1.5s cubic-bezier(.2,.9,.2,1.04) both}
+@keyframes cardIn{0%{opacity:0;transform:translateY(130px) rotateY(180deg) scale(.55)}55%{opacity:1}100%{opacity:1;transform:none}}
+.nitro{position:relative;width:100%;aspect-ratio:1.586;border-radius:22px;overflow:hidden;transform-style:preserve-3d;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .12s ease-out;
+  box-shadow:0 34px 70px rgba(0,0,0,.6),0 0 70px rgba(125,100,255,.5),inset 0 0 0 1.5px rgba(255,255,255,.4)}
+.nitro-bg{position:absolute;inset:0;background:radial-gradient(120% 150% at 0% 0%,#8a6cff 0%,#4c3ccf 34%,#2a1f80 66%,#140d4e 100%)}
+.nitro-lines{position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.06) 0 2px,transparent 2px 14px);opacity:.7}
+.nitro-holo{position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,0,200,0) 18%,rgba(255,120,210,.5) 34%,rgba(110,255,235,.5) 50%,rgba(255,236,120,.5) 66%,rgba(120,120,255,0) 82%);background-size:260% 260%;background-position:var(--mx,50%) var(--my,50%);mix-blend-mode:color-dodge;opacity:.55}
+.nitro-shine{position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.55),rgba(255,255,255,0) 42%);mix-blend-mode:overlay;pointer-events:none}
+.nitro-top{position:absolute;left:18px;right:18px;top:16px;display:flex;justify-content:space-between;align-items:center}
+.nitro-word{font-family:var(--display);font-weight:800;font-size:clamp(22px,7vw,30px);letter-spacing:.14em;color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.35)}
+.nitro-pill{font-weight:800;font-size:12px;letter-spacing:.14em;color:#1a1052;background:linear-gradient(135deg,#fff1b8,#ffd35c);padding:5px 11px;border-radius:99px;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.nitro-gem{position:absolute;left:50%;top:50%;width:34%;margin:-17% 0 0 -17%;filter:drop-shadow(0 6px 18px rgba(0,0,0,.45));animation:gemFloat 3.2s ease-in-out infinite;transform:translateZ(40px)}
+@keyframes gemFloat{50%{transform:translateY(-6px) translateZ(40px)}}
+.nitro-bottom{position:absolute;left:18px;right:18px;bottom:14px;display:flex;justify-content:space-between;align-items:flex-end;color:#fff}
+.nitro-bottom small{display:block;font-size:9.5px;letter-spacing:.2em;opacity:.8;font-weight:700}
+.nitro-bottom b{font-family:var(--display);font-size:clamp(15px,4.6vw,19px);font-weight:700;letter-spacing:-.01em}
+.nitro-bottom .r{text-align:right}
+.gift-note{color:#f6f3ff;text-align:center;max-width:34ch;font-size:15.5px}
+.gift-code{display:flex;align-items:center;gap:10px;background:rgba(8,4,28,.9);border:1px solid rgba(255,226,122,.55);border-radius:14px;padding:8px 8px 8px 14px;max-width:100%}
+.gift-code code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:15px;color:#ffe9a8;word-break:break-all;user-select:all;-webkit-user-select:all}
+.gift-copy{border:0;border-radius:9px;background:#ffe27a;color:#2b1d00;font:800 13px var(--sans);padding:9px 14px;cursor:pointer}
+.gift-actions{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:4px}
