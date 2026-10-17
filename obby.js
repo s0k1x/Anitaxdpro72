@@ -49,6 +49,7 @@
       let anims = [], particles = [], rings = [];
       let shake = 0, flashA = 0, flashCol = '255,255,255', holdFlash = false;
       let iris = 0, cur = null;
+      let trType = 'iris', trPhase = 'open', trLook = null;
       let Sb = 1, Z = 1, dprCap = 2, sceneT = 0, look = {}, camDX = 0, camDY = 0, quality = 1, slowT = 0, ft = .0167, acc = 0, glitchT = 0, glitchBands = [], deferOn = false;
       const later = [];
       let banner = null, callA = 0, callVol = 0, titleFx = null;
@@ -64,13 +65,17 @@
         layout();
       }
       // La escena se coloca por debajo de la tarjeta de texto: baja el suelo y, si hace falta, reduce la escala.
-      let topY = 140, cardBot = 380;
+      let topY = 140, cardBot = 380, cardTop = 84, cardPos = 'top';
       function layout() {
         const S0 = Math.max(.8, Math.min(W / 330, H / 700));
         let g = H * .70, sc = S0;
-        const need = cardBot + 14 + topY * sc;
-        if (need > g) g = Math.min(H * .80, need);
-        if (need > g) sc = Math.max(.55, (g - cardBot - 14) / topY);
+        if (cardPos === 'bottom') {
+          g = Math.min(H * .86, cardTop - 46); sc = Math.min(S0, Math.max(.55, (g - 92) / topY));
+        } else {
+          const need = cardBot + 14 + topY * sc;
+          if (need > g) g = Math.min(H * .80, need);
+          if (need > g) sc = Math.max(.55, (g - cardBot - 14) / topY);
+        }
         Sb = sc; S = sc * Z; GROUND = g;
       }
       resize();
@@ -226,7 +231,7 @@
         rr(ctx, -13, -34, 26, 27, 7); ctx.stroke(); ctx.shadowBlur = 0;
         ctx.fillStyle = 'rgba(255,255,255,.4)'; rr(ctx, -10, -31, 9, 3, 1.5); ctx.fill();
         ctx.fillStyle = 'rgba(0,0,30,.10)'; rr(ctx, -13, -14, 26, 7, 6); ctx.fill();
-        if (c.bow) {
+        if (c.bow && !['hardhat', 'cowboy', 'beanie'].includes(look.hat)) {
           ctx.fillStyle = '#fff'; ctx.beginPath();
           ctx.moveTo(6, -35); ctx.lineTo(1, -41); ctx.lineTo(1, -31); ctx.closePath(); ctx.fill();
           ctx.beginPath(); ctx.moveTo(6, -35); ctx.lineTo(11, -41); ctx.lineTo(11, -31); ctx.closePath(); ctx.fill();
@@ -243,6 +248,16 @@
         else if (c.sad) ctx.arc(lk, -10.5, 3.4, 1.18 * Math.PI, 1.82 * Math.PI);
         else ctx.arc(lk, -15, 3.6, .15 * Math.PI, .85 * Math.PI);
         ctx.stroke();
+        // accesorio propio del universo
+        { const h = look.hat, d = c.look >= 0 ? 1 : -1;
+          if (h === 'hardhat') { ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(0, -33, 12.8, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.fillRect(-15.5, -34.4, 31, 3.8); ctx.fillStyle = '#e0a800'; ctx.fillRect(-1.6, -45.8, 3.2, 12); ctx.strokeStyle = 'rgba(40,24,0,.7)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(0, -33, 12.8, Math.PI, 0); ctx.stroke(); }
+          else if (h === 'phones') { ctx.strokeStyle = '#ff7ad9'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, -22, 15, Math.PI * 1.02, Math.PI * 1.98); ctx.stroke(); ctx.fillStyle = '#7df3ff'; rr(ctx, -18.5, -28, 6, 12, 2.4); ctx.fill(); rr(ctx, 12.5, -28, 6, 12, 2.4); ctx.fill(); ctx.fillStyle = '#ff7ad9'; ctx.fillRect(-17, -24, 3, 3); ctx.fillRect(14, -24, 3, 3); }
+          else if (h === 'scarf') { ctx.fillStyle = '#ff7aa9'; rr(ctx, -13.5, -13.5, 27, 5.5, 2.4); ctx.fill(); ctx.fillStyle = '#e0568a'; rr(ctx, 5, -9, 5.5, 11, 2); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(-10, -12.4, 20, 1.2); }
+          else if (h === 'cowboy') { ctx.fillStyle = '#6b4a2f'; ctx.beginPath(); ctx.ellipse(0, -33.5, 21, 3.8, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#7a5636'; ctx.beginPath(); ctx.moveTo(-9.5, -34); ctx.lineTo(-7.5, -46); ctx.quadraticCurveTo(0, -43, 7.5, -46); ctx.lineTo(9.5, -34); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#2a1a10'; ctx.fillRect(-9.2, -38.6, 18.4, 3.2); ctx.strokeStyle = 'rgba(20,10,0,.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(0, -33.5, 21, 3.8, 0, 0, TAU); ctx.stroke(); }
+          else if (h === 'beanie') { ctx.fillStyle = '#6f8fb8'; ctx.beginPath(); ctx.arc(0, -33, 13.2, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#4f6f98'; ctx.fillRect(-14, -36.5, 28, 5.2); ctx.fillStyle = 'rgba(255,255,255,.35)'; for (let q = -9; q <= 9; q += 6) ctx.fillRect(q, -36.5, 1.6, 5.2); ctx.fillStyle = '#f3f7ff'; ctx.beginPath(); ctx.arc(0, -47.6, 4.2, 0, TAU); ctx.fill(); }
+          else if (h === 'torch') { ctx.fillStyle = '#33363d'; rr(ctx, d > 0 ? 9 : -19, -17.5, 10, 4.6, 1.5); ctx.fill(); ctx.fillStyle = '#ffd35c'; ctx.fillRect(d > 0 ? 18.4 : -20, -17, 1.6, 3.6); const g = ctx.createLinearGradient(d * 19, 0, d * 78, 0); g.addColorStop(0, 'rgba(255,245,200,.55)'); g.addColorStop(1, 'rgba(255,245,200,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(d * 19, -16); ctx.lineTo(d * 78, -34); ctx.lineTo(d * 78, 6); ctx.closePath(); ctx.fill(); }
+          else if (h === 'star') { const gl = ctx.createRadialGradient(0, -46, 0, 0, -46, 16); gl.addColorStop(0, 'rgba(255,240,190,.75)'); gl.addColorStop(1, 'rgba(255,240,190,0)'); ctx.fillStyle = gl; ctx.fillRect(-16, -62, 32, 32); star5(0, -46 + Math.sin(time * 3) * 1.2, 5.2, '#ffe9a0', 1); }
+        }
         ctx.restore();
 
         const overlay = () => {
@@ -1624,14 +1639,14 @@
       /* ---------- Cómo se ve cada universo ---------- */
       const DEFAULT_LOOK = { accent: '#a9d4ff', scrim: .36, style: 'plush', vignette: ['0,0,0', .42] };
       const LOOKS = {
-        obby: { accent: '#9bd8ff', scrim: .74, scrimCol: '6,22,58', style: 'cel', vignette: ['10,30,80', .26], grade: [['soft-light', '#ffe7b0', .1]], bloom: .05, mote: '255,255,255' },
-        llamada: { accent: '#ff7ad9', scrim: .4, style: 'neon', vignette: ['20,0,40', .5], grade: [['overlay', '#7a2cff', .16]], scan: .08, bloom: .32, grain: .03, mote: '255,160,240' },
-        corazon: { accent: '#ffb48a', scrim: .42, scrimCol: '44,10,56', style: 'plush', vignette: ['70,10,60', .34], grade: [['soft-light', '#ffb199', .3]], bloom: .3, grain: .05, mote: '255,210,225' },
-        rieles: { accent: '#e6b87c', scrim: .5, scrimCol: '8,12,18', style: 'cel', vignette: ['0,0,0', .62], grade: [['saturation', '#808080', .6], ['multiply', '#d8b684', .55]], grain: .1, scratches: true, letterbox: .075, weave: true, mote: '210,180,130' },
-        exito: { accent: '#ff4f66', scrim: .5, scrimCol: '0,0,0', style: 'cel', pixel: 3, chroma: 2, glitch: true, vignette: ['0,0,0', .72], grade: [['saturation', '#808080', .45], ['multiply', '#d6a8a8', .4]], scan: .15, grain: .1, mote: null },
-        distancia: { accent: '#a9c4e8', scrim: .5, scrimCol: '8,12,26', style: 'plush', vignette: ['8,14,30', .5], grade: [['saturation', '#808080', .6], ['soft-light', '#9bb4d8', .25]], grain: .035, mote: '235,242,255', zoom: t => 1.05 - .16 * smooth(clamp((t - .8) / 4.6, 0, 1)) },
-        reencuentro: { accent: '#7dffd8', scrim: .36, style: 'plush', vignette: ['4,0,30', .4], bloom: .42, grain: .03, mote: '255,235,255', zoom: t => 1 + .05 * smooth(clamp((t - 8) / 3.5, 0, 1)) },
-        portal: { accent: '#c9bcff', scrim: .3, style: 'plush', vignette: ['4,0,30', .45], bloom: .3 }
+        obby: { trans: 'iris', hat: 'hardhat', fade: '#0b2c6b', accent: '#9bd8ff', scrim: .74, scrimCol: '6,22,58', style: 'cel', vignette: ['10,30,80', .26], grade: [['soft-light', '#ffe7b0', .1]], bloom: .05, mote: '255,255,255' },
+        llamada: { trans: 'wipe', hat: 'phones', fade: '#12002e', accent: '#ff7ad9', scrim: .4, style: 'neon', vignette: ['20,0,40', .5], grade: [['overlay', '#7a2cff', .16]], scan: .08, bloom: .32, grain: .03, mote: '255,160,240' },
+        corazon: { trans: 'fade', hat: 'scarf', fade: '#ffe3cf', accent: '#ffb48a', scrim: .42, scrimCol: '44,10,56', style: 'plush', vignette: ['70,10,60', .34], grade: [['soft-light', '#ffb199', .3]], bloom: .3, grain: .05, mote: '255,210,225' },
+        rieles: { trans: 'burn', hat: 'cowboy', card: 'bottom', fade: '#f0c27c', accent: '#e6b87c', scrim: .5, scrimCol: '8,12,18', style: 'cel', vignette: ['0,0,0', .62], grade: [['saturation', '#808080', .6], ['multiply', '#d8b684', .55]], grain: .1, scratches: true, letterbox: .075, weave: true, mote: '210,180,130' },
+        exito: { trans: 'glitch', hat: 'torch', fade: '#000000', accent: '#ff4f66', scrim: .5, scrimCol: '0,0,0', style: 'cel', pixel: 3, chroma: 2, glitch: true, vignette: ['0,0,0', .72], grade: [['saturation', '#808080', .45], ['multiply', '#d6a8a8', .4]], scan: .15, grain: .1, mote: null },
+        distancia: { trans: 'fade', hat: 'beanie', fade: '#dfe8f5', accent: '#a9c4e8', scrim: .5, scrimCol: '8,12,26', style: 'plush', vignette: ['8,14,30', .5], grade: [['saturation', '#808080', .6], ['soft-light', '#9bb4d8', .25]], grain: .035, mote: '235,242,255', zoom: t => 1.05 - .16 * smooth(clamp((t - .8) / 4.6, 0, 1)) },
+        reencuentro: { trans: 'bang', hat: 'star', fade: '#ffffff', accent: '#7dffd8', scrim: .36, style: 'plush', vignette: ['4,0,30', .4], bloom: .42, grain: .03, mote: '255,235,255', zoom: t => 1 + .05 * smooth(clamp((t - 8) / 3.5, 0, 1)) },
+        portal: { trans: 'bang', fade: '#ffffff', accent: '#c9bcff', scrim: .3, style: 'plush', vignette: ['4,0,30', .45], bloom: .3 }
       };
 
       /* ---------- Postproceso ---------- */
@@ -1658,11 +1673,40 @@
         if (L.glitch && glitchT > 0) glitchBands.forEach(b => c.drawImage(lo, 0, b.y0, loW, b.h, b.dx, b.y0 * f, W, b.h * f));
         c.imageSmoothingEnabled = true;
       }
+      function overlayTransition() {
+        const c = mainCtx, cov = clamp(1 - iris, 0, 1), T = trType, NL = trLook || {};
+        const acc = NL.accent || '#c9bcff', base = NL.fade || '#050409';
+        c.save();
+        if (T === 'iris') {
+          c.strokeStyle = rgba(acc, .85 * (1 - iris)); c.lineWidth = 3 + 7 * (1 - iris); c.beginPath(); c.arc(W / 2, GROUND - 26 * Sb, Math.hypot(W, H) * .75 * iris, 0, TAU); c.stroke();
+        } else if (T === 'wipe') {              // barrido de neón de izquierda a derecha
+          const close = trPhase === 'close', x0 = close ? 0 : W * (1 - cov) * 0 + W * (1 - cov), x1 = close ? W * cov : W;
+          const xa = close ? 0 : W * (1 - cov); c.fillStyle = base; c.fillRect(xa, 0, (close ? W * cov : W * cov), H);
+          const ex = close ? W * cov : W * (1 - cov);
+          const g = c.createLinearGradient(ex - 46, 0, ex + 46, 0); g.addColorStop(0, rgba(acc, 0)); g.addColorStop(.5, rgba(acc, .9)); g.addColorStop(1, rgba(acc, 0));
+          c.fillStyle = g; c.fillRect(ex - 46, 0, 92, H); c.fillStyle = '#fff'; c.fillRect(ex - 1, 0, 2, H); void x0; void x1;
+        } else if (T === 'fade') {              // fundido a un color cálido o frío
+          c.globalAlpha = smooth(cov); c.fillStyle = base; c.fillRect(0, 0, W, H);
+        } else if (T === 'burn') {              // quemadura de película
+          c.globalAlpha = Math.pow(cov, 1.3); c.fillStyle = base; c.fillRect(0, 0, W, H);
+          c.globalAlpha = .35 * cov; c.fillStyle = '#fff4d8'; for (let k = 0; k < 5; k++) c.fillRect(Math.random() * W, 0, 1 + Math.random() * 3, H);
+          c.globalAlpha = cov * .6; c.globalCompositeOperation = 'overlay'; c.translate((Math.random() * 128) | 0, (Math.random() * 128) | 0); c.fillStyle = noisePat; c.fillRect(-128, -128, W + 256, H + 256);
+        } else if (T === 'glitch') {            // corte con cortes de imagen
+          for (let k = 0; k < 11; k++) { const y = Math.random() * H, h = 4 + Math.random() * 46, col = [acc, '#ffffff', '#000000', '#00ffd0'][(Math.random() * 4) | 0]; c.globalAlpha = cov * .85; c.fillStyle = col; c.fillRect((Math.random() - .5) * 40, y, W + 40, h); }
+          c.globalAlpha = smooth(clamp((cov - .78) / .22, 0, 1)); c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
+        } else if (T === 'bang') {              // explosión de luz
+          const r = Math.hypot(W, H) * 1.05 * cov; if (r > 1) { const g = c.createRadialGradient(W / 2, GROUND - 40 * Sb, 0, W / 2, GROUND - 40 * Sb, r); g.addColorStop(0, '#ffffff'); g.addColorStop(.82, rgba(acc, .9)); g.addColorStop(1, rgba(acc, 0)); c.fillStyle = g; c.fillRect(0, 0, W, H); }
+          if (cov > .985) { c.fillStyle = '#fff'; c.fillRect(0, 0, W, H); }
+        }
+        c.restore();
+      }
+
       function post(L) {
         const c = mainCtx;
         // velo oscuro arriba para que el texto se lea siempre
         const scr = L.scrim == null ? .36 : L.scrim;
-        if (scr > 0) { const g = c.createLinearGradient(0, 0, 0, cardBot + 46), col = L.scrimCol || '6,4,16'; g.addColorStop(0, `rgba(${col},${scr})`); g.addColorStop(.72, `rgba(${col},${scr * .82})`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g; c.fillRect(0, 0, W, cardBot + 46); }
+        if (scr > 0 && L.card === 'bottom') { const g = c.createLinearGradient(0, H, 0, cardTop - 40), col = L.scrimCol || '6,4,16'; g.addColorStop(0, `rgba(${col},${scr})`); g.addColorStop(.7, `rgba(${col},${scr * .8})`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g; c.fillRect(0, cardTop - 40, W, H - cardTop + 40); }
+        else if (scr > 0) { const g = c.createLinearGradient(0, 0, 0, cardBot + 46), col = L.scrimCol || '6,4,16'; g.addColorStop(0, `rgba(${col},${scr})`); g.addColorStop(.72, `rgba(${col},${scr * .82})`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g; c.fillRect(0, 0, W, cardBot + 46); }
         // bloom (resplandor suave)
         if (L.bloom && quality > 0) {
           const bw = Math.ceil(W / 9), bh = Math.ceil(H / 9);
@@ -1693,8 +1737,8 @@
           c.fillStyle = 'rgba(255,255,255,.07)'; c.fillText(titleFx.text, 0, 0);
           c.lineWidth = 1.5; c.strokeStyle = rgba((L.accent || '#c9bcff'), .6); c.strokeText(titleFx.text, 0, 0); c.restore();
         }
-        // aro luminoso del cambio de universo
-        if (iris < .999) { c.save(); c.strokeStyle = rgba((L.accent || '#c9bcff'), .85 * (1 - iris)); c.lineWidth = 3 + 7 * (1 - iris); c.beginPath(); c.arc(W / 2, GROUND - 26 * Sb, Math.hypot(W, H) * .75 * iris, 0, TAU); c.stroke(); c.restore(); }
+        // transición entre universos (cada uno tiene la suya)
+        if (iris < .999) overlayTransition();
       }
 
       const REG = { obby: contestScene, llamada: callScene, corazon: heartScene, rieles: railsScene, exito: hitScene, distancia: distanceScene, reencuentro: reunionScene, carrera: raceScene, chat: chatScene, build: buildScene, noche: nightScene, lluvia: rainScene, fiesta: partyScene, hoguera: campScene, portal: portalScene };
@@ -1703,15 +1747,20 @@
 
       /* ---------- Transición en iris entre mundos ---------- */
       async function goto(name, idx) {
-        if (cur) { await anim(.5, t => { iris = 1 - smooth(t); }); iris = 0; }
+        trLook = Object.assign({ id: name }, LOOKS[name] || DEFAULT_LOOK); trType = trLook.trans || 'iris';
+        if (cur) { trPhase = 'close'; await anim(.6, t => { iris = 1 - smooth(t); }); iris = 0; }
         particles = []; rings = []; shake = 0; chars.length = 2; banner = null; callA = 0;
         cur = (REG[name] || REG.obby)();
-        look = LOOKS[name] || DEFAULT_LOOK; sceneT = 0; glitchT = 0;
+        look = trLook; sceneT = 0; glitchT = 0;
         if (opts.onUniverse) opts.onUniverse(look);
-        topY = TOP[name] || 140; cardBot = opts.cardBottom ? opts.cardBottom(idx) : 380; layout();
+        cardPos = look.card || 'top';
+        const box = opts.cardBox ? opts.cardBox(idx) : { top: 84, bottom: 380 };
+        cardBot = box.bottom; cardTop = box.top;
+        topY = TOP[name] || 140; layout();
         cur.enter();
         titleFx = idx < N ? { text: String(idx + 1).padStart(2, '0'), t: 0 } : null;
-        await anim(.65, t => { iris = smooth(t); });
+        trPhase = 'open';
+        await anim(.75, t => { iris = smooth(t); });
         iris = 1;
         burst(A.x, 20, 10, PAL, 90, .6, 80);
       }
@@ -1768,7 +1817,8 @@
 
       function draw() {
         mainCtx.clearRect(0, 0, W, H);
-        if (!cur || iris <= .002) return;
+        if (!cur) return;
+        if (trType === 'iris' && iris <= .002) return;
         const L = look, c = mainCtx;
         // cámara: dolly de entrada + respiración (+ temblor de proyector en el universo de cine)
         const dolly = 1 + .06 * (1 - smooth(clamp(sceneT / 1.8, 0, 1))) + .004 * Math.sin(sceneT * .7);
@@ -1776,7 +1826,7 @@
         camDX = L.weave ? Math.sin(time * 37) * .45 : 0; camDY = L.weave ? Math.cos(time * 29) * .45 : 0;
         const sh = shake > .2 ? [(Math.random() - .5) * shake, (Math.random() - .5) * shake] : [0, 0];
         c.save();
-        if (iris < .999) { c.beginPath(); c.arc(W / 2, GROUND - 26 * Sb, Math.hypot(W, H) * .75 * iris, 0, TAU); c.clip(); }
+        if (trType === 'iris' && iris < .999) { c.beginPath(); c.arc(W / 2, GROUND - 26 * Sb, Math.hypot(W, H) * .75 * iris, 0, TAU); c.clip(); }
         if (L.pixel > 1) {
           const f = L.pixel; ensureLo(f);
           ctx = loCtx; loCtx.setTransform(1, 0, 0, 1, 0, 0); loCtx.clearRect(0, 0, lo.width, lo.height); loCtx.setTransform(1 / f, 0, 0, 1 / f, 0, 0);

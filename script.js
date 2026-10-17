@@ -265,7 +265,8 @@ function measureCard(label, s) {
   const box = $('sceneMeasure');
   box.innerHTML = `<div class="scene-card in"><p class="sc-stage">${esc(label)}</p><p class="sc-when">${esc(s.cuando)}</p>
     <h2 class="sc-title">${esc(s.titulo)}</h2><p class="sc-text">${esc(s.texto)}</p></div>`;
-  return box.firstElementChild.getBoundingClientRect().bottom;
+  const r = box.firstElementChild.getBoundingClientRect();
+  return { top: r.top, bottom: r.bottom };
 }
 
 async function showCard(label, s, hold) {
@@ -321,11 +322,11 @@ async function playIntro() {
       names: { me: DATA.yoNombre || 'Yo', her: DATA.nombre },
       sleep,
       pace: DATA.ritmo || 1,
-      onUniverse: look => { $('intro').style.setProperty('--uni', look.accent || '#a9d4ff'); },
-      cardBottom: j => j >= N ? measureCard('Meta', { cuando: 'Y ahora', titulo: 'Obby completado.', texto: 'Pasa, esto es para ti.' }) : measureCard(label(j), evs[j]),
+      onUniverse: look => { $('intro').style.setProperty('--uni', look.accent || '#a9d4ff'); $('intro').dataset.uni = look.id || ''; },
+      cardBox: j => j >= N ? measureCard('Meta', { cuando: 'Y ahora', titulo: 'Un último reto.', texto: 'Ahora toca ganarte tu regalo.' }) : measureCard(label(j), evs[j]),
       card: {
         show: j => showCard(label(j), evs[j]),
-        showFinal: () => showCard('Meta', { cuando: 'Y ahora', titulo: 'Obby completado.', texto: 'Pasa, esto es para ti.' }, 900),
+        showFinal: () => showCard('Meta', { cuando: 'Y ahora', titulo: 'Un último reto.', texto: 'Ahora toca ganarte tu regalo.' }, 900),
         hide: hideCard
       },
       onStage: j => {
@@ -334,11 +335,31 @@ async function playIntro() {
       }
     });
   }
-  // La página aparece debajo mientras la animación se desvanece
+  // Al terminar el recorrido por vuestra historia, un portal teletransporta a Anita al juego final.
+  if (window.Juego && !params.has('sinjuego')) {
+    $('intro').classList.add('hidden');
+    await playGame();
+    reveal();
+    $('game').classList.add('fade-out');
+    await wait(850);
+    $('game').classList.add('hidden');
+    return;
+  }
+  // (sin juego) La página aparece debajo mientras la animación se desvanece
   reveal();
   $('intro').classList.add('fade-out');
   await wait(850);
   $('intro').classList.add('hidden');
+}
+
+/* ---------- El último reto: un obby para ganarse el regalo ---------- */
+async function playGame() {
+  document.body.classList.add('in-game');
+  $('game').classList.remove('hidden', 'fade-out');
+  // reinicia el destello de teletransporte
+  const fl = $('game').querySelector('.g-flash'); fl.style.animation = 'none'; void fl.offsetWidth; fl.style.animation = '';
+  await Juego.play({ root: $('game'), startCp: +params.get('cp') || 0, allStars: params.has('estrellas') });
+  document.body.classList.remove('in-game');
 }
 
 /* ---------- Revelar la página ---------- */
@@ -536,6 +557,10 @@ async function start() {
     return;
   }
   await runLoader();
+  if (params.has('juego') && isUnlocked()) {
+    // Atajo para probar el juego: index.html?juego&abrir=CODIGO  (cp=1..5 empieza en un punto de control, estrellas = ya las tiene)
+    await playGame(); reveal(); $('game').classList.add('hidden'); return;
+  }
   if (isUnlocked()) showGate(); else showLock();
 }
 start();

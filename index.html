@@ -136,6 +136,33 @@
   <div class="intro-bar"><i id="introBar"></i></div>
 </div>
 
+<!-- JUEGO FINAL: un obby para ganarse el regalo -->
+<div id="game" class="screen hidden">
+  <canvas id="gameCv" aria-hidden="true"></canvas>
+  <div class="g-flash" aria-hidden="true"></div>
+  <div class="g-hud"><span id="gStars">★ 0 / 7</span><span id="gDeaths">0 caídas</span></div>
+  <div class="g-toast" id="gToast" role="status"></div>
+  <div class="g-ctrl g-ctrl-l">
+    <button class="btn btn--blue g-btn" id="gL" type="button" aria-label="Izquierda"><span class="button_top">◀</span></button>
+    <button class="btn btn--blue g-btn" id="gR" type="button" aria-label="Derecha"><span class="button_top">▶</span></button>
+  </div>
+  <div class="g-ctrl g-ctrl-r"><button class="btn btn--purple g-btn g-jump" id="gJ" type="button"><span class="button_top">SALTAR</span></button></div>
+  <div class="g-card" id="gIntro">
+    <p class="g-kicker">Nivel final</p>
+    <h2>Un último reto</h2>
+    <p>Te hemos teletransportado a un obby. Llega hasta la caja del regalo… pero solo se abre si recoges <b>las 7 estrellas ★</b>. Cuidado con la lava, las barras y las trampas.</p>
+    <p class="g-keys">Mantén ◀ ▶ para moverte y SALTAR para saltar. En ordenador: flechas y espacio.</p>
+    <button class="btn btn--purple" id="gStart" type="button"><span class="button_top">¡Vamos!</span></button>
+  </div>
+  <div class="g-card hidden" id="gWin">
+    <p class="g-kicker">¡Lo conseguiste!</p>
+    <h2>Tu regalo</h2>
+    <p id="gWinStats"></p>
+    <p>Te lo has ganado tú solita. Ábrelo.</p>
+    <button class="btn btn--purple" id="gWinBtn" type="button"><span class="button_top">Abrir mi regalo</span></button>
+  </div>
+</div>
+
 <!-- PÁGINA PRINCIPAL -->
 <main id="main" class="hidden">
 
@@ -262,6 +289,7 @@
 </div>
 
 <script src="obby.js"></script>
+<script src="juego.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
