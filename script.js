@@ -321,6 +321,7 @@ async function playIntro() {
       names: { me: DATA.yoNombre || 'Yo', her: DATA.nombre },
       sleep,
       pace: DATA.ritmo || 1,
+      onUniverse: look => { $('intro').style.setProperty('--uni', look.accent || '#a9d4ff'); },
       cardBottom: j => j >= N ? measureCard('Meta', { cuando: 'Y ahora', titulo: 'Obby completado.', texto: 'Pasa, esto es para ti.' }) : measureCard(label(j), evs[j]),
       card: {
         show: j => showCard(label(j), evs[j]),

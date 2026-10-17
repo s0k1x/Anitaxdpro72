@@ -238,18 +238,18 @@ a{color:inherit}
 .intro-top{position:absolute;z-index:2;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:12px;
   padding:calc(18px + env(safe-area-inset-top,0px)) 22px 0}
 #introCount{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-variant-numeric:tabular-nums}
-#scene{position:absolute;z-index:2;left:24px;right:24px;top:calc(84px + env(safe-area-inset-top,0px));max-width:520px;pointer-events:none}
+#scene{text-shadow:0 1px 14px rgba(0,0,0,.45);position:absolute;z-index:2;left:24px;right:24px;top:calc(84px + env(safe-area-inset-top,0px));max-width:520px;pointer-events:none}
 #sceneMeasure{position:absolute;z-index:-1;left:24px;right:24px;top:calc(84px + env(safe-area-inset-top,0px));max-width:520px;visibility:hidden;pointer-events:none}
 .scene-card{opacity:0;transform:translateY(14px);transition:opacity .7s ease,transform .7s ease}
 .scene-card.in{opacity:1;transform:none}
 .scene-card.out{opacity:0;transform:translateY(-12px)}
-.sc-stage{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2);margin-bottom:12px}
+.sc-stage{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--uni,var(--accent-2));margin-bottom:12px;transition:color .6s}
 .sc-stage::before{content:"";width:24px;height:1px;background:currentColor}
 .sc-when{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .sc-title{font-size:clamp(32px,9.6vw,52px);font-weight:700;letter-spacing:-.04em;line-height:1.02;margin-bottom:14px}
 .sc-text{font-family:var(--serif);font-style:italic;font-size:clamp(19px,5.1vw,23px);line-height:1.42;color:#cfc9e6;min-height:4.2em;max-width:32ch}
 .intro-bar{position:absolute;z-index:2;left:24px;right:88px;bottom:calc(34px + env(safe-area-inset-bottom,0px));height:2px;background:rgba(255,255,255,.14);overflow:hidden}
-.intro-bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .8s ease}
+.intro-bar i{display:block;height:100%;width:0;background:var(--uni,var(--accent));transition:width .8s ease,background .6s}
 
 /* =====================================================
    PÁGINA PRINCIPAL
