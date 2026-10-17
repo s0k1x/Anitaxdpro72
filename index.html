@@ -2,7 +2,9 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#050409">
 <title>Para ti</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,6 +13,12 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body class="locked">
+
+<!-- Aviso si el móvil está en horizontal (todo está pensado en vertical) -->
+<div id="rotate" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M11 18.5h2"/></svg>
+  <span>Pon el móvil en vertical</span>
+</div>
 
 <canvas id="stars" aria-hidden="true"></canvas>
 <div class="glow" aria-hidden="true"></div>
@@ -141,7 +149,9 @@
   <canvas id="gameCv" aria-hidden="true"></canvas>
   <div class="g-flash" aria-hidden="true"></div>
   <div class="g-hud"><span id="gStars">★ 0 / 7</span><span id="gDeaths">0 caídas</span></div>
+  <div class="g-prog" id="gProgBox" aria-hidden="true"><i id="gProg"></i></div>
   <div class="g-toast" id="gToast" role="status"></div>
+  <div class="g-count" id="gCount" aria-hidden="true"></div>
   <div class="g-ctrl g-ctrl-l">
     <button class="btn btn--blue g-btn" id="gL" type="button" aria-label="Izquierda"><span class="button_top">◀</span></button>
     <button class="btn btn--blue g-btn" id="gR" type="button" aria-label="Derecha"><span class="button_top">▶</span></button>

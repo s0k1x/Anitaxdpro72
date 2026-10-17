@@ -87,6 +87,13 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const target = new Date(DATA.bloqueo.fecha);
 const fechaLarga = d => d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
 
+/* ---------- Sin zoom: pellizco, doble toque y Ctrl + rueda ---------- */
+['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
+document.addEventListener('touchmove', e => { if (e.touches.length > 1 || (e.scale && e.scale !== 1)) e.preventDefault(); }, { passive: false });
+document.addEventListener('dblclick', e => e.preventDefault());
+addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && ['+', '-', '=', '0'].includes(e.key)) e.preventDefault(); });
+
 /* ---------- Esperas que se pueden saltar (solo la animación inicial) ---------- */
 let skipped = false, wake = [];
 const sleep = ms => new Promise(res => {
@@ -316,7 +323,7 @@ async function playIntro() {
       await hideCard();
     }
   } else {
-    await Obby.play({
+    try { await Obby.play({
       canvas: $('obby'),
       scenes: evs.map((e, i) => e.escena || DEFAULT_SCENES[order[i] % DEFAULT_SCENES.length]),
       names: { me: DATA.yoNombre || 'Yo', her: DATA.nombre },
@@ -334,9 +341,10 @@ async function playIntro() {
         $('introBar').style.width = ((j + 1) / N * 100) + '%';
       }
     });
+    } catch (err) { console.error(err); }
   }
   // Al terminar el recorrido por vuestra historia, un portal teletransporta a Anita al juego final.
-  if (window.Juego && !params.has('sinjuego')) {
+  if (window.Juego && !params.has('sinjuego') && !gifted()) {
     $('intro').classList.add('hidden');
     await playGame();
     reveal();
@@ -353,12 +361,17 @@ async function playIntro() {
 }
 
 /* ---------- El último reto: un obby para ganarse el regalo ---------- */
+const GIFT_KEY = 'homenaje_regalo_ganado';
+const gifted = () => { try { return !!localStorage.getItem(GIFT_KEY); } catch (e) { return false; } };
 async function playGame() {
   document.body.classList.add('in-game');
   $('game').classList.remove('hidden', 'fade-out');
   // reinicia el destello de teletransporte
   const fl = $('game').querySelector('.g-flash'); fl.style.animation = 'none'; void fl.offsetWidth; fl.style.animation = '';
-  await Juego.play({ root: $('game'), startCp: +params.get('cp') || 0, allStars: params.has('estrellas') });
+  try {
+    await Juego.play({ root: $('game'), startCp: +params.get('cp') || 0, allStars: params.has('estrellas') });
+    try { localStorage.setItem(GIFT_KEY, '1'); } catch (e) {}
+  } catch (err) { console.error(err); }   // si algo fallara, nunca se queda sin su regalo
   document.body.classList.remove('in-game');
 }
 

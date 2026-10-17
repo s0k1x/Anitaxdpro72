@@ -17,6 +17,34 @@
   }
   const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
 
+  /* ---------- Sonidos (sintetizados, sin archivos) y vibración ---------- */
+  function makeSfx() {
+    let ac = null;
+    const ensure = () => { if (!ac) { try { ac = new (global.AudioContext || global.webkitAudioContext)(); } catch (e) { ac = null; } } if (ac && ac.state === 'suspended') ac.resume(); return ac; };
+    const tone = (f0, f1, dur, type, vol, delay) => {
+      const a = ensure(); if (!a) return;
+      try {
+        const t = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain();
+        o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t + dur);
+        g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+        o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + .03);
+      } catch (e) {}
+    };
+    return {
+      unlock: ensure,
+      jump: () => tone(330, 660, .11, 'square', .035),
+      land: () => tone(140, 70, .09, 'sine', .06),
+      bounce: () => tone(220, 980, .22, 'sine', .07),
+      crumble: () => tone(150, 55, .22, 'sawtooth', .035),
+      star: () => [660, 880, 1320].forEach((f, i) => tone(f, f * 1.01, .13, 'triangle', .06, i * .07)),
+      cp: () => { tone(523, 523, .1, 'triangle', .06); tone(784, 784, .2, 'triangle', .06, .1); },
+      die: () => tone(320, 50, .4, 'sawtooth', .06),
+      tick: fin => tone(fin ? 880 : 440, fin ? 880 : 440, fin ? .3 : .12, 'triangle', .06),
+      win: () => [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, f, .26, 'triangle', .07, i * .1))
+    };
+  }
+  const buzz = ms => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} };
+
   /* ---------- Constantes de juego (unidades por segundo) ---------- */
   const G = 1500, JUMP = 560, RUN = 190, ACC = 1500, FRICTION = 1700, MAXFALL = 780, COYOTE = .11, BUFFER = .13;
   const PW = 22, PH = 28, DEATH_Y = 430, LAVA_Y = 392, STARS_NEEDED = 7;
@@ -60,13 +88,15 @@
       const root = opts.root, cv = root.querySelector('#gameCv'), ctx = cv.getContext('2d');
       const $ = s => root.querySelector(s);
       const hud = { stars: $('#gStars'), deaths: $('#gDeaths'), toast: $('#gToast') };
+      const gProg = $('#gProg'), gCount = $('#gCount'), sfx = makeSfx();
       let W = 0, H = 0, dpr = 1, K = 1, OY = 0;
       const level = buildLevel();
       const keys = { left: false, right: false, jump: false };
-      let state = 'intro', time = 0, deaths = 0, assist = false, stars = 0, running = true, raf = 0, last = 0, acc = 0, toastT = 0, introT = 0, winT = 0, shake = 0;
+      let countT = 0, lastCount = '', state = 'intro', time = 0, deaths = 0, assist = false, stars = 0, running = true, raf = 0, last = 0, acc = 0, toastT = 0, introT = 0, winT = 0, shake = 0;
       const cam = { x: 0 }; let respawn = { x: 40, y: 262, cp: 0 };
       const p = { x: 40, y: 262, vx: 0, vy: 0, ground: null, coyote: 0, buffer: 0, face: 1, sx: 1, sy: 1, run: 0, blink: 2, dead: 0, jumpHeld: false };
-      const particles = [], flags = {};
+      const particles = [], flags = {}, floaters = [];
+      for (const q of level.plats) if (q.cp) { const t = document.createElement('b'); t.style.left = (q.x / level.end * 100) + '%'; $('#gProgBox').appendChild(t); }
 
       /* ---------- Entrada ---------- */
       const setKey = (k, v) => { keys[k] = v; if (k === 'jump' && v) p.buffer = BUFFER; };
@@ -135,8 +165,8 @@
         }
       }
       function land(q, v) {
-        if (v > 220) { p.sy = .72; p.sx = 1.22; burst(p.x + PW / 2, p.y + PH, 5, ['#e8e1ff', '#a9d4ff'], 60, .4); }
-        if (q.bounce) { p.vy = -830; p.sy = 1.3; p.sx = .8; burst(q.x + q.w / 2, q.y, 14, ['#ffd0ec', '#ffffff'], 120, .6); q.squash = .25; return; }
+        if (v > 220) { sfx.land(); p.sy = .72; p.sx = 1.22; burst(p.x + PW / 2, p.y + PH, 5, ['#e8e1ff', '#a9d4ff'], 60, .4); }
+        if (q.bounce) { sfx.bounce(); p.vy = -830; p.sy = 1.3; p.sx = .8; burst(q.x + q.w / 2, q.y, 14, ['#ffd0ec', '#ffffff'], 120, .6); q.squash = .25; return; }
       }
       function groundProbe() {
         const pr = { x: p.x, y: p.y + 1.5, w: PW, h: PH };
@@ -146,7 +176,7 @@
 
       function die() {
         if (p.dead) return;
-        p.dead = .75; deaths++; shake = 7; updateHud();
+        p.dead = .75; deaths++; shake = 7; updateHud(); sfx.die(); buzz(40);
         burst(p.x + PW / 2, p.y + PH / 2, 26, ['#e6dcff', '#9b82ff', '#ffffff'], 190, .9);
         if (!assist && deaths >= 20) { assist = true; toast('Modo ayuda: los obstáculos van más lentos', 3.2); }
       }
@@ -160,7 +190,15 @@
         for (let i = particles.length - 1; i >= 0; i--) { const q = particles[i]; q.life -= dt; if (q.life <= 0) { particles.splice(i, 1); continue; } q.vy += 600 * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.r += dt * 6; }
         if (toastT > 0) { toastT -= dt; if (toastT <= 0) hud.toast.classList.remove('on'); }
         shake *= Math.pow(.02, dt);
+        for (let i = floaters.length - 1; i >= 0; i--) { floaters[i].t += dt; if (floaters[i].t > 1.1) floaters.splice(i, 1); }
         if (state === 'intro') { introT += dt; updatePlats(dt); return; }
+        if (state === 'count') {
+          countT += dt; updatePlats(dt);
+          const n = 3 - Math.floor(countT / .6), lbl = n > 0 ? String(n) : '¡YA!';
+          if (lbl !== lastCount) { lastCount = lbl; gCount.textContent = lbl; gCount.classList.remove('pop'); void gCount.offsetWidth; gCount.classList.add('pop'); sfx.tick(lbl === '¡YA!'); }
+          if (countT >= 2.3) { state = 'play'; p.buffer = 0; keys.left = keys.right = keys.jump = false; }
+          return;
+        }
         if (state === 'won') { winT += dt; updatePlats(dt); return; }
         updatePlats(dt);
         if (p.dead) { p.dead -= dt; if (p.dead <= 0) doRespawn(); return; }
@@ -174,12 +212,12 @@
         p.vy = Math.min(MAXFALL, p.vy + G * dt);
         if (p.buffer > 0) p.buffer -= dt;
         if (p.ground) p.coyote = COYOTE; else p.coyote -= dt;
-        if (p.buffer > 0 && p.coyote > 0) { p.vy = -JUMP; p.coyote = 0; p.buffer = 0; p.ground = null; p.sy = 1.22; p.sx = .84; p.jumpHeld = true; burst(p.x + PW / 2, p.y + PH, 4, ['#e8e1ff'], 50, .3); }
+        if (p.buffer > 0 && p.coyote > 0) { p.vy = -JUMP; p.coyote = 0; p.buffer = 0; p.ground = null; p.sy = 1.22; p.sx = .84; p.jumpHeld = true; burst(p.x + PW / 2, p.y + PH, 4, ['#e8e1ff'], 50, .3); sfx.jump(); }
         if (p.jumpHeld && !keys.jump && p.vy < -170) { p.vy *= .5; p.jumpHeld = false; }
         if (!keys.jump) p.jumpHeld = false;
         moveX(p.vx * dt); moveY(p.vy * dt);
         const g = groundProbe(); p.ground = g;
-        if (g) { if (g.type === 'crumble' && !g.state) { g.state = 'shake'; g.t = .55; } if (g.cp && g.cp > respawn.cp) { respawn = { x: g.x + Math.min(g.w - PW - 6, 30), y: g.y - PH - 1, cp: g.cp }; flags[g.cp] = time; toast('Punto de control guardado', 1.3); burst(p.x + PW / 2, p.y, 16, ['#a9d4ff', '#ffffff', '#c9bcff'], 120, .8); } }
+        if (g) { if (g.type === 'crumble' && !g.state) { g.state = 'shake'; g.t = .55; sfx.crumble(); } if (g.cp && g.cp > respawn.cp) { respawn = { x: g.x + Math.min(g.w - PW - 6, 30), y: g.y - PH - 1, cp: g.cp }; flags[g.cp] = time; sfx.cp(); buzz(18); toast('Punto de control guardado', 1.3); burst(p.x + PW / 2, p.y, 16, ['#a9d4ff', '#ffffff', '#c9bcff'], 120, .8); } }
         for (const q of level.plats) if (q.squash) q.squash = Math.max(0, q.squash - dt);
         p.sx = lerp(p.sx, 1, Math.min(1, dt * 14)); p.sy = lerp(p.sy, 1, Math.min(1, dt * 14));
         p.run += Math.abs(p.vx) * dt * .09; p.blink -= dt; if (p.blink < -.12) p.blink = 1.8 + Math.random() * 2.2;
@@ -193,18 +231,19 @@
           for (let t = .25; t <= 1.001; t += .125) { const bx = b.px + Math.cos(a) * b.L * t, by = b.py + Math.sin(a) * b.L * t; if (bx > hb.x - 3 && bx < hb.x + hb.w + 3 && by > hb.y - 3 && by < hb.y + hb.h + 3) return die(); }
         }
         // estrellas
-        for (const s of level.stars) if (!s.got && Math.hypot(s.x - (p.x + PW / 2), s.y - (p.y + PH / 2)) < 20) { s.got = true; stars++; updateHud(); burst(s.x, s.y, 20, ['#ffe9a0', '#fff', '#ffd35c'], 150, .8); toast(stars === STARS_NEEDED ? '¡Las 7 estrellas! Ve a por el regalo' : '★ ' + stars + ' de ' + STARS_NEEDED, 1.4); }
+        for (const s of level.stars) if (!s.got && Math.hypot(s.x - (p.x + PW / 2), s.y - (p.y + PH / 2)) < 20) { s.got = true; stars++; updateHud(); sfx.star(); buzz(14); floaters.push({ x: s.x, y: s.y, text: '+1 ★', t: 0 }); burst(s.x, s.y, 20, ['#ffe9a0', '#fff', '#ffd35c'], 150, .8); toast(stars === STARS_NEEDED ? '¡Las 7 estrellas! Ve a por el regalo' : '★ ' + stars + ' de ' + STARS_NEEDED, 1.4); }
         // regalo
         const gf = level.gift;
         if (Math.abs(p.x + PW / 2 - gf.x) < 28 && Math.abs(p.y + PH - gf.y) < 30) {
           if (stars >= STARS_NEEDED) win(); else if (toastT < .3) toast('Te faltan ' + (STARS_NEEDED - stars) + ' estrellas ★', 1.8);
         }
         cam.x = lerp(cam.x, clamp(p.x - W / K * .36, -60, level.end - W / K + 40), Math.min(1, dt * 5));
+        gProg.style.width = clamp(p.x / level.end * 100, 0, 100) + '%';
       }
 
       function win() {
         if (state === 'won') return;
-        state = 'won'; winT = 0; keys.left = keys.right = keys.jump = false;
+        state = 'won'; winT = 0; keys.left = keys.right = keys.jump = false; sfx.win(); buzz([30, 40, 30, 40, 70]);
         burst(level.gift.x, level.gift.y - 20, 90, ['#ffe9a0', '#ff8fbc', '#7df3ff', '#c9bcff', '#ffffff'], 330, 1.6);
         setTimeout(() => { $('#gWin').classList.remove('hidden'); $('#gWinStats').textContent = deaths + (deaths === 1 ? ' caída' : ' caídas') + ' · ' + Math.round(time) + ' s'; }, 1500);
       }
@@ -314,6 +353,7 @@
         drawPlayer();
         for (const q of particles) { const a = Math.max(0, q.life / q.max); ctx.globalAlpha = a; ctx.fillStyle = q.c; ctx.save(); ctx.translate(sx(q.x), sy(q.y)); ctx.rotate(q.r); const s = q.s * K * (.5 + a * .5); ctx.fillRect(-s / 2, -s / 2, s, s); ctx.restore(); }
         ctx.globalAlpha = 1;
+        for (const f of floaters) { const a = clamp(1 - f.t / 1.1, 0, 1); ctx.save(); ctx.globalAlpha = a; ctx.font = `800 ${15 * K}px "DM Sans",sans-serif`; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(20,6,50,.85)'; ctx.strokeText(f.text, sx(f.x), sy(f.y - 14 - f.t * 34)); ctx.fillStyle = '#ffe27a'; ctx.fillText(f.text, sx(f.x), sy(f.y - 14 - f.t * 34)); ctx.restore(); }
         const vg = ctx.createRadialGradient(W / 2, H * .5, Math.min(W, H) * .35, W / 2, H * .5, Math.max(W, H) * .8); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(10,0,30,.38)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
         ctx.restore();
       }
@@ -322,7 +362,7 @@
         if (!running) return;
         const dt = Math.min(.1, Math.max(0, (ts - (last || ts)) / 1000)); last = ts;
         acc += dt; let n = 0; const h = 1 / 120;
-        while (acc >= h && n < 14) { step(h); acc -= h; n++; }
+        while (acc >= h && n < 14) { step(h * (p.dead > .5 ? .35 : 1)); acc -= h; n++; }
         if (n === 14) acc = 0;
         draw();
         raf = requestAnimationFrame(frame);
@@ -333,7 +373,7 @@
       if (opts.startCp) { const q = level.plats.find(z => z.cp === opts.startCp); if (q) { respawn = { x: q.x + 12, y: q.y - PH - 1, cp: q.cp }; p.x = respawn.x; p.y = respawn.y; cam.x = p.x - 80; } }
       updateHud();
       $('#gIntro').classList.remove('hidden'); $('#gWin').classList.add('hidden');
-      $('#gStart').addEventListener('click', () => { $('#gIntro').classList.add('hidden'); state = 'play'; toast('¡A por las estrellas!', 1.6); });
+      $('#gStart').addEventListener('click', () => { sfx.unlock(); $('#gIntro').classList.add('hidden'); state = 'count'; countT = 0; lastCount = ''; keys.left = keys.right = keys.jump = false; });
       $('#gWinBtn').addEventListener('click', () => {
         running = false; cancelAnimationFrame(raf); removeEventListener('keydown', kd); removeEventListener('keyup', ku); removeEventListener('resize', resize);
         resolve({ deaths, time });

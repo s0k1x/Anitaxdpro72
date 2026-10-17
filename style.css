@@ -13,8 +13,8 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:70px;-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+html{scroll-behavior:smooth;scroll-padding-top:70px;-webkit-text-size-adjust:100%;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
+body{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 body.locked{overflow:hidden;height:100%}
 body.noscroll{overflow:hidden}
 h1,h2,h3{font-family:var(--display);margin:0;font-weight:600}
@@ -555,3 +555,24 @@ body.in-game{overscroll-behavior:none}
 .g-card p{color:#ece8fa;margin-bottom:12px}
 .g-card .g-keys{font-size:13.5px;color:#c9c3e2}
 body.in-game .music-btn{bottom:auto;top:calc(12px + env(safe-area-inset-top,0px));right:12px}
+
+
+/* =====================================================
+   Sin zoom, sin selección accidental y aviso de orientación
+   ===================================================== */
+input,textarea{-webkit-user-select:text;user-select:text}
+.screen,#game,.lb{touch-action:none}
+.nav .links{touch-action:pan-x pan-y}
+#rotate{display:none;position:fixed;inset:0;z-index:200;background:#050409;color:#f4f2fa;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;padding:24px;font:700 18px var(--sans)}
+#rotate svg{width:56px;height:56px;color:#b9a6ff;animation:rotphone 2.4s ease-in-out infinite}
+@keyframes rotphone{0%,25%{transform:rotate(-90deg)}65%,100%{transform:rotate(0)}}
+@media (orientation:landscape) and (max-height:520px){ body.locked #rotate{display:flex} }
+
+/* progreso del nivel y cuenta atrás del juego */
+.g-prog{position:absolute;top:calc(54px + env(safe-area-inset-top,0px));left:16px;right:16px;height:5px;background:rgba(255,255,255,.18);border-radius:9px;z-index:3}
+.g-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#a9d4ff,#ffe27a);border-radius:9px}
+.g-prog b{position:absolute;top:-3px;width:2px;height:11px;background:rgba(255,255,255,.6);border-radius:2px}
+.g-toast{top:calc(76px + env(safe-area-inset-top,0px))}
+.g-count{position:absolute;inset:0;display:grid;place-items:center;font:800 clamp(80px,28vw,150px)/1 var(--display);color:#fff;text-shadow:0 0 34px rgba(201,188,255,.9),0 4px 0 rgba(0,0,0,.35);pointer-events:none;z-index:5;opacity:0}
+.g-count.pop{animation:gpop .6s ease-out}
+@keyframes gpop{0%{transform:scale(1.9);opacity:0}25%{opacity:1}100%{transform:scale(1);opacity:0}}
