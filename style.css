@@ -609,7 +609,7 @@ main.show{opacity:1}
 .sk-atk::after{display:none}
 .sk-beam{right:104px;bottom:4px;background:#ffb3ec;border-color:#6a0a52;color:#6a0a52;box-shadow:0 5px 0 #6a0a52,0 10px 20px rgba(0,0,0,.4)}
 .sk-wave{right:86px;bottom:82px;background:#a9eaff;border-color:#0a3a5a;color:#0a3a5a;box-shadow:0 5px 0 #0a3a5a,0 10px 20px rgba(0,0,0,.4)}
-.sk-dash{right:12px;bottom:110px;background:#c9bcff}
+.sk-dash{right:2px;bottom:104px;background:#c9bcff}
 #game.g-intro .g-skills,#game.g-intro .g-top{opacity:0}
 
 .g-card{position:absolute;z-index:7;left:50%;top:50%;transform:translate(-50%,-50%);width:min(90vw,430px);max-height:calc(100% - 40px);overflow:auto;background:rgba(8,4,28,.94);border:1px solid rgba(201,188,255,.5);border-radius:20px;padding:22px 22px 24px;box-shadow:0 24px 60px rgba(0,0,0,.5);text-align:center}
@@ -696,3 +696,31 @@ input,textarea{-webkit-user-select:text;user-select:text}
 @keyframes ticketIn{from{opacity:0;transform:translateY(24px) scale(.9)}}
 @keyframes ticketShine{0%,60%{left:-60%}100%{left:130%}}
 @media (prefers-reduced-motion:reduce){.ticket,.ticket::after{animation:none}}
+
+/* viñeta cinematográfica sobre las escenas 3D */
+.w3-vig{position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(120% 90% at 50% 55%,transparent 55%,rgba(8,4,24,.45) 100%)}
+.w3-tag{backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);background:rgba(10,8,22,.5);border:1px solid rgba(255,255,255,.18);box-shadow:0 4px 12px rgba(0,0,0,.25)}
+#game::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;background:radial-gradient(130% 95% at 50% 50%,transparent 58%,rgba(6,2,20,.55) 100%)}
+
+/* combate: poder estelar, combo, súper-ataque, vida de los monstruos */
+.g-ult{display:flex;align-items:center;gap:8px;max-width:310px;padding:0 2px}
+.g-ult span{font:800 11px var(--sans);letter-spacing:.06em;color:#ffe27a;text-transform:uppercase;white-space:nowrap;text-shadow:0 1px 4px #000}
+.g-ult-bar{flex:1;height:7px;border-radius:5px;background:rgba(8,4,28,.8);border:1px solid rgba(255,226,122,.45);overflow:hidden}
+.g-ult-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff4fd8,#ffe27a,#7df3ff);background-size:200% 100%;animation:ultBar 2s linear infinite;transition:width .2s}
+@keyframes ultBar{to{background-position:200% 0}}
+.sk-ult{--u:0deg;right:150px;bottom:62px;width:58px;height:58px;background:#3a2a6a;border-color:#1a0a3a;color:#8a7ab8;box-shadow:0 5px 0 #1a0a3a,0 10px 20px rgba(0,0,0,.4)}
+.sk-ult::after{display:grid;content:"";background:conic-gradient(transparent var(--u),rgba(8,4,28,.6) 0)}
+.sk-ult.ready{background:linear-gradient(135deg,#ffe27a,#ff8ae8);color:#4a0a3a;border-color:#6a0a52;animation:ultReady 1s ease-in-out infinite}
+.sk-ult.ready::after{background:none}
+@keyframes ultReady{50%{box-shadow:0 5px 0 #6a0a52,0 0 0 10px rgba(255,226,122,.35),0 0 30px rgba(255,138,232,.8)}}
+.pw-ult{background:linear-gradient(135deg,#ffe27a,#ff8ae8)}
+.g-combo{position:absolute;z-index:5;right:16px;top:calc(196px + env(safe-area-inset-top,0px));text-align:right;font:700 15px var(--sans);color:#fff;opacity:0;transition:opacity .3s;text-shadow:0 2px 10px rgba(0,0,0,.8);pointer-events:none}
+.g-combo.on{opacity:1}
+.g-combo b{display:block;font:800 42px/1 var(--display);background:linear-gradient(180deg,#fff,#ffe27a 55%,#ff8ae8);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 rgba(43,27,110,.9))}
+.g-combo.pop b{animation:comboPop .25s ease-out}
+@keyframes comboPop{from{transform:scale(1.5) rotate(-6deg)}}
+.g-ultfx{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 45%,rgba(255,226,122,.5),rgba(255,79,216,.25) 40%,rgba(40,10,80,.55) 100%)}
+.g-ultfx.on{animation:ultFx 2.4s ease-out}
+@keyframes ultFx{0%{opacity:0}8%{opacity:1}70%{opacity:.6}100%{opacity:0}}
+.g-ehp{position:absolute;left:0;top:0;width:44px;height:6px;border-radius:4px;background:rgba(8,4,28,.85);border:1px solid rgba(255,255,255,.35);overflow:hidden;transition:opacity .3s}
+.g-ehp i{display:block;height:100%;background:linear-gradient(90deg,#ff4f6a,#ffb07a);transition:width .15s}

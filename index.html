@@ -159,11 +159,14 @@
       <div class="g-hp-bar"><i id="gHpFill"></i></div>
       <b id="gHpTxt">100</b>
     </div>
+    <div class="g-ult"><span>Poder estelar</span><div class="g-ult-bar"><i id="gUltFill"></i></div></div>
     <div class="g-wave"><b id="gWave"></b><span id="gLeft"></span></div>
   </div>
   <div class="g-boss hidden" id="gBoss"><span>Rey Cubo</span><div class="g-boss-bar"><i id="gBossFill"></i></div></div>
   <div class="g-toast" id="gToast" role="status"></div>
   <div class="g-count" id="gCount" aria-hidden="true"></div>
+  <div class="g-combo" id="gCombo" aria-hidden="true"></div>
+  <div class="g-ultfx" id="gUltFx" aria-hidden="true"></div>
 
   <div class="g-skills">
     <button class="sk sk-atk" id="skAtk" type="button" aria-label="Golpe (mantén pulsado)">
@@ -178,6 +181,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.5" fill="currentColor"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5" opacity=".5"/></svg>
       <span>Onda</span>
     </button>
+    <button class="sk sk-ult" id="skUlt" type="button" aria-label="Lluvia de estrellas">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5l2.6 6.4 6.9.5-5.3 4.4 1.7 6.7L12 15.8l-5.9 3.7 1.7-6.7L2.5 8.4l6.9-.5z"/></svg>
+      <span>Ultra</span>
+    </button>
     <button class="sk sk-dash" id="skDash" type="button" aria-label="Esquivar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6l6 6-6 6M13 6l6 6-6 6"/></svg>
       <span>Esquiva</span>
@@ -187,14 +194,15 @@
   <div class="g-card" id="gIntro">
     <p class="g-kicker">Nivel final</p>
     <h2>Recupera tu regalo</h2>
-    <p>Los monstruos de bloques lo han encerrado en una jaula. Sobrevive a <b>3 oleadas</b> y derrota al <b>Rey Cubo</b>.</p>
+    <p>Los monstruos de bloques lo han encerrado en una jaula. Con tu <b>Espada Píxel</b>, sobrevive a <b>3 oleadas</b> y derrota al <b>Rey Cubo</b>.</p>
     <ul class="g-powers">
-      <li><i class="pw pw-atk"></i><span><b>Golpe</b> Mantén pulsado para encadenar un combo de 3 golpes.</span></li>
+      <li><i class="pw pw-atk"></i><span><b>Golpe</b> Mantén pulsado: dos cortes y un giro final en el aire.</span></li>
       <li><i class="pw pw-beam"></i><span><b>Rayo Píxel</b> Tus gafas disparan un láser que atraviesa a todos.</span></li>
-      <li><i class="pw pw-wave"></i><span><b>Onda Estelar</b> Empuja, aturde y borra las bolas de energía.</span></li>
+      <li><i class="pw pw-wave"></i><span><b>Onda Estelar</b> Saltas y golpeas el suelo: empuja, aturde y borra las bolas de energía.</span></li>
       <li><i class="pw pw-dash"></i><span><b>Esquiva</b> Un acelerón en el que nada te hace daño.</span></li>
+      <li><i class="pw pw-ult"></i><span><b>Lluvia de Estrellas</b> Golpea y recoge gemas para llenar el Poder Estelar. Cuando brille el botón Ultra, caerán meteoritos sobre todos.</span></li>
     </ul>
-    <p class="g-keys">Muévete arrastrando el dedo en la mitad izquierda. Huye de los círculos rojos. En ordenador: WASD, J, K, L y espacio.</p>
+    <p class="g-keys">Muévete arrastrando el dedo en la mitad izquierda. Huye de los círculos rojos y de los slimes cuando se aplastan: van a saltar. En ordenador: WASD, J, K, L, U y espacio.</p>
     <button class="btn btn--purple" id="gStart" type="button"><span class="button_top">¡A luchar!</span></button>
   </div>
   <div class="g-card hidden" id="gLose">
