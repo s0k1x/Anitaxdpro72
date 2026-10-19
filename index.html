@@ -132,7 +132,7 @@
   <span id="pct">0%</span>
 </div>
 
-<!-- ANIMACIÓN: el obby de vuestra historia -->
+<!-- ANIMACIÓN: vuestra historia en 3D, un mundo de Roblox por etapa -->
 <div id="intro" class="screen hidden">
   <canvas id="obby" aria-hidden="true"></canvas>
   <div class="intro-top">
@@ -144,68 +144,109 @@
   <div class="intro-bar"><i id="introBar"></i></div>
 </div>
 
-<!-- JUEGO FINAL: un obby para ganarse el regalo -->
+<!-- JUEGO FINAL: combate en 3D para ganarse el regalo -->
 <div id="game" class="screen hidden">
   <canvas id="gameCv" aria-hidden="true"></canvas>
   <div class="g-flash" aria-hidden="true"></div>
-  <div class="g-hud"><span id="gStars">★ 0 / 7</span><span id="gDeaths">0 caídas</span></div>
-  <div class="g-prog" id="gProgBox" aria-hidden="true"><i id="gProg"></i></div>
+  <div class="g-hurt" id="gHurt" aria-hidden="true"></div>
+  <div class="g-dmg" id="gDmg" aria-hidden="true"></div>
+  <div class="g-joyzone" id="gJoyZone" aria-hidden="true"></div>
+  <div class="g-stick" id="gStick" aria-hidden="true"><i id="gKnob"></i></div>
+
+  <div class="g-top">
+    <div class="g-hp">
+      <span class="g-hp-name" id="gHeroName"></span>
+      <div class="g-hp-bar"><i id="gHpFill"></i></div>
+      <b id="gHpTxt">100</b>
+    </div>
+    <div class="g-wave"><b id="gWave"></b><span id="gLeft"></span></div>
+  </div>
+  <div class="g-boss hidden" id="gBoss"><span>Rey Cubo</span><div class="g-boss-bar"><i id="gBossFill"></i></div></div>
   <div class="g-toast" id="gToast" role="status"></div>
   <div class="g-count" id="gCount" aria-hidden="true"></div>
-  <div class="g-ctrl g-ctrl-l">
-    <button class="btn btn--blue g-btn" id="gL" type="button" aria-label="Izquierda"><span class="button_top">◀</span></button>
-    <button class="btn btn--blue g-btn" id="gR" type="button" aria-label="Derecha"><span class="button_top">▶</span></button>
+
+  <div class="g-skills">
+    <button class="sk sk-atk" id="skAtk" type="button" aria-label="Golpe (mantén pulsado)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l2.2 5.6 6 .4-4.6 3.8 1.5 5.9L12 15l-5.1 3.2 1.5-5.9L3.8 8.5l6-.4z"/></svg>
+      <span>Golpe</span>
+    </button>
+    <button class="sk sk-beam" id="skBeam" type="button" aria-label="Rayo Píxel">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 8h20v3h-2v2h-2v2h-4v-2h-2v-2h-2v2H8v2H4v-2H2z"/></svg>
+      <span>Rayo</span>
+    </button>
+    <button class="sk sk-wave" id="skWave" type="button" aria-label="Onda Estelar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.5" fill="currentColor"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5" opacity=".5"/></svg>
+      <span>Onda</span>
+    </button>
+    <button class="sk sk-dash" id="skDash" type="button" aria-label="Esquivar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6l6 6-6 6M13 6l6 6-6 6"/></svg>
+      <span>Esquiva</span>
+    </button>
   </div>
-  <div class="g-ctrl g-ctrl-r"><button class="btn btn--purple g-btn g-jump" id="gJ" type="button"><span class="button_top">SALTAR</span></button></div>
+
   <div class="g-card" id="gIntro">
     <p class="g-kicker">Nivel final</p>
-    <h2>Un último reto</h2>
-    <p>Te hemos teletransportado a un obby. Llega hasta la caja del regalo… pero solo se abre si recoges <b>al menos 5 de las 7 estrellas ★</b>. Las monedas te marcan el camino de los saltos. Cuidado con la lava, las barras y los pinchos.</p>
-    <p class="g-keys">Mantén ◀ ▶ para moverte y SALTAR para saltar. En ordenador: flechas y espacio.</p>
-    <button class="btn btn--purple" id="gStart" type="button"><span class="button_top">¡Vamos!</span></button>
+    <h2>Recupera tu regalo</h2>
+    <p>Los monstruos de bloques lo han encerrado en una jaula. Sobrevive a <b>3 oleadas</b> y derrota al <b>Rey Cubo</b>.</p>
+    <ul class="g-powers">
+      <li><i class="pw pw-atk"></i><span><b>Golpe</b> Mantén pulsado para encadenar un combo de 3 golpes.</span></li>
+      <li><i class="pw pw-beam"></i><span><b>Rayo Píxel</b> Tus gafas disparan un láser que atraviesa a todos.</span></li>
+      <li><i class="pw pw-wave"></i><span><b>Onda Estelar</b> Empuja, aturde y borra las bolas de energía.</span></li>
+      <li><i class="pw pw-dash"></i><span><b>Esquiva</b> Un acelerón en el que nada te hace daño.</span></li>
+    </ul>
+    <p class="g-keys">Muévete arrastrando el dedo en la mitad izquierda. Huye de los círculos rojos. En ordenador: WASD, J, K, L y espacio.</p>
+    <button class="btn btn--purple" id="gStart" type="button"><span class="button_top">¡A luchar!</span></button>
+  </div>
+  <div class="g-card hidden" id="gLose">
+    <p class="g-kicker">Te han derrotado</p>
+    <h2>Otra vez</h2>
+    <p id="gLoseTxt"></p>
+    <button class="btn btn--purple" id="gRetry" type="button"><span class="button_top">Reintentar la oleada</span></button>
   </div>
   <div class="g-card hidden" id="gWin">
-    <p class="g-kicker">¡Lo conseguiste!</p>
-    <h2>Tu regalo</h2>
+    <p class="g-kicker">¡Victoria!</p>
+    <h2>Tu regalo es libre</h2>
     <p id="gWinStats"></p>
     <p>Te lo has ganado tú solita. Ábrelo.</p>
     <button class="btn btn--purple" id="gWinBtn" type="button"><span class="button_top">Abrir mi regalo</span></button>
   </div>
 </div>
 
-<!-- REGALO: la tarjeta de Nitro -->
+<!-- REGALO: caja 3D que se abre y tarjeta de Robux -->
 <div id="gift" class="screen hidden">
   <div class="gift-rays" aria-hidden="true"></div>
+  <div class="gift-3d" id="giftStage">
+    <canvas id="giftBoxCv" aria-label="Caja de regalo: tócala para abrirla"></canvas>
+    <p class="gift-hint" id="giftHint">Toca la caja para abrirla</p>
+  </div>
   <canvas id="giftCv" aria-hidden="true"></canvas>
-  <div class="gift-inner">
+  <div class="gift-inner hidden" id="giftInner">
     <p class="gift-kicker" id="giftKicker">¡Lo has conseguido!</p>
     <h2 class="gift-title" id="giftTitle"></h2>
-    <div class="nitro-wrap" id="nitroWrap">
-      <div class="nitro" id="nitro">
-        <div class="nitro-bg"></div>
-        <div class="nitro-lines"></div>
-        <div class="nitro-holo"></div>
-        <div class="nitro-top"><span class="nitro-word">NITRO</span><span class="nitro-pill" id="nitroPill">1 MES</span></div>
-        <svg class="nitro-gem" viewBox="0 0 120 120" aria-hidden="true">
+    <div class="rbx-wrap" id="cardWrap">
+      <div class="rbx" id="card">
+        <div class="rbx-bg"></div>
+        <div class="rbx-grid"></div>
+        <div class="rbx-holo"></div>
+        <div class="rbx-top"><span class="rbx-word">ROBUX</span><span class="rbx-pill" id="cardAmount">10 €</span></div>
+        <svg class="rbx-coins" viewBox="0 0 160 120" aria-hidden="true">
           <defs>
-            <linearGradient id="gmA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#cfc4ff"/><stop offset="1" stop-color="#7d8bff"/></linearGradient>
-            <linearGradient id="gmB" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#6a55ff"/><stop offset="1" stop-color="#b8f0ff"/></linearGradient>
+            <linearGradient id="cnA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".45" stop-color="#ffd23f"/><stop offset="1" stop-color="#d89a1a"/></linearGradient>
+            <linearGradient id="cnB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0a420"/><stop offset="1" stop-color="#a86a0a"/></linearGradient>
           </defs>
-          <polygon points="30,24 90,24 110,48 10,48" fill="url(#gmA)"/>
-          <polygon points="10,48 110,48 60,104" fill="url(#gmB)"/>
-          <polygon points="30,24 45,48 60,24" fill="rgba(255,255,255,.55)"/>
-          <polygon points="60,24 75,48 90,24" fill="rgba(255,255,255,.3)"/>
-          <polygon points="45,48 75,48 60,104" fill="rgba(255,255,255,.28)"/>
-          <polyline points="30,24 90,24 110,48 60,104 10,48 30,24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.6" stroke-linejoin="round"/>
+          <g transform="translate(22 52)"><ellipse cx="34" cy="40" rx="34" ry="12" fill="url(#cnB)"/><rect x="0" y="28" width="68" height="12" fill="url(#cnB)"/><ellipse cx="34" cy="28" rx="34" ry="12" fill="url(#cnA)"/></g>
+          <g transform="translate(70 40)"><ellipse cx="34" cy="40" rx="34" ry="12" fill="url(#cnB)"/><rect x="0" y="22" width="68" height="18" fill="url(#cnB)"/><ellipse cx="34" cy="22" rx="34" ry="12" fill="url(#cnA)"/></g>
+          <g transform="translate(46 6) rotate(-14 34 34)"><circle cx="34" cy="34" r="32" fill="url(#cnB)"/><circle cx="34" cy="31" r="31" fill="url(#cnA)"/><circle cx="34" cy="31" r="23" fill="none" stroke="#c98a10" stroke-width="3" opacity=".7"/><path d="M34 15l4.6 9.6 10.4 1.3-7.6 7.2 2 10.4L34 38.4l-9.4 5.1 2-10.4-7.6-7.2 10.4-1.3z" fill="#fff6c8" stroke="#c98a10" stroke-width="1.5" stroke-linejoin="round"/></g>
         </svg>
-        <div class="nitro-bottom"><div><small>PARA</small><b id="nitroTo"></b></div><div class="r"><small>DE</small><b id="nitroFrom"></b></div></div>
-        <div class="nitro-shine"></div>
+        <div class="rbx-bottom"><div><small>PARA</small><b id="cardTo"></b></div><div class="r"><small>DE</small><b id="cardFrom"></b></div></div>
+        <div class="rbx-shine"></div>
       </div>
     </div>
     <p class="gift-note" id="giftNote"></p>
+    <div class="tickets hidden" id="giftTickets"></div>
     <div class="gift-code hidden" id="giftCodeBox"><code id="giftCodeTxt"></code><button class="gift-copy" id="giftCopy" type="button">Copiar</button></div>
     <div class="gift-actions">
-      <a class="btn btn--purple hidden" id="giftLink" target="_blank" rel="noopener"><span class="button_top">Canjear mi Nitro</span></a>
+      <a class="btn btn--purple hidden" id="giftLink" target="_blank" rel="noopener"><span class="button_top">Canjear mis Robux</span></a>
       <button class="btn btn--blue" id="giftNext" type="button"><span class="button_top">Ver todo lo que hay para ti</span></button>
     </div>
   </div>
@@ -337,8 +378,10 @@
   </div>
 </div>
 
+<script src="motor3d.js"></script>
 <script src="obby.js"></script>
 <script src="juego.js"></script>
+<script src="regalo3d.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

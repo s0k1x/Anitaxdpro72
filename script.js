@@ -21,31 +21,39 @@ const DATA = {
   amistadDesde: "2022-08-20",
   amistadNota: "desde el 20 de agosto de 2022, en Obby Creator",
 
-  // Cada recuerdo es una ETAPA de la animación y luego sale en la línea del tiempo.
-  // "escena" es el mundo animado de esa etapa. Opciones:
-  //   obby (concurso de construir en Obby Creator) · llamada (horas en llamada, jugar de todo)
-  //   corazon (salir y quedar como amigos) · rieles (tren y sustos) · exito (juego famoso y compartir)
-  //   distancia (dejar de hablar) · reencuentro (volver a hablar)
-  //   noche (estrellas) · hoguera (tranquilidad) · lluvia (un mal momento y el sol) · fiesta (celebrar)
-  //   carrera (carrera en un obby) · build (construir una pirámide)
-  // Puedes poner todas las etapas que quieras; si pones más de 7 se repiten las escenas.
+  // Cada recuerdo es una ETAPA de la animación 3D y luego sale en la línea del tiempo.
+  // "escena" es el mundo 3D de esa etapa (cada uno inspirado en un juego de Roblox):
+  //   obby      → construir una casa bloque a bloque y ganar el trofeo
+  //   llamada   → isla de mascotas: un huevo se abre y sale una mascota legendaria
+  //   corazon   → pueblo al atardecer: llegan en coche y se bajan saludando
+  //   rieles    → el tren por el desierto, con sombras que lo persiguen
+  //   exito     → pasillo de terror que se ilumina y se llena de monedas
+  //   distancia → dos islas nevadas que se separan
+  //   reencuentro → suben juntos a lo alto de una torre, con fuegos artificiales
+  // "mundo" es el nombre que sale en la pantalla de teletransporte y en la tarjeta (cámbialo si quieres).
   // "foto" es opcional: pon el nombre de la imagen (ej: "fotos/1.jpg") o déjalo vacío.
   eventos: [
-    { escena: "obby", cuando: "20 · 08 · 2022", titulo: "Nos conocimos en Obby Creator", texto: "Estabas con unos amigos y me uní. Hice un concurso con uno de ellos: quién construía mejor la casa de Calamardo de Bob Esponja. Gané, me metiste en llamada y desde ahí hablamos casi todos los días.", foto: "" },
-    { escena: "llamada", cuando: "Después de aquella llamada", titulo: "Horas y horas en llamada", texto: "Pasábamos horas y horas en llamada. Jugábamos a todo lo que se nos ponía por delante.", foto: "" },
-    { escena: "corazon", cuando: "Más adelante", titulo: "Salimos, y lo dejamos como amigos", texto: "Empecé a gustarte y empezamos a salir. No funcionó, así que lo dejamos como amigos.", foto: "" },
-    { escena: "rieles", cuando: "Nuestra época de Rieles Muertos", titulo: "Rieles Muertos", texto: "Empezamos a jugar muchísimo a Rieles Muertos, de Roblox. Un tren, muchos sustos y mil partidas juntos.", foto: "" },
-    { escena: "exito", cuando: "Cuando me fue bien", titulo: "Lo compartí con vosotros", texto: "Hice un juego de terror psicológico que se hizo famoso y empecé a ganar dinero. Decidí compartirlo contigo y con más amigos.", foto: "" },
-    { escena: "distancia", cuando: "Un tiempo después", titulo: "Dejamos de hablar", texto: "Durante mucho tiempo dejamos de hablar. Cada uno por su lado.", foto: "" },
-    { escena: "reencuentro", cuando: "Hoy", titulo: "Mejor que nunca", texto: "Volvimos a hablar y ahora estamos mejor que nunca. Siempre has sido la persona que me ha apoyado en todo.", foto: "" }
+    { escena: "obby", mundo: "Obby Creator", cuando: "20 · 08 · 2022", titulo: "Nos conocimos en Obby Creator", texto: "Estabas con unos amigos y me uní. Hice un concurso con uno de ellos: quién construía mejor la casa de Calamardo de Bob Esponja. Gané, me metiste en llamada y desde ahí hablamos casi todos los días.", foto: "" },
+    { escena: "llamada", mundo: "Adopt Me", cuando: "Después de aquella llamada", titulo: "Horas y horas en llamada", texto: "Pasábamos horas y horas en llamada. Jugábamos a todo lo que se nos ponía por delante.", foto: "" },
+    { escena: "corazon", mundo: "Brookhaven", cuando: "Más adelante", titulo: "Salimos, y lo dejamos como amigos", texto: "Empecé a gustarte y empezamos a salir. No funcionó, así que lo dejamos como amigos.", foto: "" },
+    { escena: "rieles", mundo: "Rieles Muertos", cuando: "Nuestra época de Rieles Muertos", titulo: "Rieles Muertos", texto: "Empezamos a jugar muchísimo a Rieles Muertos, de Roblox. Un tren, muchos sustos y mil partidas juntos.", foto: "" },
+    { escena: "exito", mundo: "Mi juego de terror", cuando: "Cuando me fue bien", titulo: "Lo compartí con vosotros", texto: "Hice un juego de terror psicológico que se hizo famoso y empecé a ganar dinero. Decidí compartirlo contigo y con más amigos.", foto: "" },
+    { escena: "distancia", mundo: "Natural Disaster", cuando: "Un tiempo después", titulo: "Dejamos de hablar", texto: "Durante mucho tiempo dejamos de hablar. Cada uno por su lado.", foto: "" },
+    { escena: "reencuentro", mundo: "Tower of Hell", cuando: "Hoy", titulo: "Mejor que nunca", texto: "Volvimos a hablar y ahora estamos mejor que nunca. Siempre has sido la persona que me ha apoyado en todo.", foto: "" }
   ],
 
-  // REGALO: lo que se entrega al ganar el juego (tarjeta de Nitro de 1 mes).
-  // "enlace": el enlace de canje (botón "Canjear"). "codigo": el código para copiar. Puedes poner uno, los dos o ninguno.
+  // REGALO: lo que se entrega al ganar el combate (tarjeta regalo de Robux de 10 €).
+  // "codigo": el código de la tarjeta (sale con botón de Copiar). Si lo pones, aparece también el botón
+  //   "Canjear mis Robux", que abre la página oficial de canje (o la que pongas en "enlace").
+  // Si se la das en persona (tarjeta física), deja "codigo" vacío.
+  // "enlaces": los enlaces de las tarjetas regalo; cada uno sale como un cupón dorado que se abre al tocarlo.
   regalo: {
-    titulo: "1 mes de <em>Nitro</em>",
-    duracion: "1 MES",
-    enlace: "",
+    titulo: "10 € en <em>Robux</em>",
+    importe: "10 €",
+    enlaces: [
+      "https://roblox.cashstar.com/gift-card/view/LAAdDK2M1Hf61k7cYfUGXXp3L/",
+      "https://roblox.cashstar.com/gift-card/view/JV8e1RRfTMIrx0PRWTPCmwbZD/"
+    ],
     codigo: ""
   },
 
@@ -152,6 +160,7 @@ function render() {
   $('gateKicker').textContent = 'Para ' + nombre;
   $('nombre').textContent = nombre;
   $('envInitial').textContent = nombre.charAt(0);
+  $('gHeroName').textContent = nombre;
   $('introTxt').textContent = DATA.intro;
   $('finalTitle').textContent = DATA.finalTitulo;
   $('finalText').textContent = DATA.finalTexto;
@@ -264,7 +273,7 @@ async function runLoader() {
   $('loader').classList.add('hidden');
 }
 
-/* ---------- Animación: el obby de vuestra historia ---------- */
+/* ---------- Animación: vuestra historia en 3D ---------- */
 async function type(el, text) {
   if (reduced) { el.textContent = text; return; }
   el.textContent = '';
@@ -308,6 +317,7 @@ async function hideCard() {
 }
 
 const DEFAULT_SCENES = ['obby', 'llamada', 'corazon', 'rieles', 'exito', 'distancia', 'reencuentro'];
+const FINAL_CARD = { cuando: 'Y ahora', titulo: 'Un último reto.', texto: 'Unos monstruos han robado tu regalo. Toca recuperarlo con tus poderes.' };
 
 async function playIntro() {
   // Para probar una sola escena: index.html?abrir=CODIGO&escena=lluvia
@@ -320,13 +330,13 @@ async function playIntro() {
     ? '' : ' · ' + new Date(DATA.amistadDesde + 'T00:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }).replace(/\//g, '.');
   $('intro').classList.remove('hidden', 'fade-out');
   $('introCount').textContent = DATA.juego + fechaCorta;
-  const label = j => 'Etapa ' + pad2(order[j] + 1);
+  const label = j => 'Etapa ' + pad2(order[j] + 1) + (evs[j] && evs[j].mundo ? ' · ' + evs[j].mundo : '');
 
   if (reduced || !window.Obby) {
     // Versión sin movimiento: solo las tarjetas con cada recuerdo
     $('obby').classList.add('hidden');
     for (let i = 0; i < N && !skipped; i++) {
-      $('introCount').textContent = label(i) + ' / ' + pad2(DATA.eventos.length);
+      $('introCount').textContent = 'Etapa ' + pad2(order[i] + 1) + ' / ' + pad2(DATA.eventos.length);
       $('introBar').style.width = ((i + 1) / N * 100) + '%';
       await showCard(label(i), evs[i]);
       await hideCard();
@@ -335,24 +345,25 @@ async function playIntro() {
     try { await Obby.play({
       canvas: $('obby'),
       scenes: evs.map((e, i) => e.escena || DEFAULT_SCENES[order[i] % DEFAULT_SCENES.length]),
+      worlds: evs.map(e => e.mundo || ''),
       names: { me: DATA.yoNombre || 'Yo', her: DATA.nombre },
       sleep,
       pace: DATA.ritmo || 1,
       onUniverse: look => { $('intro').style.setProperty('--uni', look.accent || '#a9d4ff'); $('intro').dataset.uni = look.id || ''; },
-      cardBox: j => j >= N ? measureCard('Meta', { cuando: 'Y ahora', titulo: 'Un último reto.', texto: 'Ahora toca ganarte tu regalo.' }) : measureCard(label(j), evs[j]),
+      cardBox: j => j >= N ? measureCard('Meta', FINAL_CARD) : measureCard(label(j), evs[j]),
       card: {
         show: j => showCard(label(j), evs[j]),
-        showFinal: () => showCard('Meta', { cuando: 'Y ahora', titulo: 'Un último reto.', texto: 'Ahora toca ganarte tu regalo.' }, 900),
+        showFinal: () => showCard('Meta', FINAL_CARD, 900),
         hide: hideCard
       },
       onStage: j => {
-        $('introCount').textContent = label(j) + ' / ' + pad2(DATA.eventos.length);
+        $('introCount').textContent = 'Etapa ' + pad2(order[j] + 1) + ' / ' + pad2(DATA.eventos.length);
         $('introBar').style.width = ((j + 1) / N * 100) + '%';
       }
     });
     } catch (err) { console.error(err); }
   }
-  // Al terminar el recorrido por vuestra historia, un portal teletransporta a Anita al juego final.
+  // Al terminar el recorrido por vuestra historia, un portal teletransporta a Anita al combate final.
   if (window.Juego && !params.has('sinjuego') && !gifted()) {
     $('intro').classList.add('hidden');
     await playGame();
@@ -368,8 +379,7 @@ async function playIntro() {
   $('intro').classList.add('hidden');
 }
 
-/* ---------- El último reto: un obby para ganarse el regalo ---------- */
-/* ---------- El regalo: tarjeta de Nitro ---------- */
+/* ---------- El regalo: caja 3D y tarjeta de Robux ---------- */
 function confetti(cv, ms) {
   const c = cv.getContext('2d'), dpr = Math.min(devicePixelRatio || 1, 2);
   const w = cv.clientWidth, h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr; c.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -384,29 +394,55 @@ function confetti(cv, ms) {
 }
 
 function showGift(first) {
-  return new Promise(resolve => {
-    const R = DATA.regalo || {}, g = $('gift'), wrap = $('nitroWrap'), card = $('nitro');
+  return new Promise(async resolve => {
+    const R = DATA.regalo || {}, g = $('gift'), wrap = $('cardWrap'), card = $('card'), inner = $('giftInner'), stage = $('giftStage');
+    const enlaces = (R.enlaces || []).filter(Boolean);
+    const enlace = enlaces.length ? '' : (R.enlace || (R.codigo ? 'https://www.roblox.com/redeem' : ''));
     $('giftKicker').textContent = first ? '¡Lo has conseguido!' : 'Tu regalo';
-    $('giftTitle').innerHTML = R.titulo || '1 mes de <em>Nitro</em>';
-    $('nitroPill').textContent = R.duracion || '1 MES';
-    $('nitroTo').textContent = DATA.nombre; $('nitroFrom').textContent = DATA.yoNombre || '';
-    $('giftNote').textContent = (R.enlace || R.codigo) ? 'Canjéalo cuando quieras. ¡Te lo has ganado!' : 'Un mes de Nitro, solo para ti. ¡Te lo has ganado!';
+    $('giftTitle').innerHTML = R.titulo || '10 € en <em>Robux</em>';
+    $('cardAmount').textContent = R.importe || '10 €';
+    $('cardTo').textContent = DATA.nombre; $('cardFrom').textContent = DATA.yoNombre || '';
+    // cupones dorados, uno por enlace
+    const tk = $('giftTickets'); tk.innerHTML = '';
+    enlaces.forEach((url, i) => {
+      const a = document.createElement('a');
+      a.className = 'ticket'; a.href = url; a.target = '_blank'; a.rel = 'noopener';
+      a.style.setProperty('--d', (1500 + i * 220) + 'ms');
+      a.innerHTML = `<span class="ticket-coin" aria-hidden="true">★</span>
+        <span class="ticket-txt"><b>Tarjeta ${enlaces.length > 1 ? i + 1 : ''}</b><small>Toca para abrirla y canjearla</small></span>
+        <span class="ticket-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></span>`;
+      a.addEventListener('click', () => a.classList.add('used'));
+      tk.appendChild(a);
+    });
+    tk.classList.toggle('hidden', !enlaces.length);
+    $('giftNote').textContent = enlaces.length
+      ? (enlaces.length > 1 ? 'Tienes ' + enlaces.length + ' tarjetas regalo. Abre cada una y canjéala en tu cuenta de Roblox.' : 'Abre tu tarjeta regalo y canjéala en tu cuenta de Roblox.')
+      : R.codigo
+      ? 'Copia el código y canjéalo en tu cuenta de Roblox. ¡Te lo has ganado!'
+      : 'Una tarjeta regalo de ' + (R.importe || '10 €') + ' para gastar en Robux. ¡Te lo has ganado!';
     const box = $('giftCodeBox'); box.classList.toggle('hidden', !R.codigo); $('giftCodeTxt').textContent = R.codigo || '';
-    const link = $('giftLink'); link.classList.toggle('hidden', !R.enlace); if (R.enlace) link.href = R.enlace;
+    const link = $('giftLink'); link.classList.toggle('hidden', !enlace); if (enlace) link.href = enlace;
     $('giftCopy').onclick = async () => {
       try { await navigator.clipboard.writeText(R.codigo); } catch (e) { const t = document.createElement('textarea'); t.value = R.codigo; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (_) {} t.remove(); }
       $('giftCopy').textContent = '¡Copiado!'; setTimeout(() => { $('giftCopy').textContent = 'Copiar'; }, 1600);
     };
-    // aparece con destello, giro de la tarjeta y confeti
     document.body.classList.add('in-game');
     g.classList.remove('hidden', 'fade-out');
+    // 1) la caja en 3D: hay que tocarla para abrirla (solo la primera vez)
+    if (first && window.Regalo3D) {
+      inner.classList.add('hidden'); stage.classList.remove('hidden', 'fade'); $('giftHint').classList.remove('hidden');
+      try { await Regalo3D.open($('giftBoxCv'), $('giftHint')); } catch (e) { console.error(e); }
+      stage.classList.add('fade');
+    } else stage.classList.add('hidden');
+    // 2) aparece la tarjeta con giro y confeti
+    inner.classList.remove('hidden');
     wrap.style.animation = 'none'; void wrap.offsetWidth; wrap.style.animation = '';
     setTimeout(() => confetti($('giftCv'), 4200), 650);
     // la tarjeta se inclina con el dedo / el ratón y, si nadie la toca, se mece sola
     let touching = false, running = true;
     const tilt = (px, py) => { card.style.setProperty('--ry', ((px - .5) * 26) + 'deg'); card.style.setProperty('--rx', ((.5 - py) * 22) + 'deg'); card.style.setProperty('--mx', (px * 100) + '%'); card.style.setProperty('--my', (py * 100) + '%'); };
-    const move = e => { const r = wrap.getBoundingClientRect(); touching = true; tilt(clamp01((e.clientX - r.left) / r.width), clamp01((e.clientY - r.top) / r.height)); };
     const clamp01 = v => Math.max(0, Math.min(1, v));
+    const move = e => { const r = wrap.getBoundingClientRect(); touching = true; tilt(clamp01((e.clientX - r.left) / r.width), clamp01((e.clientY - r.top) / r.height)); };
     const leave = () => { touching = false; };
     g.addEventListener('pointermove', move); g.addEventListener('pointerup', leave); g.addEventListener('pointercancel', leave); g.addEventListener('pointerleave', leave);
     (function idle(now) { if (!running) return; if (!touching) tilt(.5 + Math.sin(now / 1500) * .32, .5 + Math.cos(now / 1900) * .28); requestAnimationFrame(idle); })(performance.now());
@@ -425,7 +461,7 @@ async function playGame() {
   // reinicia el destello de teletransporte
   const fl = $('game').querySelector('.g-flash'); fl.style.animation = 'none'; void fl.offsetWidth; fl.style.animation = '';
   try {
-    await Juego.play({ root: $('game'), startCp: +params.get('cp') || 0, allStars: params.has('estrellas') });
+    await Juego.play({ root: $('game'), startCp: +params.get('oleada') || 0 });
     try { localStorage.setItem(GIFT_KEY, '1'); } catch (e) {}
   } catch (err) { console.error(err); }   // si algo fallara, nunca se queda sin su regalo
   document.body.classList.remove('in-game');
@@ -628,7 +664,7 @@ async function start() {
   }
   await runLoader();
   if (params.has('juego') && isUnlocked()) {
-    // Atajo para probar el juego: index.html?juego&abrir=CODIGO  (cp=1..5 empieza en un punto de control, estrellas = ya las tiene)
+    // Atajo para probar el combate: index.html?juego&abrir=CODIGO  (&oleada=1, 2 o 3 empieza más adelante; 3 = el jefe final)
     await playGame(); $('game').classList.add('hidden'); await showGift(true); reveal(); return;
   }
   if (params.has('regalo') && isUnlocked()) { await showGift(true); reveal(); return; }   // para ver la tarjeta: index.html?regalo&abrir=CODIGO
