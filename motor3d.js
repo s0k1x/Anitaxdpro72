@@ -750,7 +750,7 @@ void main(){
   // corte curvo (para los golpes): un arco brillante que barre y se desvanece
   FX.prototype.slash = function (p, yaw, color, r, life, tilt) {
     const n = this.spawn(geo.arc); n.pos = [p[0], p[1], p[2]]; n.color = rgb(color); n.emis = 1; n.additive = true; n.alpha = 1;
-    n.rot = [tilt || 0, yaw, 0]; n.scl = [r * 2, 1.6, r * 2];
+    n.rot = [tilt || 0, yaw, 0]; n.scl = [r * 2, 2.6, r * 2];
     this.rings.push({ n, t: 0, life: life || .22, maxR: r, thick: 1.6, slash: true, yaw });
   };
   FX.prototype.update = function (dt) {
@@ -767,7 +767,7 @@ void main(){
     for (let i = this.rings.length - 1; i >= 0; i--) {
       const r = this.rings[i]; r.t += dt; const k = r.t / r.life;
       if (k >= 1) { this.scene.remove(r.n); this.pool.push(r.n); this.rings.splice(i, 1); continue; }
-      if (r.slash) { r.n.rot[1] = r.yaw - .9 + ease.out(k) * 1.5; r.n.alpha = (1 - k); const s = r.maxR * 2 * (.85 + k * .25); r.n.scl = [s, 1.6 * (1 - k * .5), s]; continue; }
+      if (r.slash) { r.n.rot[1] = r.yaw - .9 + ease.out(k) * 1.5; r.n.alpha = (1 - k); const s = r.maxR * 2 * (.85 + k * .25); r.n.scl = [s, 2.6 * (1 - k * .5), s]; continue; }
       const R = lerp(.4, r.maxR, ease.out(k)) * 2; r.n.scl = [R, r.thick * (1 + k * 2), R]; r.n.alpha = (1 - k) * .95;
     }
   };
@@ -971,7 +971,7 @@ void main(){
       A.blink -= dt; const bl = A.blink < 0; if (A.blink < -.12) A.blink = 1.8 + Math.random() * 2.6;
       P.eyes.forEach(e => { e.scl[1] = bl ? .15 : 1; });
       if (pose) pose(P, A);
-      const kb = A.snap || !A.prev ? 1 : 1 - Math.exp(-A.rate * dt);
+      const kb = A.snap || !A.prev ? 1 : 1 - Math.exp(-(A.rateOverride || A.rate) * dt);
       if (!A.prev) A.prev = JOINTS.map(j => ({ r: j.rot.slice(), p: j.pos.slice() }));
       JOINTS.forEach((j, i) => {
         const pv = A.prev[i];

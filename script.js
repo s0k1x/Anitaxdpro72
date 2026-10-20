@@ -21,16 +21,15 @@ const DATA = {
   amistadDesde: "2022-08-20",
   amistadNota: "desde el 20 de agosto de 2022, en Obby Creator",
 
-  // Cada recuerdo es una ETAPA de la animación 3D y luego sale en la línea del tiempo.
-  // "escena" es el mundo 3D de esa etapa (cada uno inspirado en un juego de Roblox):
-  //   obby      → construir una casa bloque a bloque y ganar el trofeo
-  //   llamada   → isla de mascotas: un huevo se abre y sale una mascota legendaria
-  //   corazon   → pueblo al atardecer: llegan en coche y se bajan saludando
-  //   rieles    → el tren por el desierto, con sombras que lo persiguen
-  //   exito     → pasillo de terror que se ilumina y se llena de monedas
-  //   distancia → dos islas nevadas que se separan
-  //   reencuentro → suben juntos a lo alto de una torre, con fuegos artificiales
-  // "mundo" es el nombre que sale en la pantalla de teletransporte y en la tarjeta (cámbialo si quieres).
+  // Cada recuerdo es una ETAPA de la animación y luego sale en la línea del tiempo.
+  // "escena" es el mundo animado de esa etapa. Opciones:
+  //   obby (concurso de construir en Obby Creator) · llamada (horas en llamada, jugar de todo)
+  //   corazon (salir y quedar como amigos) · rieles (tren y sustos) · exito (juego famoso y compartir)
+  //   distancia (dejar de hablar) · reencuentro (volver a hablar)
+  //   noche (estrellas) · hoguera (tranquilidad) · lluvia (un mal momento y el sol) · fiesta (celebrar)
+  //   carrera (carrera en un obby) · build (construir una pirámide)
+  // Puedes poner todas las etapas que quieras; si pones más de 7 se repiten las escenas.
+  // "mundo" es solo informativo (el nombre del juego de esa etapa).
   // "foto" es opcional: pon el nombre de la imagen (ej: "fotos/1.jpg") o déjalo vacío.
   eventos: [
     { escena: "obby", mundo: "Obby Creator", cuando: "20 · 08 · 2022", titulo: "Nos conocimos en Obby Creator", texto: "Estabas con unos amigos y me uní. Hice un concurso con uno de ellos: quién construía mejor la casa de Calamardo de Bob Esponja. Gané, me metiste en llamada y desde ahí hablamos casi todos los días.", foto: "" },
@@ -330,7 +329,7 @@ async function playIntro() {
     ? '' : ' · ' + new Date(DATA.amistadDesde + 'T00:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }).replace(/\//g, '.');
   $('intro').classList.remove('hidden', 'fade-out');
   $('introCount').textContent = DATA.juego + fechaCorta;
-  const label = j => 'Etapa ' + pad2(order[j] + 1) + (evs[j] && evs[j].mundo ? ' · ' + evs[j].mundo : '');
+  const label = j => 'Etapa ' + pad2(order[j] + 1);
 
   if (reduced || !window.Obby) {
     // Versión sin movimiento: solo las tarjetas con cada recuerdo

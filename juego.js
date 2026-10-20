@@ -18,8 +18,8 @@
 
   // Ajustes de dificultad (todo en un sitio, por si hay que tocarla)
   const TUNE = {
-    hp: 100, speed: 9.5,
-    combo: [11, 11, 15, 28], comboRange: 3.8,
+    hp: 100, speed: 12.5,
+    combo: [11, 11, 16, 30], comboRange: 4.4,
     beam: { cd: 5.5, dur: 1.2, tick: .1, dmg: 7, len: 26, width: 1.3 },
     wave: { cd: 9, dmg: 32, radius: 7.5, stun: .9 },
     dash: { cd: 1.3, dur: .2, speed: 30, inv: .38 },
@@ -29,30 +29,35 @@
   /* ---------- animaciones de espada por fotogramas clave ----------
      cada clave: [tiempo, { armR, armL, torso, body, legL, legR }] (rotaciones en radianes)
      anticipación lenta → golpe rápido → recuperación lenta */
-  const READY = { armR: [-.55, 0, .25], armL: [-.15, 0, -.25], torso: [0, 0, 0], body: [0, 0, 0], legL: [0, 0, 0], legR: [0, 0, 0] };
+  const READY = { armR: [-.95, .35, .12], armL: [-.25, 0, -.3], torso: [.05, .2, 0], body: [0, 0, 0], legL: [-.15, 0, 0], legR: [.12, 0, 0] };
   const K = (o) => Object.assign({}, READY, o);
   const CLIPS = [
-    { dur: .4, hit: .17, act: [.1, .26], spread: 1.5, range: 0, lunge: 8, keys: [
+    // 1 · corte horizontal de derecha a izquierda
+    { dur: .3, hit: .11, act: [.05, .2], spread: 1.6, range: .4, lunge: 11, keys: [
       [0, K({})],
-      [.13, K({ armR: [-1.5, .9, 1.45], torso: [.05, .75, 0], legL: [.2, 0, 0], legR: [-.2, 0, 0] })],
-      [.24, K({ armR: [-1.4, -1, -.55], torso: [.12, -.85, 0], legL: [-.55, 0, 0], legR: [.35, 0, 0], armL: [.3, 0, -.5] })],
-      [.4, K({ armR: [-.8, -.4, 0], torso: [0, -.2, 0] })]] },
-    { dur: .4, hit: .17, act: [.1, .27], spread: 1.5, range: 0, lunge: 8, keys: [
-      [0, K({ armR: [-.8, -.4, 0], torso: [0, -.2, 0] })],
-      [.12, K({ armR: [-1.15, -1.25, -.95], torso: [0, -.85, 0], legL: [-.2, 0, 0] })],
-      [.25, K({ armR: [-2.2, .85, 1.25], torso: [-.06, .7, 0], legL: [.35, 0, 0], legR: [-.45, 0, 0], armL: [-.4, 0, -.7] })],
-      [.4, K({ armR: [-1.2, .3, .6], torso: [0, .2, 0] })]] },
-    { dur: .46, hit: .22, act: [.16, .3], spread: .95, range: .7, lunge: 10, keys: [
-      [0, K({ armR: [-1.2, .3, .6], torso: [0, .2, 0] })],
-      [.16, K({ armR: [-3.05, 0, .12], armL: [-2.7, 0, -.12], torso: [-.28, 0, 0], body: [-.08, 0, 0], legR: [.25, 0, 0] })],
-      [.26, K({ armR: [-.3, 0, .1], armL: [-.5, 0, -.1], torso: [.45, 0, 0], body: [.1, 0, 0], legL: [-.8, 0, 0], legR: [.35, 0, 0] })],
-      [.46, K({})]] },
-    { dur: .66, hit: .42, act: [.08, .5], spread: 3.2, range: 1.4, lunge: 4, spin: [.06, .44], jump: 9, keys: [
-      [0, K({ armR: [-.9, 0, .6] })],
-      [.08, K({ armR: [-1.55, 0, 1.5], armL: [-.3, 0, -1.4], legL: [-.7, 0, 0], legR: [-.3, 0, 0] })],
-      [.4, K({ armR: [-1.55, 0, 1.5], armL: [-.3, 0, -1.4], legL: [-.7, 0, 0], legR: [-.3, 0, 0] })],
-      [.48, K({ armR: [-.35, 0, .15], armL: [-.6, 0, -.3], torso: [.4, 0, 0], legL: [-.9, 0, 0], legR: [.4, 0, 0] })],
-      [.66, K({})]] }
+      [.06, K({ armR: [-1.25, 1.6, .7], torso: [.05, 1.0, 0], legL: [.25, 0, 0], legR: [-.25, 0, 0] })],
+      [.15, K({ armR: [-1.45, -1.55, -.2], torso: [.12, -1.05, 0], armL: [.5, 0, -.6], legL: [-.6, 0, 0], legR: [.4, 0, 0] })],
+      [.3, K({ armR: [-1.3, -.9, .1], torso: [.05, -.45, 0] })]] },
+    // 2 · revés de izquierda a derecha, un poco en diagonal
+    { dur: .3, hit: .11, act: [.05, .2], spread: 1.6, range: .4, lunge: 11, keys: [
+      [0, K({ armR: [-1.3, -.9, .1], torso: [.05, -.45, 0] })],
+      [.06, K({ armR: [-1.4, -1.6, -.3], torso: [0, -1.05, 0], legL: [-.25, 0, 0] })],
+      [.15, K({ armR: [-1.7, 1.55, .9], torso: [-.05, 1.05, 0], armL: [-.6, 0, -.9], legL: [.45, 0, 0], legR: [-.55, 0, 0] })],
+      [.3, K({ armR: [-1.5, .8, .2], torso: [0, .45, 0] })]] },
+    // 3 · tajo vertical desde arriba
+    { dur: .36, hit: .17, act: [.08, .26], spread: 1.0, range: 1, lunge: 13, keys: [
+      [0, K({ armR: [-1.5, .8, .2], torso: [0, .45, 0] })],
+      [.1, K({ armR: [-3.1, .05, 0], armL: [-2.8, 0, -.1], torso: [-.3, 0, 0], body: [-.08, 0, 0], legR: [.3, 0, 0] })],
+      [.2, K({ armR: [-.55, 0, 0], armL: [-.7, 0, -.1], torso: [.5, 0, 0], body: [.14, 0, 0], legL: [-.95, 0, 0], legR: [.45, 0, 0] })],
+      [.36, K({})]] },
+    // 4 · giro en el aire con la espada extendida + tajo final
+    { dur: .6, hit: .44, act: [.05, .52], spread: 3.3, range: 1.8, lunge: 5, spin: [.05, .38], jump: 10, keys: [
+      [0, K({})],
+      [.05, K({ armR: [-.2, 0, 1.6], armL: [-.2, 0, -1.4], legL: [-.8, 0, 0], legR: [-.4, 0, 0], torso: [0, 0, 0] })],
+      [.38, K({ armR: [-.2, 0, 1.6], armL: [-.2, 0, -1.4], legL: [-.8, 0, 0], legR: [-.4, 0, 0], torso: [0, 0, 0] })],
+      [.42, K({ armR: [-3.0, 0, 0], armL: [-2.6, 0, 0], torso: [-.3, 0, 0], legL: [-.6, 0, 0] })],
+      [.48, K({ armR: [-.45, 0, 0], armL: [-.6, 0, -.2], torso: [.55, 0, 0], legL: [-1.0, 0, 0], legR: [.5, 0, 0] })],
+      [.6, K({})]] }
   ];
   function samplePose(clip, t) {
     const ks = clip.keys; let i = 0; while (i < ks.length - 2 && t > ks[i + 1][0]) i++;
@@ -171,13 +176,13 @@
         beamT: 0, beamTick: 0, dashT: 0, dashDir: [0, 0], cd: { beam: 0, wave: 0, dash: 0 }, waveT: 0, dead: false, deadT: 0, buff: 1, y: 0, vy: 0,
         slam: false, ult: 0, ultT: 0, kx: 0, kz: 0, ghostT: 0 };
       // la Espada Píxel: empuñadura dorada y hoja de cristal que cambia de color
-      const sword = group(); hero.P.armR.add(sword); sword.at(0, -1.42, .12); sword.rot[0] = Math.PI / 2;
+      const sword = group(); hero.P.armR.add(sword); sword.at(0, -1.5, 0); sword.rot = [Math.PI, 0, 0];
       mesh(sword, geo.cyl, 0x4a2a6a, .22, .75, .22, 0, -.38, 0); mesh(sword, geo.ballS, 0xffd23f, .3, .3, .3, 0, -.8, 0, { emis: .4, shine: 1 });
       box(sword, 1.1, .2, .36, 0xffd23f, 0, .05, 0, { emis: .3, shine: 1 }); mesh(sword, geo.gem, 0xff4fd8, .3, .3, .3, 0, .05, .2, { emis: 1 });
-      const blade = box(sword, .36, 3, .12, 0xff9ae8, 0, 1.65, 0, { emis: .75, shine: 1, r: .05 });
-      const tip = box(sword, .26, .26, .12, 0xff9ae8, 0, 3.15, 0, { emis: .75, r: .02, rot: [0, 0, Math.PI / 4] });
-      const bladeGlow = box(sword, .8, 3.5, .36, 0xff4fd8, 0, 1.7, 0, { emis: 1, add: true, alpha: .22, r: .15, cast: false });
-      const trail = new M.Trail(scene, 0xffb8f0, 14), trail2 = new M.Trail(scene, 0x9af0ff, 9);
+      const blade = box(sword, .44, 3.8, .14, 0xff9ae8, 0, 2.05, 0, { emis: .85, shine: 1, r: .05 });
+      const tip = box(sword, .32, .32, .14, 0xff9ae8, 0, 3.95, 0, { emis: .85, r: .02, rot: [0, 0, Math.PI / 4] });
+      const bladeGlow = box(sword, 1, 4.3, .4, 0xff4fd8, 0, 2.1, 0, { emis: 1, add: true, alpha: .3, r: .15, cast: false });
+      const trail = new M.Trail(scene, 0xffffff, 18), trail2 = new M.Trail(scene, 0x6ae8ff, 12);
       // copias fantasma al esquivar
       const ghosts = [0, 1, 2, 3, 4, 5].map(() => {
         const g = group(); scene.add(g); g.visible = false;
@@ -312,7 +317,8 @@
       zone.addEventListener('pointerup', joyEnd); zone.addEventListener('pointercancel', joyEnd);
       const look = $('#gLookZone'); let lookId = null, lx = 0, ly = 0;
       look.addEventListener('pointerdown', e => { if (lookId !== null) return; lookId = e.pointerId; lx = e.clientX; ly = e.clientY; try { look.setPointerCapture(e.pointerId); } catch (_) {} });
-      look.addEventListener('pointermove', e => { if (e.pointerId !== lookId) return; camYaw -= (e.clientX - lx) * .0075; camPitch = clamp(camPitch + (e.clientY - ly) * .004, .14, .85); lx = e.clientX; ly = e.clientY; lookT = 0; });
+      const hint = $('#gLookHint'); let hinted = false;
+      look.addEventListener('pointermove', e => { if (e.pointerId !== lookId) return; hint.classList.add('off'); hinted = true; camYaw -= (e.clientX - lx) * .009; camPitch = clamp(camPitch + (e.clientY - ly) * .005, .06, .9); lx = e.clientX; ly = e.clientY; lookT = 0; });
       const lookEnd = e => { if (e.pointerId === lookId) lookId = null; };
       look.addEventListener('pointerup', lookEnd); look.addEventListener('pointercancel', lookEnd);
       const hold = (el, down, up) => {
@@ -331,7 +337,7 @@
       let deaths = 0, waveDeaths = 0, time = 0, hitstop = 0, shake = 0, slowmo = 1, winT = 0, kills = 0;
       let boss = null;
       const camS = { x: 0, z: 4 };
-      let camYaw = Math.PI, camPitch = .25, lookT = 9, camY = 4.3, camDist = 0;
+      let camYaw = Math.PI, camPitch = .3, lookT = 9, camY = 4.3, camDist = 0;
 
       // controles relativos a la cámara: arriba = hacia donde mira la cámara
       function moveInput() {
@@ -551,7 +557,7 @@
             P.ghostT -= dt; if (P.ghostT <= 0) { P.ghostT = .045; spawnGhost(); }
             if (Math.random() < .9) fx.burst([P.x, 1 + Math.random() * 3, P.z], 2, { colors: [0xff4fd8, 0x7df3ff, 0x6c4cf0], speed: 1, life: .3, size: .3, add: true, grav: 0 });
           } else if (canMove && ml > .1) {
-            const slow = P.beamT > 0 ? .3 : P.atkT > 0 ? .45 : 1;
+            const slow = P.beamT > 0 ? .45 : P.atkT > 0 ? .8 : 1;
             P.x += mx * TUNE.speed * slow * dt; P.z += mz * TUNE.speed * slow * dt; sp = ml * slow;
             P.stepT = (P.stepT || 0) - dt * sp; if (P.stepT <= 0 && P.y === 0) { P.stepT = .26; fx.burst([P.x - Math.sin(P.face) * .6, .2, P.z - Math.cos(P.face) * .6], 2, { geo: geo.ballS, colors: [0x8a7ab8, 0xb8a8e0], speed: 1.2, life: .45, size: .35, grav: -1.5, emis: .1, fade: true }); }
             const want = Math.atan2(mx, mz); let d = want - P.face; d = Math.atan2(Math.sin(d), Math.cos(d));
@@ -588,7 +594,7 @@
               const range = TUNE.comboRange + C.range;
               // corte de viento en media luna (blanco, estilo anime)
               const tilt = [.45, -.5, 1.25, 0][P.atkI];
-              fx.slash([P.x, 2.7 + P.y, P.z], P.face - .38, 0xffffff, range * .95, fin ? .32 : .2, tilt);
+              fx.slash([P.x, 2.9 + P.y, P.z], P.face - .38, 0xffffff, range * 1.15, fin ? .34 : .24, tilt);
               fx.slash([P.x, 2.7 + P.y, P.z], P.face - .38, fin ? 0xffd23f : (P.atkI % 2 ? 0x7df3ff : 0xff8ae8), range * .8, fin ? .3 : .18, tilt);
               if (fin) { fx.ring([P.x, .4, P.z], 0xffffff, range + 1.5, .35, { thin: true }); fx.slash([P.x, 2.2 + P.y, P.z], P.face + 2.2, 0xffd23f, range, .3, 0); fx.slash([P.x, 2.2 + P.y, P.z], P.face - 2.6, 0xffd23f, range, .3, 0); punch = .5; }
               S.noise(.12, .1, 4500); S.tone(fin ? 420 : 760, 260, .12, 'sawtooth', .02);
@@ -600,7 +606,7 @@
                 const ang = Math.acos(clamp((dx * fx0 + dz * fz0) / (dd || 1), -1, 1));
                 if (ang < C.spread * .6 + .3 || d < .6) { hits++; hurtEnemy(e, TUNE.combo[P.atkI] * P.buff, dx / (dd || 1), dz / (dd || 1), fin ? 15 : (P.atkI === 2 ? 9 : 4), Math.random() < .12); }
               }
-              if (hits) { hitstop = Math.max(hitstop, fin ? .11 : (P.atkI === 2 ? .07 : .05)); shake = Math.max(shake, fin ? .9 : .4); if (fin || P.atkI === 2) impactT = fin ? .1 : .05; }
+              if (hits) { hitstop = Math.max(hitstop, fin ? .085 : (P.atkI === 2 ? .05 : .03)); shake = Math.max(shake, fin ? .9 : .35); if (fin) impactT = .08; }
             }
           }
           // Rayo Píxel
@@ -693,6 +699,8 @@
           }
         }
         if (state === 'break') { breakT -= dt; if (breakT <= 0) startWave(waveI + 1); }
+        if (!hinted && state === 'play' && time > 1 && time < 1.02) hint.classList.remove('off');
+        if (!hinted && time > 8) { hint.classList.add('off'); hinted = true; }
         if (state === 'won') { winT += dt; slowmo = lerp(slowmo, 1, dt * 1.5); }
 
         /* --- poner los modelos en su sitio --- */
@@ -700,12 +708,15 @@
         hero.root.visible = !(P.inv > 0 && P.hurtT > 0 && !P.dead && state === 'play' && Math.sin(time * 40) > .6);
         const atkK = P.atkT > 0 ? 1 - P.atkT / P.atkDur : 0;
         const bladeCol = (Math.sin(time * 3) + 1) / 2;
-        blade.color = rgb(bladeCol > .5 ? 0xff9ae8 : 0x9af0ff); tip.color = blade.color; bladeGlow.color = rgb(bladeCol > .5 ? 0xff4fd8 : 0x4fd8ff);
+        blade.color = rgb(0xd8fbff); tip.color = blade.color; bladeGlow.color = rgb(bladeCol > .5 ? 0x4fd8ff : 0xb07aff);
         bladeGlow.alpha = P.atkT > 0 || P.ultT > 0 ? .55 : .2 + Math.sin(time * 4) * .05;
+        hero.rateOverride = P.atkT > 0 || P.dashT > 0 ? 75 : 26;
         hero.animate(dt, P.dashT > 0 ? 1 : sp, (H, A) => {
           const B = A.body;
           // postura de combate con la espada lista
-          if (sp > .6 && P.atkT <= 0) { H.armR.rot = [1.05, 0, .3]; H.armL.rot = [1, 0, -.3]; B.rot[0] = .3; H.head.rot[0] = -.25; } else { H.armR.rot = [-.55 + Math.sin(A.walk) * .2 * sp, 0, .25]; H.armL.rot[2] -= .15; }
+          if (sp > .55 && P.atkT <= 0) { H.armR.rot = [1.15, 0, .35]; H.armL.rot = [1.05, 0, -.35]; B.rot[0] = .32; H.head.rot[0] = -.28; H.torso.rot[1] = 0; }
+          else if (sp > .05 && P.atkT <= 0) { H.armR.rot = [-.7 + Math.sin(A.walk) * .25, .3, .15]; }
+          else if (state === 'play') { H.armR.rot = READY.armR.slice(); H.armL.rot = READY.armL.slice(); H.torso.rot = READY.torso.slice(); H.legL.rot = [Math.sin(A.t * 2) * .02 - .15, 0, 0]; H.legR.rot = [.12, 0, 0]; }
           if (P.dead) { B.rot[0] = -Math.min(1.4, P.deadT * 3); B.pos[1] = .3; H.armR.rot = [0, 0, 1]; return; }
           if (state === 'intro') { H.armR.rot = [-.4, 0, 2.5 + Math.sin(A.t * 2) * .1]; H.armL.rot[2] = -.5; B.rot[1] = Math.sin(A.t * .8) * .1; }
           if (state === 'won') { H.armR.rot = [-.2, 0, 2.9 + Math.sin(A.t * 10) * .1]; H.armL.rot[2] = -2.6 - Math.sin(A.t * 10) * .2; B.pos[1] = Math.abs(Math.sin(A.t * 6)) * .6; B.rot[1] = A.t * 2; }
@@ -909,17 +920,19 @@
           // tercera persona: detrás de ella, con muelle suave
           lookT += dt;
           const [, , ml] = moveInput();
-          if (lookT > 1.3 && ml > .2 && P.dashT <= 0) { const d = Math.atan2(Math.sin(P.face - camYaw), Math.cos(P.face - camYaw)); if (Math.abs(d) < 2.4) camYaw += d * Math.min(1, dt * 1.1); }
+          if (lookT > 2.5 && ml > .2 && P.dashT <= 0 && P.atkT <= 0) { const d = Math.atan2(Math.sin(P.face - camYaw), Math.cos(P.face - camYaw)); if (Math.abs(d) < 2.4) camYaw += d * Math.min(1, dt * .8); }
           // suavizado estable a cualquier velocidad de fotogramas (estilo SmoothDamp)
           const sd = (cur, tgt, vk, st) => { const om = 2 / st, x = om * dt, ex = 1 / (1 + x + .48 * x * x + .235 * x * x * x), ch = cur - tgt, tp = ((camS[vk] || 0) + om * ch) * dt; camS[vk] = ((camS[vk] || 0) - om * tp) * ex; return tgt + (ch + tp) * ex; };
           camS.x = sd(camS.x, P.x, 'vx', .16); camS.z = sd(camS.z, P.z, 'vz', .16); camY = lerp(camY, 4.3 + P.y * .7, Math.min(1, dt * 7));
-          let dist = asp > 1 ? 11 : 14.5; if (boss && !boss.dead) dist += 4.5; if (state === 'won') dist += 3; if (P.ultT > 0) dist += 3;
+          let dist = asp > 1 ? 9.5 : 13; if (boss && !boss.dead) dist += 4.5; if (state === 'won') dist += 3; if (P.ultT > 0) dist += 3;
           const cp = Math.cos(camPitch), fx = Math.sin(camYaw), fz = Math.cos(camYaw);
           // la cámara no atraviesa los pilares del borde: se acerca si hace falta
           for (let i = 0; i < 12; i++) { const cx = camS.x - fx * cp * dist, cz = camS.z - fz * cp * dist; if (Math.hypot(cx, cz) < 70 || dist < 5) break; dist *= .9; }
           camDist = lerp(camDist || dist, dist, Math.min(1, dt * (dist < (camDist || dist) ? 12 : 3))); dist = camDist;
-          cam.target = [camS.x + fx * 4 + shx * .3, camY + shy * .3, camS.z + fz * 4];
-          cam.pos = [camS.x - fx * cp * dist + shx, camY + Math.sin(camPitch) * dist + shy, camS.z - fz * cp * dist];
+          // cámara por encima del hombro derecho (se ve la espada y lo que hay delante)
+          const rx = -Math.cos(camYaw), rz = Math.sin(camYaw), off = asp > 1 ? 2.1 : 1.2;
+          cam.target = [camS.x + fx * 4 + rx * off + shx * .3, camY + shy * .3, camS.z + fz * 4 + rz * off];
+          cam.pos = [camS.x - fx * cp * dist + rx * off + shx, camY + Math.sin(camPitch) * dist + shy, camS.z - fz * cp * dist + rz * off];
           cam.shadowCenter = [camS.x + fx * 6, 0, camS.z + fz * 6];
         }
         cam.shiftY = state === 'intro' ? -.3 : -.3;
@@ -980,7 +993,7 @@
       };
       $('#gRotateSkip').onclick = () => root.classList.add('rot-ok');
       // utilidades para probar (no afectan al juego)
-      G.__juego = { P, enemies, scene, cam, R, get camYaw() { return camYaw; }, get camS() { return camS; }, get state() { return state; }, set state(v) { state = v; }, start: () => $('#gStart').click(), act, setWave: i => { waveI = i; }, killAll: () => enemies.forEach(e => { if (!e.dead) killEnemy(e); }), hurtEnemy, get queue() { return queue; } };
+      G.__juego = { P, enemies, scene, cam, R, hero, setSlow: v => { slowmo = v; }, get camYaw() { return camYaw; }, get camS() { return camS; }, get state() { return state; }, set state(v) { state = v; }, start: () => $('#gStart').click(), act, setWave: i => { waveI = i; }, killAll: () => enemies.forEach(e => { if (!e.dead) killEnemy(e); }), hurtEnemy, get queue() { return queue; } };
       raf = requestAnimationFrame(frame);
     });
   }
