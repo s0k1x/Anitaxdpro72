@@ -736,10 +736,10 @@ void main(){
       const a = Math.random() * TAU, el = (o.flat ? .1 : .25) + Math.random() * (o.flat ? .3 : .75), sp = (o.speed || 6) * (.45 + Math.random() * .7);
       n.pos = [p[0] + (Math.random() - .5) * (o.spread || .3), p[1] + (Math.random() - .5) * (o.spread || .3), p[2] + (Math.random() - .5) * (o.spread || .3)];
       n.color = cols[(Math.random() * cols.length) | 0];
-      n.emis = o.emis == null ? .7 : o.emis; n.additive = !!o.add; n.alpha = 1;
+      n.emis = o.emis == null ? .7 : o.emis; n.additive = !!o.add; n.alpha = o.alpha || 1;
       const s = (o.size || .22) * (.6 + Math.random() * .8); n.scl = [s, s, s]; n.rot = [Math.random() * 6, Math.random() * 6, 0];
       const life = (o.life || .8) * (.6 + Math.random() * .6);
-      this.list.push({ n, v: [Math.cos(a) * Math.cos(el) * sp, Math.sin(el) * sp * (o.up == null ? 1 : o.up) + (o.lift || 0), Math.sin(a) * Math.cos(el) * sp], life, max: life, g: o.grav == null ? 14 : o.grav, s, spin: (Math.random() - .5) * 12, drag: o.drag || 1.5, fade: !!o.fade, floor: o.floor == null ? .05 : o.floor });
+      this.list.push({ n, v: [Math.cos(a) * Math.cos(el) * sp, Math.sin(el) * sp * (o.up == null ? 1 : o.up) + (o.lift || 0), Math.sin(a) * Math.cos(el) * sp], life, max: life, g: o.grav == null ? 14 : o.grav, s, spin: (Math.random() - .5) * 12, drag: o.drag || 1.5, fade: !!o.fade, floor: o.floor == null ? .05 : o.floor, grow: o.grow || 0, amax: o.alpha || 1 });
     }
   };
   FX.prototype.ring = function (p, color, maxR, life, o) {
@@ -761,8 +761,8 @@ void main(){
       q.n.pos[0] += q.v[0] * dt; q.n.pos[1] += q.v[1] * dt; q.n.pos[2] += q.v[2] * dt;
       if (q.n.pos[1] < q.floor && q.g > 0) { q.n.pos[1] = q.floor; q.v[1] *= -.3; }
       q.n.rot[0] += q.spin * dt; q.n.rot[1] += q.spin * dt * .7;
-      const k = q.life / q.max, s = q.s * (q.fade ? 1 : Math.min(1, k * 1.6)); q.n.scl = [s, s, s];
-      if (q.fade || q.n.additive) q.n.alpha = Math.min(1, k * 1.8);
+      const k = q.life / q.max, s = q.s * (q.fade ? 1 : Math.min(1, k * 1.6)) * (1 + q.grow * (1 - k)); q.n.scl = [s, s, s];
+      if (q.fade || q.n.additive) q.n.alpha = Math.min(1, k * 1.8) * q.amax;
     }
     for (let i = this.rings.length - 1; i >= 0; i--) {
       const r = this.rings[i]; r.t += dt; const k = r.t / r.life;

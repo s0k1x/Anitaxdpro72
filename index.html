@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=DM+Sans:wght@400;500;700&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=9">
 </head>
 <body class="locked">
 
@@ -164,9 +164,12 @@
     <div class="g-ult"><span>Poder estelar</span><div class="g-ult-bar"><i id="gUltFill"></i></div></div>
     <div class="g-wave"><b id="gWave"></b><span id="gLeft"></span></div>
   </div>
-  <div class="g-boss hidden" id="gBoss"><span>Rey Cubo</span><div class="g-boss-bar"><i id="gBossFill"></i></div></div>
+  <div class="g-boss hidden" id="gBoss"><span>Ronin Carmesí</span><div class="g-boss-bar"><i id="gBossFill"></i></div></div>
   <div class="g-toast" id="gToast" role="status"></div>
   <div class="g-count" id="gCount" aria-hidden="true"></div>
+  <div class="g-reticle" id="gReticle" aria-hidden="true"></div>
+  <div class="g-banner" id="gBanner" aria-hidden="true"></div>
+  <div class="g-bars" id="gBars" aria-hidden="true"></div>
   <div class="g-combo" id="gCombo" aria-hidden="true"></div>
   <div class="g-ultfx" id="gUltFx" aria-hidden="true"></div>
 
@@ -175,13 +178,13 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5L20.5 3.5 20.5 9.5 9 21 3 15z"/><path d="M6 12l6 6M4.5 19.5l-2 2"/></svg>
       <span>Espada</span>
     </button>
-    <button class="sk sk-beam" id="skBeam" type="button" aria-label="Rayo Píxel">
+    <button class="sk sk-beam" id="skBeam" type="button" aria-label="Tajo Lunar">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 8h20v3h-2v2h-2v2h-4v-2h-2v-2h-2v2H8v2H4v-2H2z"/></svg>
-      <span>Rayo</span>
+      <span>Tajo</span>
     </button>
-    <button class="sk sk-wave" id="skWave" type="button" aria-label="Onda Estelar">
+    <button class="sk sk-wave" id="skWave" type="button" aria-label="Torbellino">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.5" fill="currentColor"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5" opacity=".5"/></svg>
-      <span>Onda</span>
+      <span>Giro</span>
     </button>
     <button class="sk sk-ult" id="skUlt" type="button" aria-label="Lluvia de estrellas">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5l2.6 6.4 6.9.5-5.3 4.4 1.7 6.7L12 15.8l-5.9 3.7 1.7-6.7L2.5 8.4l6.9-.5z"/></svg>
@@ -201,15 +204,15 @@
   <div class="g-card" id="gIntro">
     <p class="g-kicker">Nivel final</p>
     <h2>Recupera tu regalo</h2>
-    <p>Los monstruos de bloques lo han encerrado en una jaula. Con tu <b>Espada Píxel</b>, sobrevive a <b>3 oleadas</b> y derrota al <b>Rey Cubo</b>.</p>
+    <p>Un ejército de sombras guarda tu regalo, y el <b>Ronin Carmesí</b> lo vigila. Derrótalos con tu <b>espada</b>.</p>
     <ul class="g-powers">
-      <li><i class="pw pw-atk"></i><span><b>Espada</b> Mantén pulsado: combo de 4 golpes que acaba con un giro en el aire.</span></li>
-      <li><i class="pw pw-beam"></i><span><b>Rayo Píxel</b> Tus gafas disparan un láser que atraviesa a todos.</span></li>
-      <li><i class="pw pw-wave"></i><span><b>Onda Estelar</b> Saltas y golpeas el suelo: empuja, aturde y borra las bolas de energía.</span></li>
-      <li><i class="pw pw-dash"></i><span><b>Esquiva</b> Un acelerón en el que nada te hace daño.</span></li>
-      <li><i class="pw pw-ult"></i><span><b>Lluvia de Estrellas</b> Golpea y recoge gemas para llenar el Poder Estelar. Cuando brille el botón Ultra, caerán meteoritos sobre todos.</span></li>
+      <li><i class="pw pw-atk"></i><span><b>Espada</b> Mantén pulsado: salta hacia el enemigo y encadena 4 golpes. El último lo lanza por los aires: pulsa otra vez y lo sigues con un <b>combo aéreo</b>.</span></li>
+      <li><i class="pw pw-beam"></i><span><b>Tajo Lunar</b> Una media luna de viento que atraviesa a todos.</span></li>
+      <li><i class="pw pw-wave"></i><span><b>Torbellino</b> Giro con salto que lanza a los enemigos al aire.</span></li>
+      <li><i class="pw pw-dash"></i><span><b>Esquiva</b> Si esquivas justo antes de un golpe, <b>tiempo lento</b> y contraataque doble.</span></li>
+      <li><i class="pw pw-ult"></i><span><b>Filo Celestial</b> Pega y esquiva para llenar la barra: la ultra es una secuencia de cine.</span></li>
     </ul>
-    <p class="g-keys">Muévete arrastrando el dedo en la mitad izquierda y gira la cámara deslizando el dedo por la mitad derecha. Huye de los círculos rojos y de los slimes cuando se aplastan: van a saltar. En ordenador: WASD, J, K, L, U y espacio.</p>
+    <p class="g-keys">La cámara fija al enemigo más cercano. Muévete con el dedo izquierdo; desliza por la derecha para girar la cámara. Huye de los círculos rojos. En ordenador: WASD, J espada, K tajo, L giro, espacio esquiva, U ultra.</p>
     <button class="btn btn--purple" id="gStart" type="button"><span class="button_top">¡A luchar!</span></button>
   </div>
   <div class="g-card hidden" id="gLose">
@@ -393,10 +396,10 @@
   </div>
 </div>
 
-<script src="motor3d.js?v=7"></script>
-<script src="obby.js?v=7"></script>
-<script src="juego.js?v=7"></script>
-<script src="regalo3d.js?v=7"></script>
-<script src="script.js?v=7"></script>
+<script src="motor3d.js?v=9"></script>
+<script src="obby.js?v=9"></script>
+<script src="juego.js?v=9"></script>
+<script src="regalo3d.js?v=9"></script>
+<script src="script.js?v=9"></script>
 </body>
 </html>

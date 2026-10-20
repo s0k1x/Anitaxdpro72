@@ -811,3 +811,22 @@ body.in-game #rotate{display:none!important}
 .g-card .g-kicker{color:#7df3ff;letter-spacing:.3em}
 .g-num{font-family:var(--display);text-shadow:0 0 8px rgba(0,0,0,.6),0 2px 0 rgba(20,10,60,.9)}
 @media (orientation:landscape) and (max-height:520px){.g-boss{left:auto;right:96px;width:min(38vw,340px)}}
+
+/* =====================================================
+   DUELO ANIME · fijación de objetivo, banner de habilidad y barras de cine
+   ===================================================== */
+.g-reticle{position:absolute;left:0;top:0;width:58px;height:58px;margin:-29px 0 0 -29px;z-index:3;pointer-events:none;opacity:0;transition:opacity .15s}
+.g-reticle.on{opacity:1}
+.g-reticle::before,.g-reticle::after{content:"";position:absolute;inset:0;border:2px solid #ff4f6a;transform:rotate(45deg);box-shadow:0 0 12px #ff4f6a,inset 0 0 8px rgba(255,79,106,.35);border-radius:3px}
+.g-reticle::after{inset:12px;border-width:1.5px;border-color:#fff;animation:retSpin 2.4s linear infinite;box-shadow:0 0 8px #fff}
+@keyframes retSpin{to{transform:rotate(405deg)}}
+.g-banner{position:absolute;left:0;right:0;top:30%;z-index:6;text-align:center;pointer-events:none;opacity:0}
+.g-banner b{display:block;font:800 clamp(30px,7.4vw,62px)/1 var(--display);letter-spacing:.07em;color:#fff;font-style:italic;transform:skewX(-9deg);text-shadow:0 0 16px rgba(125,243,255,.95),0 0 40px rgba(125,243,255,.55),0 4px 0 rgba(20,40,90,.95)}
+.g-banner i{display:block;margin-top:8px;font:600 13px var(--sans);letter-spacing:.42em;color:#bff6ff;font-style:normal;text-transform:uppercase;text-shadow:0 0 10px rgba(0,0,0,.7)}
+.g-banner.on{animation:bannerIn 1.6s ease-out forwards}
+@keyframes bannerIn{0%{opacity:0;transform:translateX(-70px) scale(1.25)}10%{opacity:1;transform:none}78%{opacity:1}100%{opacity:0;transform:translateX(50px)}}
+.g-bars{position:absolute;inset:0;z-index:5;pointer-events:none}
+.g-bars::before,.g-bars::after{content:"";position:absolute;left:0;right:0;height:0;background:#000;transition:height .25s ease-out}
+.g-bars::before{top:0}.g-bars::after{bottom:0}
+.g-bars.on::before,.g-bars.on::after{height:13%}
+#game.ulting .g-top,#game.ulting .g-skills,#game.ulting .g-combo,#game.ulting .g-boss,#game.ulting .g-ehp{opacity:0;transition:opacity .2s}
