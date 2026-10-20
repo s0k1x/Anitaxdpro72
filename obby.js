@@ -111,6 +111,23 @@
     }
   }
   const GRASS = [0x5cc96a, 0x6ad478, 0x52bb60];
+  // fondos: anillo de montañas lejanas o de islas flotantes, para que ningún mundo acabe en el vacío
+  function mountains(c, r, cols, h, y) {
+    const g = group(), Rr = M.rng(41);
+    for (let i = 0; i < 30; i++) { const a = i / 30 * TAU + Rr() * .1, d = r + Rr() * r * .25, hh = h * (.6 + Rr() * .8); mesh(g, geo.ball, cols[i % cols.length], 60 + Rr() * 40, hh * 2, 50, Math.cos(a) * d, (y || 0) - 4, Math.sin(a) * d, { rot: [0, -a, 0], shine: 0 }); if (Rr() < .5) mesh(g, geo.cone6, cols[(i + 1) % cols.length], 34, hh * 1.4, 34, Math.cos(a) * (d + 20), (y || 0) + hh * .4, Math.sin(a) * (d + 20), { rot: [0, Rr() * 3, 0], shine: 0 }); }
+    const n = bake(g, 51); n.cast = false; c.scene.add(n);
+  }
+  function islandsRing(c, n, r, y, top, dirt, rockc, leaf) {
+    const g = group(), Rr = M.rng(43);
+    for (let i = 0; i < n; i++) {
+      const a = i / n * TAU + Rr() * .3, d = r + Rr() * r * .35, x = Math.cos(a) * d, z = Math.sin(a) * d, s = 6 + Rr() * 10, yy = y + (Rr() - .5) * 26;
+      box(g, s, 1.2, s * .8, top, x, yy, z, { r: .5 }); box(g, s * .9, 2, s * .7, dirt, x, yy - 1.5, z, { r: .6 });
+      mesh(g, geo.cone6, rockc, s * 1.1, s * .9, s * .9, x, yy - 2.5 - s * .45, z, { rot: [Math.PI, Rr() * 3, 0] });
+      if (Rr() < .7) { tree(g, x - s * .15, z, .7 + Rr() * .4, leaf); }
+      if (Rr() < .4) { tree(g, x + s * .25, z + s * .1, .5 + Rr() * .3, leaf); }
+    }
+    const nn = bake(g, 53); nn.cast = false; c.scene.add(nn);
+  }
 
   /* =========================================================
      MUNDOS
@@ -151,6 +168,7 @@
       island(st, 36, 10, -46, 10, 9, 0x6ad478, 0x9a6a4a, { deep: 5 }); tree(st, 36, -46, .8, 0xffb3d1);
       c.scene.add(bake(st, 1));
       const drift = cloudLayer(c, [[-30, 24, -60, 2.2], [10, 30, -70, 2.8], [40, 22, -55, 2], [-55, 16, -30, 1.8], [55, 18, -25, 1.8]], 0xffffff, .3);
+      islandsRing(c, 16, 80, 0, 0x6ad478, 0x9a6a4a, 0x7a6a7a, 0x56c26a);
       const bar = box(c.scene, 8, .5, .5, 0xff2a2a, -4, 8.9, -25, { emis: .7 });
       const pad = box(c.scene, 2.4, .5, 2.4, 0x3ad0ff, 0, 0, -22, { r: .25, emis: .3 });
       // la casa que se construye bloque a bloque
@@ -169,7 +187,7 @@
       const chim = box(H, .7, 1.4, .7, 0xa85a4a, 1.3, 4.6, -.8); blocks.push({ n: chim, y: 4.6, t: .3 + k * .1 + .55 });
       blocks.forEach(b => { b.n.visible = false; });
       // martillo en la mano de Mario
-      const hammer = group(); c.me.P.armR.add(hammer); hammer.at(0, -1.8, .2); hammer.rot[0] = Math.PI / 2;
+      const hammer = group(); c.me.P.armR.add(hammer); hammer.at(0, -1.45, .2); hammer.rot[0] = Math.PI / 2;
       box(hammer, .16, 1.3, .16, 0x8a5a3a, 0, .5, 0, { r: .06 }); box(hammer, .7, .32, .32, 0x8a8e9e, 0, 1.15, 0, { r: .08, shine: 1 });
       c.cleanup.push(() => c.me.P.armR.remove(hammer));
       // trofeo de ganador
@@ -238,6 +256,7 @@
       scatter(46, [32, 24], [0, 2, 6, 7], 8, (x, z, R, i) => i % 4 ? flower(st, x, z, [0xff7ab8, 0xffd23f, 0x9b82ff, 0x7df3ff, 0xffffff][i % 5], 1) : tuft(st, x, z, 0x6ac46a));
       c.scene.add(bake(st, 2));
       const drift = cloudLayer(c, [[-30, 20, -50, 2.4], [20, 26, -60, 2.6], [45, 16, -40, 2], [-50, 14, -20, 1.8]], 0xfff0fa, .25);
+      islandsRing(c, 16, 80, 0, 0x9ae8a6, 0xb08a6a, 0x9a84b0, 0xffa8d8);
       // agua de la fuente que sube
       const jets = [0, 1, 2, 3].map(i => mesh(c.scene, geo.ballS, 0x9fe6ff, .5, .5, .5, 9, 3, 4, { emis: .5, alpha: .8, cast: false }));
       // globos
@@ -342,6 +361,7 @@
       parked(-24, -4.9, 0xff5a6a); parked(30, 4.9, 0xffd23f);
       c.scene.add(bake(st, 3));
       const drift = cloudLayer(c, [[-40, 26, -60, 2.6], [0, 32, -70, 3], [40, 24, -60, 2.4], [70, 20, -40, 2]], 0xffc9b8, .3);
+      mountains(c, 140, [0x8a5a8a, 0x9a6a90, 0x7a4a7a], 34);
       // el coche
       const car = group(); c.scene.add(car);
       box(car, 6, 1.3, 3, 0x4fd1c5, 0, 1.1, 0, { r: .5, shine: 1 });
@@ -401,6 +421,7 @@
       box(st, 260, .3, 3.4, 0x9a7a5a, 0, .15, 0, { r: .1 });
       [-1, 1].forEach(sd => box(st, 260, .28, .22, 0x9a9aa8, 0, .45, sd * .8, { r: .06, shine: 1 }));
       c.scene.add(bake(st, 4));
+      mountains(c, 190, [0xa04a3a, 0xb05a40, 0x8a3a30], 40);
       const moving = [];
       const add = (n, sp, w) => { moving.push({ n, sp, w }); return n; };
       for (let i = 0; i < 46; i++) add(box(c.scene, .55, .22, 2.8, 0x5a3a2a, -70 + i * 3, .32, 0, { r: .05 }), 1, 138);
@@ -431,7 +452,7 @@
       box(train, 1.4, 1.2, 1.2, 0x8a6a4a, -8.5, 1.85, -.8, { r: .1 }); box(train, 1, .9, 1, 0x7a5a3a, -8.5, 2.9, -.8, { r: .1 });
       const wh = []; [-8, -2, 1.5, 4.5, 7.5].forEach(x => [1.45, -1.45].forEach(z => wh.push(mesh(train, geo.cyl20, 0x2a2a30, 1.4, .3, 1.4, x, .25, z, { rot: [Math.PI / 2, 0, 0], shine: .8 }))));
       const rod = box(train, 6.5, .18, .1, 0xb8b8c8, 4.5, .25, 1.65, { r: 0, shine: 1 });
-      const lamp = group(); c.me.P.armR.add(lamp); lamp.at(0, -1.9, .1); c.cleanup.push(() => c.me.P.armR.remove(lamp));
+      const lamp = group(); c.me.P.armR.add(lamp); lamp.at(0, -1.65, .1); c.cleanup.push(() => c.me.P.armR.remove(lamp));
       box(lamp, .45, .55, .45, 0xffd88a, 0, 0, 0, { r: .12, emis: 1 }); box(lamp, .55, .12, .55, 0x1c1c22, 0, .32, 0, { r: .04 });
       const glow = mesh(lamp, geo.ball, 0xffb84a, 3, 3, 3, 0, 0, 0, { emis: 1, add: true, alpha: .22, cast: false });
       train.add(c.me.root); train.add(c.her.root);
@@ -682,6 +703,7 @@
       stars(st, 140, 120);
       island(st, -24, 6, -30, 8, 7, 0x6a5aa8, 0x3a2a6a, { rock: 0x4a3a7a }); island(st, 26, 9, -36, 7, 6, 0x6a5aa8, 0x3a2a6a, { rock: 0x4a3a7a });
       c.scene.add(bake(st, 12));
+      islandsRing(c, 14, 70, 0, 0x6a5aa8, 0x3a2a6a, 0x4a3a7a, 0x9b82ff);
       const P = group().at(0, 4.6, -4); c.scene.add(P);
       const ring = mesh(P, geo.torus, 0xc9bcff, 8, 8, 8, 0, 0, 0, { rot: [Math.PI / 2, 0, 0], emis: .8, shine: 1 });
       const ring2 = mesh(P, geo.torus, 0x7df3ff, 7.2, 7.2, 7.2, 0, 0, 0, { rot: [Math.PI / 2, 0, 0], emis: 1, add: true, alpha: .7 });
@@ -791,6 +813,7 @@
         C.scene.add(C.me.root); C.scene.add(C.her.root);
         R.setEnv(Object.assign({ sunDir: null, stars: 0, clouds: 0, sunDisc: 0 }, W.env)); R.envAmb = W.env.amb; R.envSun = W.env.sunK;
         R.grade = Object.assign({ exp: 1.12, sat: 1.08, con: 1.04, tint: [1, 1, 1], lift: [0, 0, 0], bloom: .55, tilt: 0, tiltC: .5, vig: .35, grain: .025, flash: 0, flashCol: [1, 1, 1] }, W.grade || {});
+        R.grade.exp *= .9; R.grade.sat *= 1.12; R.grade.con *= 1.06; R.grade.bloom *= .7; R.grade.lift = [0, 0, 0];
         cv.style.background = '#000';
         const look = Object.assign({ id: name }, W.look);
         if (opts.onUniverse) opts.onUniverse(look);
@@ -816,7 +839,7 @@
 
       function placeTag(el, a, show) {
         if (!show || !a.root.parent) { el.style.opacity = 0; return; }
-        const w = a.P.head.world, p = R.project([w[12], w[13] + 1.55 * Math.abs(a.root.world[5] || 1), w[14]]);
+        const w = a.P.head.world, p = R.project([w[12], w[13] + 2.25 * Math.abs(a.root.world[5] || 1), w[14]]);
         el.style.opacity = p.vis ? 1 : 0;
         el.style.transform = `translate(${p.x}px,${p.y}px) translate(-50%,-100%)`;
       }

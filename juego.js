@@ -12,20 +12,54 @@
   const M = G.M3;
   if (!M) return;
   const { TAU, clamp, lerp, ease, geo, group, box, mesh, bake, FX, avatar, rgb } = M;
-  const ARENA = 17;
+  const ARENA = 30;
 
   const HERO = { skin: 0xf7d6c4, shirt: 0xc8142a, dress: true, belt: 0xffffff, shoes: 0xf2f2f6, hair: 'long', hairCol: 0x4a2c1c, hairHi: 0xc9a06a, glasses: true, necklace: true, bracelet: true, blush: true, cape: 0x6c4cf0, capeTrim: 0xf2c14e };
 
   // Ajustes de dificultad (todo en un sitio, por si hay que tocarla)
   const TUNE = {
     hp: 100, speed: 9.5,
-    combo: [12, 12, 24], comboRange: 3.6,
+    combo: [11, 11, 15, 28], comboRange: 3.8,
     beam: { cd: 5.5, dur: 1.2, tick: .1, dmg: 7, len: 26, width: 1.3 },
     wave: { cd: 9, dmg: 32, radius: 7.5, stun: .9 },
     dash: { cd: 1.3, dur: .2, speed: 30, inv: .38 },
     potion: 28, betweenWaves: 35,
     ult: { gain: .3, gem: 3, meteors: 12, dmg: 46, radius: 3.6 }
   };
+  /* ---------- animaciones de espada por fotogramas clave ----------
+     cada clave: [tiempo, { armR, armL, torso, body, legL, legR }] (rotaciones en radianes)
+     anticipación lenta → golpe rápido → recuperación lenta */
+  const READY = { armR: [-.55, 0, .25], armL: [-.15, 0, -.25], torso: [0, 0, 0], body: [0, 0, 0], legL: [0, 0, 0], legR: [0, 0, 0] };
+  const K = (o) => Object.assign({}, READY, o);
+  const CLIPS = [
+    { dur: .4, hit: .17, act: [.1, .26], spread: 1.5, range: 0, lunge: 8, keys: [
+      [0, K({})],
+      [.13, K({ armR: [-1.5, .9, 1.45], torso: [.05, .75, 0], legL: [.2, 0, 0], legR: [-.2, 0, 0] })],
+      [.24, K({ armR: [-1.4, -1, -.55], torso: [.12, -.85, 0], legL: [-.55, 0, 0], legR: [.35, 0, 0], armL: [.3, 0, -.5] })],
+      [.4, K({ armR: [-.8, -.4, 0], torso: [0, -.2, 0] })]] },
+    { dur: .4, hit: .17, act: [.1, .27], spread: 1.5, range: 0, lunge: 8, keys: [
+      [0, K({ armR: [-.8, -.4, 0], torso: [0, -.2, 0] })],
+      [.12, K({ armR: [-1.15, -1.25, -.95], torso: [0, -.85, 0], legL: [-.2, 0, 0] })],
+      [.25, K({ armR: [-2.2, .85, 1.25], torso: [-.06, .7, 0], legL: [.35, 0, 0], legR: [-.45, 0, 0], armL: [-.4, 0, -.7] })],
+      [.4, K({ armR: [-1.2, .3, .6], torso: [0, .2, 0] })]] },
+    { dur: .46, hit: .22, act: [.16, .3], spread: .95, range: .7, lunge: 10, keys: [
+      [0, K({ armR: [-1.2, .3, .6], torso: [0, .2, 0] })],
+      [.16, K({ armR: [-3.05, 0, .12], armL: [-2.7, 0, -.12], torso: [-.28, 0, 0], body: [-.08, 0, 0], legR: [.25, 0, 0] })],
+      [.26, K({ armR: [-.3, 0, .1], armL: [-.5, 0, -.1], torso: [.45, 0, 0], body: [.1, 0, 0], legL: [-.8, 0, 0], legR: [.35, 0, 0] })],
+      [.46, K({})]] },
+    { dur: .66, hit: .42, act: [.08, .5], spread: 3.2, range: 1.4, lunge: 4, spin: [.06, .44], jump: 9, keys: [
+      [0, K({ armR: [-.9, 0, .6] })],
+      [.08, K({ armR: [-1.55, 0, 1.5], armL: [-.3, 0, -1.4], legL: [-.7, 0, 0], legR: [-.3, 0, 0] })],
+      [.4, K({ armR: [-1.55, 0, 1.5], armL: [-.3, 0, -1.4], legL: [-.7, 0, 0], legR: [-.3, 0, 0] })],
+      [.48, K({ armR: [-.35, 0, .15], armL: [-.6, 0, -.3], torso: [.4, 0, 0], legL: [-.9, 0, 0], legR: [.4, 0, 0] })],
+      [.66, K({})]] }
+  ];
+  function samplePose(clip, t) {
+    const ks = clip.keys; let i = 0; while (i < ks.length - 2 && t > ks[i + 1][0]) i++;
+    const a = ks[i], b = ks[i + 1], u = clamp((t - a[0]) / (b[0] - a[0] || 1), 0, 1), e = u * u * (3 - 2 * u), out = {};
+    for (const j in a[1]) out[j] = a[1][j].map((v, n) => v + (b[1][j][n] - v) * e);
+    return out;
+  }
   const WAVES = [
     { name: 'Los slimes', list: ['slime', 'slime', 'slime', 'slime', 'slime', 'slime', 'slime'], cap: 3 },
     { name: 'Ojos que vuelan', list: ['slime', 'eye', 'slime', 'eye', 'slime', 'slime', 'eye'], cap: 4 },
@@ -58,71 +92,78 @@
       let toastT = 0;
       function toast(msg, t) { ui.toast.textContent = msg; ui.toast.classList.add('on'); toastT = t || 1.8; }
 
-      /* ---------- el mundo: una arena flotante sobre la lava ---------- */
+      /* ---------- el mundo: una pradera enorme bajo un cielo de anime ---------- */
       const scene = group(), fx = new FX(scene);
-      R.setEnv({ sky: 0xc9b8ff, gnd: 0x8a3a2a, sun: 0xfff0f8, fog: 0x3a1438, fogNear: 45, fogFar: 160, light: [.4, .85, .35], amb: .64, sunK: .72, shadowArea: 22,
-        skyTop: 0x06021a, skyMid: 0x4a1a4a, skyBot: 0xa83a1a, sunDir: [-.3, .5, -.8], sunCol: 0xffd0f0, sunDisc: .5, stars: 1, clouds: .3, cloudCol: 0x8a3a6a });
-      R.grade = Object.assign(R.grade, { exp: 1.14, sat: 1.12, con: 1.06, tint: [1.03, .97, 1.02], lift: [.03, 0, .04], bloom: 1, tilt: .55, tiltC: .5, vig: .4, grain: .02 });
+      R.setEnv({ sky: 0xc8e4ff, gnd: 0x4a6a3a, sun: 0xfff0d0, fog: 0xa8d4f4, fogNear: 90, fogFar: 340, light: [.5, .8, .35], amb: .62, sunK: .9, shadowArea: 26,
+        skyTop: 0x1462d8, skyMid: 0x9fd4ff, skyBot: 0x8fc4ea, sunDir: [.35, .55, -.76], sunCol: 0xfff4d8, sunDisc: 1.1, stars: 0, clouds: 1, cloudCol: 0xffffff });
+      R.grade = Object.assign(R.grade, { exp: .96, sat: 1.32, con: 1.14, tint: [1, 1.01, .97], lift: [0, 0, .015], bloom: .42, tilt: .4, tiltC: .45, vig: .3, grain: .012 });
       cv.style.background = '#000';
+      const T = M.terrain(300, 300, 96, { a: 0x2f8a26, b: 0x58b030, c: 0xc89a6a, amp: 2.4, scale: .03, flatR: 34, seed: 21 });
+      const ground = new M.Node(T, 0xffffff, { shine: .08, vary: false }); scene.add(ground);
+      const gh = (x, z) => T.height(x, z);
       const st = group();
-      // suelo de losetas redondeadas, con anillos y tonos variados
-      for (let x = -19; x <= 19; x += 2) for (let z = -19; z <= 19; z += 2) {
-        const d = Math.hypot(x, z); if (d > 18.6) continue;
-        const ring = Math.floor(d / 4.5), alt = ((x + z) / 2 & 1);
-        box(st, 1.9, .7, 1.9, ring % 2 ? (alt ? 0x342a66 : 0x3a2f72) : (alt ? 0x2a2256 : 0x30275e), x, -.35, z, { r: .18, shine: .5 });
+      // caminos de tierra cruzando la pradera
+      for (let i = 0; i < 70; i++) { const t = i / 69, x = lerp(-60, 60, t), z = Math.sin(t * 4) * 6 + 8; mesh(st, geo.cyl20, i % 2 ? 0xd9b48c : 0xcfa87e, 5.4, .06, 4.2, x, gh(x, z) + .03, z, { vary: true }); }
+      for (let i = 0; i < 40; i++) { const t = i / 39, z = lerp(-70, 4, t), x = Math.sin(t * 3 + 1) * 5 - 6; mesh(st, geo.cyl20, i % 2 ? 0xd9b48c : 0xcfa87e, 4.4, .06, 4.8, x, gh(x, z) + .03, z); }
+      // rocas rosadas (como las del vídeo)
+      const RR = M.rng(77);
+      for (let i = 0; i < 46; i++) {
+        const a = RR() * TAU, d = 26 + RR() * 70, x = Math.cos(a) * d, z = Math.sin(a) * d, sz = 1 + RR() * 2.6;
+        mesh(st, geo.rock, RR() < .5 ? 0xf0a49a : 0xe0948c, sz * 1.5, sz * 1.1, sz * 1.3, x, gh(x, z) + sz * .35, z, { rot: [RR(), RR() * 6, RR() * .4], shine: .2 });
+        if (RR() < .5) mesh(st, geo.rock, 0xe8b8ae, sz * .7, sz * .6, sz * .7, x + sz, gh(x, z) + sz * .2, z + sz * .4, { rot: [RR(), RR() * 6, 0] });
       }
-      // círculo de runas brillante
-      mesh(st, geo.hair, 0x9b82ff, 13, .5, 13, 0, .02, 0, { emis: .9 }); mesh(st, geo.hair, 0xff4fd8, 25, .5, 25, 0, .02, 0, { emis: .7 }); mesh(st, geo.hair, 0x7df3ff, 6.4, .5, 6.4, 0, .02, 0, { emis: .9 });
-      for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; mesh(st, geo.oct, i % 2 ? 0x7df3ff : 0xff4fd8, .5, .1, .9, Math.cos(a) * 9.4, .05, Math.sin(a) * 9.4, { emis: 1, rot: [0, -a, 0] }); }
-      for (let i = 0; i < 6; i++) { const a = i / 6 * TAU; box(st, .18, .05, 6, 0x9b82ff, Math.cos(a) * 3.2, .03, Math.sin(a) * 3.2, { r: 0, emis: .8, rot: [0, -a + Math.PI / 2, 0] }); }
-      // borde de piedra y base de la isla
-      mesh(st, geo.cyl20, 0x241a48, 39, 3.5, 39, 0, -2.4, 0);
-      mesh(st, geo.cone6, 0x2a1e50, 37, 12, 37, 0, -10, 0, { rot: [Math.PI, .2, 0] });
-      for (let i = 0; i < 40; i++) { const a = i / 40 * TAU; box(st, 1.6, .9 + (i % 3) * .35, 1.5, i % 2 ? 0x4a3a8a : 0x55459a, Math.cos(a) * 19.3, .35, Math.sin(a) * 19.3, { r: .35, rot: [0, -a, 0] }); }
-      for (let i = 0; i < 26; i++) { const a = i / 26 * TAU + .1; M.rock(st, Math.cos(a) * 18, -5 - (i % 4), Math.sin(a) * 18, 1.4 + (i % 3) * .6, 0x3a2c6a); }
-      // pilares con cristales y antorchas
-      for (let i = 0; i < 8; i++) {
-        const a = i / 8 * TAU + .2, x = Math.cos(a) * 20.6, z = Math.sin(a) * 20.6;
-        box(st, 2.4, .8, 2.4, 0x4a3a8a, x, .4, z, { r: .3 }); box(st, 1.8, 6, 1.8, 0x3a2c6e, x, 3.6, z, { r: .4 }); box(st, 2.5, .6, 2.5, 0x55459a, x, 6.8, z, { r: .25 });
-        for (let k = 0; k < 3; k++) box(st, 1.84, .14, 1.84, 0x9b82ff, x, 1.8 + k * 1.6, z, { r: .05, emis: .6 });
-        mesh(st, geo.gem, i % 2 ? 0xff4fd8 : 0x7df3ff, 1.3, 2.4, 1.3, x, 8.6, z, { emis: 1 });
-        // estandarte
-        box(st, 1.3, 2.6, .1, i % 2 ? 0x8a2ad8 : 0x2a6ad8, x - Math.sin(a) * 0, 4.2, z, { r: .05, rot: [0, -a + Math.PI / 2, 0] });
-      }
-      // lava
-      mesh(st, geo.cyl20, 0x9a2410, 420, .2, 420, 0, -16, 0, { emis: .9 });
-      for (let i = 0; i < 40; i++) { const a = Math.random() * TAU, d = 30 + Math.random() * 70; mesh(st, geo.cyl20, Math.random() < .5 ? 0xff6a1a : 0xd84a14, 2 + Math.random() * 5, .3, 2 + Math.random() * 5, Math.cos(a) * d, -15.8, Math.sin(a) * d, { emis: 1, vary: false }); }
-      for (let i = 0; i < 22; i++) { const a = Math.random() * TAU, d = 30 + Math.random() * 40; M.rock(st, Math.cos(a) * d, -16, Math.sin(a) * d, 2 + Math.random() * 4, 0x2a2030); }
-      for (let i = 0; i < 160; i++) { const a = Math.random() * TAU, e = .15 + Math.random() * 1.2, r = 150, s = .4 + Math.random() * .7; mesh(st, geo.oct, 0xffffff, s, s, s, Math.cos(a) * Math.cos(e) * r, Math.sin(e) * r, Math.sin(a) * Math.cos(e) * r, { emis: 1, vary: false }); }
+      // árboles frondosos de tronco rojizo
+      const tree = (x, z, s, leaf) => {
+        const y = gh(x, z);
+        mesh(st, M.geo.custom(10, .4, .62), 0x8a3a2e, 1.1 * s, 6 * s, 1.1 * s, x, y + 3 * s, z, { rot: [0, 0, (RR() - .5) * .15] });
+        mesh(st, M.geo.custom(8, .2, .4), 0x8a3a2e, .6 * s, 3 * s, .6 * s, x + 1.1 * s, y + 5.6 * s, z, { rot: [0, 0, -.7] });
+        const L = [leaf, leaf + 0x0a1408 > 0xffffff ? leaf : leaf + 0x0a1408, 0x3a8a3a];
+        [[0, 7.4, 0, 4.4], [2.2, 6.6, .6, 3.3], [-2.1, 6.9, -.4, 3.4], [.4, 9.1, -.3, 3.1], [-.8, 6.1, 1.8, 2.8], [1.2, 6.2, -1.9, 2.9], [-1.4, 8.4, 1, 2.4]]
+          .forEach(([a, b, c, r], i) => mesh(st, geo.ballS, L[i % 3], r * s, r * .82 * s, r * s, x + a * s, y + b * s, z + c * s, { rot: [0, RR() * 6, 0] }));
+      };
+      for (let i = 0; i < 34; i++) { const a = i / 34 * TAU + RR() * .15, d = 40 + RR() * 45; tree(Math.cos(a) * d, Math.sin(a) * d, .9 + RR() * .6, RR() < .5 ? 0x4a9a3a : 0x5aac42); }
+      [[-34, -10], [33, 16], [-28, 24], [30, -26], [8, -40], [-14, 38]].forEach(([x, z]) => tree(x, z, 1.1 + RR() * .3, 0x52a43e));
+      // arbustos y flores
+      for (let i = 0; i < 40; i++) { const a = RR() * TAU, d = 30 + RR() * 40, x = Math.cos(a) * d, z = Math.sin(a) * d; M.bush(st, x, z, 1 + RR() * .8, RR() < .5 ? 0x3e9a3a : 0x52a845); st.children.slice(-3).forEach(n => { n.pos[1] += gh(x, z); }); }
+      for (let i = 0; i < 90; i++) { const a = RR() * TAU, d = 6 + RR() * 34, x = Math.cos(a) * d, z = Math.sin(a) * d; M.flower(st, x, z, [0xffffff, 0xffe27a, 0xff9ad8, 0xb8a8ff][i % 4], .7); st.children.slice(-3).forEach(n => { n.pos[1] += gh(x, z); }); }
+      // lago
+      mesh(st, geo.cyl20, 0x3aa8e0, 46, .1, 30, 58, gh(58, -52) + .1, -52, { shine: 1.4, emis: .1 });
+      mesh(st, geo.cyl20, 0xd9c8a0, 50, .06, 34, 58, gh(58, -52) + .04, -52);
+      // colinas y montañas lejanas
+      for (let i = 0; i < 26; i++) { const a = i / 26 * TAU, d = 170 + (i % 3) * 25, h = 24 + (i * 7 % 5) * 9; mesh(st, geo.ball, i % 2 ? 0x5a9a5a : 0x4a8a5a, 90, h * 2, 70, Math.cos(a) * d, -6, Math.sin(a) * d, { rot: [0, -a, 0], shine: 0 }); }
+      // isla flotante con castillo en el cielo (fondo)
+      const sky = group().at(-60, 70, -210); st.add(sky);
+      mesh(sky, geo.cone6, 0x8a7a70, 70, 40, 70, 0, -24, 0, { rot: [Math.PI, .3, 0] });
+      mesh(sky, geo.cyl20, 0x6aaa5a, 72, 4, 72, 0, 0, 0);
+      for (let i = 0; i < 6; i++) { const r = 26 - i * 3.8; mesh(sky, geo.cyl20, i % 2 ? 0xd8d4e0 : 0xc8c4d4, r * 2, 5, r * 2, 0, 3 + i * 5, 0); }
+      for (let i = 0; i < 8; i++) { const a = i / 8 * TAU; mesh(sky, geo.cyl, 0xe0dcec, 4, 26, 4, Math.cos(a) * 20, 13, Math.sin(a) * 20); mesh(sky, geo.cone, 0x6a7ad8, 6, 7, 6, Math.cos(a) * 20, 29, Math.sin(a) * 20); }
+      mesh(sky, geo.cyl, 0xe8e4f4, 6, 30, 6, 0, 45, 0); mesh(sky, geo.cone, 0x5a6ad0, 9, 12, 9, 0, 66, 0);
       scene.add(bake(st, 31));
-      // islas flotantes con cristales (se mecen)
-      const floaters = [];
-      for (let i = 0; i < 6; i++) {
-        const a = i / 6 * TAU + .5, d = 30 + (i % 2) * 8, g = group().at(Math.cos(a) * d, 2 + (i % 3) * 3, Math.sin(a) * d); scene.add(g);
-        const s = group(); box(s, 4, 1, 4, 0x3a2c6e, 0, 0, 0, { r: .4 }); mesh(s, geo.cone6, 0x2a1e50, 4.4, 4, 4.4, 0, -2.4, 0, { rot: [Math.PI, 0, 0] });
-        mesh(s, geo.gem, i % 2 ? 0xff4fd8 : 0x7df3ff, 1.2, 2.6, 1.2, -.6, 1.6, .2, { emis: 1 }); mesh(s, geo.gem, 0xc9bcff, .8, 1.6, .8, .8, 1.1, -.4, { emis: 1 });
-        g.add(bake(s, 40 + i)); floaters.push({ g, y: g.pos[1], ph: i });
-      }
-      const embers = new M.Motes(scene, { n: 70, area: [70, 26, 70], center: [0, -2, 0], color: 0xffa040, size: .16, speed: .8, fall: -2.5 });
-      const sparks = new M.Motes(scene, { n: 30, area: [34, 8, 34], center: [0, 4, 0], color: 0xc9bcff, size: .1, speed: .5 });
-      // antorchas con fuego
+      // hierba alta que se mueve con el viento
+      scene.add(M.grassField({ n: 26000, r: 40, inner: 0, h: 1.15, w: .14, root: 0x1e5a14, tip: 0x8cd23a, seed: 3 }));
+      scene.add(M.grassField({ n: 9000, r: 80, inner: 40, h: 1.4, w: .22, root: 0x22621a, tip: 0x84c838, seed: 4, height: gh }));
+      // nubes 3D grandes por encima
+      const cl = group(); [[-80, 60, -150, 7], [40, 70, -170, 8], [120, 55, -90, 6], [-140, 50, -40, 6], [90, 64, 120, 7], [-60, 58, 140, 6]].forEach(([x, y, z, s]) => M.cloud(cl, x, y, z, s, 0xffffff)); const clouds = bake(cl, 9); clouds.cast = false; scene.add(clouds);
+      const floaters = [{ g: clouds, y: 0, ph: 0 }];
+      const embers = new M.Motes(scene, { n: 60, area: [70, 10, 70], center: [0, 4, 0], color: 0xfff8c0, size: .12, speed: .5, fall: -.3, alpha: .7 });
+      const sparks = new M.Motes(scene, { n: 30, area: [40, 5, 40], center: [0, 2.5, 0], color: 0xffffff, size: .08, speed: .9, alpha: .6 });
       const torches = [];
-      for (let i = 0; i < 8; i++) { const a = i / 8 * TAU + .2 + Math.PI / 8, x = Math.cos(a) * 19.3, z = Math.sin(a) * 19.3; mesh(scene, geo.cyl, 0x3a2c6e, .4, 2.4, .4, x, 1.9, z); mesh(scene, geo.custom(10, .55, .3), 0x55459a, .9, .5, .9, x, 3.2, z); torches.push([x, 3.6, z]); mesh(scene, geo.ball, 0xff9a3a, 1.2, 1.5, 1.2, x, 3.8, z, { emis: 1, add: true, alpha: .3, cast: false }); }
-      // portales por donde salen los monstruos
-      const PORTALS = [0, 1, 2, 3].map(i => { const a = i / 4 * TAU + Math.PI / 4; return [Math.cos(a) * 15, Math.sin(a) * 15]; });
-      const portalNodes = PORTALS.map(([x, z]) => { mesh(scene, geo.cyl20, 0x1a0a30, 3.6, .08, 3.6, x, .04, z); const p = mesh(scene, geo.torus, 0xff4fd8, 4, 4, 4, x, .15, z, { emis: 1, add: true, alpha: .55 }); return p; });
-      // la caja del regalo, encerrada en una jaula... hasta que ganes
-      const cage = group().at(0, 0, -14); scene.add(cage);
-      mesh(cage, geo.cyl20, 0x55459a, 6, .5, 6, 0, .25, 0); mesh(cage, geo.thin, 0xffd23f, 6, .5, 6, 0, .5, 0, { emis: .8 });
-      const giftBox = group().at(0, .5, 0); cage.add(giftBox);
+      // portales de aparición (círculos mágicos en el suelo)
+      const PORTALS = [0, 1, 2, 3, 4, 5].map(i => { const a = i / 6 * TAU + .3; return [Math.cos(a) * 24, Math.sin(a) * 24]; });
+      const portalNodes = PORTALS.map(([x, z]) => { const p = mesh(scene, geo.hair, 0xc84aff, 5, .5, 5, x, .12, z, { emis: 1, add: true, alpha: .5, cast: false }); return p; });
+      // el regalo, encerrado en una jaula sobre una colina
+      const CAGE_Z = -26;
+      const cage = group().at(0, gh(0, CAGE_Z), CAGE_Z); scene.add(cage);
+      mesh(cage, geo.cyl20, 0xc8b8a8, 6, .6, 6, 0, .3, 0); mesh(cage, geo.hair, 0xffd23f, 6, .5, 6, 0, .62, 0, { emis: .9 });
+      const giftBox = group().at(0, .6, 0); cage.add(giftBox);
       box(giftBox, 2.2, 2, 2.2, 0x6ee07a, 0, 1, 0, { shine: .8 }); box(giftBox, 2.5, .55, 2.5, 0x4ac05a, 0, 2.2, 0, { shine: .8 });
       box(giftBox, .42, 2.6, 2.3, 0xffd23f, 0, 1.25, 0, { emis: .3, r: .1 }); box(giftBox, 2.3, 2.6, .42, 0xffd23f, 0, 1.25, 0, { emis: .3, r: .1 });
       box(giftBox, 1, .7, .4, 0xffd23f, -.45, 2.75, 0, { rot: [0, 0, .5], emis: .3 }); box(giftBox, 1, .7, .4, 0xffd23f, .45, 2.75, 0, { rot: [0, 0, -.5], emis: .3 });
       mesh(giftBox, geo.ball, 0xffd23f, 4, 4, 4, 0, 1.4, 0, { emis: 1, add: true, alpha: .12, cast: false });
       const bars = [];
-      for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; bars.push(mesh(cage, geo.cyl, 0x9aa0b8, .26, 4.4, .26, Math.cos(a) * 2.3, 2.6, Math.sin(a) * 2.3, { shine: 1 })); }
-      const cageTop = mesh(cage, geo.cyl20, 0x6a6e88, 5.4, .4, 5.4, 0, 4.9, 0, { shine: .9 });
-      const lock = mesh(cage, geo.ball, 0xffd23f, .9, .9, .5, 0, 2.6, 2.4, { emis: .3, shine: 1 });
+      for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; bars.push(mesh(cage, geo.cyl, 0x9aa0b8, .26, 4.4, .26, Math.cos(a) * 2.3, 2.8, Math.sin(a) * 2.3, { shine: 1 })); }
+      const cageTop = mesh(cage, geo.cyl20, 0x6a6e88, 5.4, .4, 5.4, 0, 5.1, 0, { shine: .9 });
+      const lock = mesh(cage, geo.ball, 0xffd23f, .9, .9, .5, 0, 2.8, 2.4, { emis: .3, shine: 1 });
 
       /* ---------- la heroína ---------- */
       const hero = avatar(Object.assign({ blend: 24 }, HERO)); scene.add(hero.root);
@@ -130,12 +171,13 @@
         beamT: 0, beamTick: 0, dashT: 0, dashDir: [0, 0], cd: { beam: 0, wave: 0, dash: 0 }, waveT: 0, dead: false, deadT: 0, buff: 1, y: 0, vy: 0,
         slam: false, ult: 0, ultT: 0, kx: 0, kz: 0, ghostT: 0 };
       // la Espada Píxel: empuñadura dorada y hoja de cristal que cambia de color
-      const sword = group(); hero.P.armR.add(sword); sword.at(0, -1.72, .12); sword.rot[0] = Math.PI / 2;
+      const sword = group(); hero.P.armR.add(sword); sword.at(0, -1.42, .12); sword.rot[0] = Math.PI / 2;
       mesh(sword, geo.cyl, 0x4a2a6a, .22, .75, .22, 0, -.38, 0); mesh(sword, geo.ballS, 0xffd23f, .3, .3, .3, 0, -.8, 0, { emis: .4, shine: 1 });
       box(sword, 1.1, .2, .36, 0xffd23f, 0, .05, 0, { emis: .3, shine: 1 }); mesh(sword, geo.gem, 0xff4fd8, .3, .3, .3, 0, .05, .2, { emis: 1 });
       const blade = box(sword, .36, 3, .12, 0xff9ae8, 0, 1.65, 0, { emis: .75, shine: 1, r: .05 });
       const tip = box(sword, .26, .26, .12, 0xff9ae8, 0, 3.15, 0, { emis: .75, r: .02, rot: [0, 0, Math.PI / 4] });
       const bladeGlow = box(sword, .8, 3.5, .36, 0xff4fd8, 0, 1.7, 0, { emis: 1, add: true, alpha: .22, r: .15, cast: false });
+      const trail = new M.Trail(scene, 0xffb8f0, 14), trail2 = new M.Trail(scene, 0x9af0ff, 9);
       // copias fantasma al esquivar
       const ghosts = [0, 1, 2, 3, 4, 5].map(() => {
         const g = group(); scene.add(g); g.visible = false;
@@ -289,7 +331,7 @@
       let deaths = 0, waveDeaths = 0, time = 0, hitstop = 0, shake = 0, slowmo = 1, winT = 0, kills = 0;
       let boss = null;
       const camS = { x: 0, z: 4 };
-      let camYaw = Math.PI, camPitch = .36, lookT = 9, camY = 3.4, camDist = 0;
+      let camYaw = Math.PI, camPitch = .25, lookT = 9, camY = 4.3, camDist = 0;
 
       // controles relativos a la cámara: arriba = hacia donde mira la cámara
       function moveInput() {
@@ -321,7 +363,7 @@
           const [mx, mz, L] = moveInput();
           P.dashDir = L > .2 ? [mx / L, mz / L] : [Math.sin(P.face), Math.cos(P.face)];
           P.face = Math.atan2(P.dashDir[0], P.dashDir[1]);
-          P.cd.dash = TUNE.dash.cd; P.dashT = TUNE.dash.dur; P.inv = Math.max(P.inv, TUNE.dash.inv); P.atkT = 0;
+          hero.capeKick = .9; P.cd.dash = TUNE.dash.cd; P.dashT = TUNE.dash.dur; P.inv = Math.max(P.inv, TUNE.dash.inv); P.atkT = 0;
           S.noise(.18, .08, 2500); S.tone(500, 1200, .12, 'sine', .03);
           fx.ring([P.x, .3, P.z], 0xc9bcff, 2.5, .3);
         }
@@ -343,7 +385,7 @@
         if (state !== 'play') return;
         {
           {
-            S.noise(.5, .2, 500); S.tone(160, 50, .5, 'sine', .18); punch = .6;
+            S.noise(.5, .2, 500); S.tone(160, 50, .5, 'sine', .18); punch = .6; impactT = .08;
             fx.ring([P.x, .4, P.z], 0x7df3ff, TUNE.wave.radius, .55); fx.ring([P.x, .6, P.z], 0xff4fd8, TUNE.wave.radius * .8, .45);
             fx.burst([P.x, 1, P.z], 46, { colors: [0x7df3ff, 0xff4fd8, 0xffffff, 0xffd23f], speed: 16, life: .6, size: .3, add: true, flat: true, grav: 4 });
             shake = Math.max(shake, .9);
@@ -392,7 +434,7 @@
           const q = debris[i], n = q.n; q.life -= dt;
           q.v[1] -= 28 * dt; n.pos[0] += q.v[0] * dt; n.pos[1] += q.v[1] * dt; n.pos[2] += q.v[2] * dt;
           n.rot[0] += q.w[0] * dt; n.rot[1] += q.w[1] * dt; n.rot[2] += q.w[2] * dt;
-          const fl = Math.hypot(n.pos[0], n.pos[2]) < 19 ? q.r : -40;
+          const fl = q.r;
           if (n.pos[1] < fl) { n.pos[1] = fl; if (q.v[1] < 0) q.v[1] *= -.35; q.v[0] *= .7; q.v[2] *= .7; q.w = q.w.map(v => v * .6); }
           if (q.life < .5) { const k = Math.max(0, q.life / .5); n.scl = q.s.map(v => v * k); }
           if (q.life <= 0) { scene.remove(n); debris.splice(i, 1); }
@@ -485,7 +527,7 @@
             scene.remove(m.n); scene.remove(m.warn); meteors.splice(i, 1);
             fx.ring([m.x, .3, m.z], 0xffd23f, TUNE.ult.radius + 1, .5); fx.ring([m.x, .5, m.z], 0xff4fd8, TUNE.ult.radius, .4);
             fx.burst([m.x, .8, m.z], 26, { colors: [0xffd23f, 0xff7a2a, 0xffffff, 0xff4fd8], speed: 12, life: .7, size: .32, add: true, grav: 10 });
-            shake = Math.max(shake, .8); S.noise(.35, .14, 600); S.tone(120, 40, .3, 'sine', .1);
+            shake = Math.max(shake, .8); S.noise(.35, .14, 600); S.tone(120, 40, .3, 'sine', .1); if (Math.random() < .35) impactT = .05;
             for (const e of enemies) { if (e.dead || e.spawn < 1) continue; const dx = e.x - m.x, dz = e.z - m.z, d = Math.hypot(dx, dz); if (d < TUNE.ult.radius + e.r) { hurtEnemy(e, TUNE.ult.dmg * P.buff, dx / (d || 1), dz / (d || 1), e.type === 'boss' ? 0 : 10, Math.random() < .3); e.stun = Math.max(e.stun, e.type === 'boss' ? .2 : .6); } }
           }
         }
@@ -520,39 +562,45 @@
           if (P.kx || P.kz) { P.x += P.kx * dt; P.z += P.kz * dt; P.kx *= Math.pow(.02, dt); P.kz *= Math.pow(.02, dt); if (Math.abs(P.kx) + Math.abs(P.kz) < .1) P.kx = P.kz = 0; }
           // empuje con los monstruos (no se les atraviesa, salvo esquivando)
           if (P.dashT <= 0) for (const e of enemies) { if (e.dead || e.spawn < 1) continue; const dx = P.x - e.x, dz = P.z - e.z, d = Math.hypot(dx, dz), m = e.r + .9; if (d < m && d > .001) { P.x = e.x + dx / d * m; P.z = e.z + dz / d * m; } }
-          { const dx = P.x, dz = P.z + 14, d = Math.hypot(dx, dz); if (d < 3.2 && d > .001) { P.x = dx / d * 3.2; P.z = -14 + dz / d * 3.2; } }
+          { const dx = P.x, dz = P.z - CAGE_Z, d = Math.hypot(dx, dz); if (d < 3.2 && d > .001) { P.x = dx / d * 3.2; P.z = CAGE_Z + dz / d * 3.2; } }
           const pd = Math.hypot(P.x, P.z); if (pd > ARENA) { P.x *= ARENA / pd; P.z *= ARENA / pd; }
           // salto de la onda
           if (P.vy || P.y > 0) { P.vy -= (P.slam && P.vy < 0 ? 60 : 30) * dt; P.y = Math.max(0, P.y + P.vy * dt); if (P.y === 0 && P.vy < 0) { P.vy = 0; if (P.slam) { P.slam = false; doWave(); } else fx.ring([P.x, .2, P.z], 0xffffff, 2, .3); } }
 
-          // combo de golpes (mantener pulsado = golpes seguidos)
+          // combo de 4 golpes con la espada (mantener pulsado = combo seguido)
           P.comboWin = Math.max(0, P.comboWin - dt);
           if (state === 'play' && atkHeld && P.atkT <= 0 && P.beamT <= 0 && P.dashT <= 0) {
-            P.atkI = P.comboWin > 0 ? (P.atkI + 1) % 3 : 0;
-            P.atkDur = P.atkI === 2 ? .46 : .3; P.atkT = P.atkDur; P.atkHit = false; P.comboWin = .6;
-            if (P.atkI === 2) { P.vy = 7; P.y = Math.max(P.y, .01); }
-            const t = nearest(7.5, P.x, P.z); if (t && ml < .2) aimAt(t); else if (t) { const want = Math.atan2(t.x - P.x, t.z - P.z); let d = want - P.face; d = Math.atan2(Math.sin(d), Math.cos(d)); if (Math.abs(d) < 1.2) P.face = want; }
+            P.atkI = P.comboWin > 0 ? (P.atkI + 1) % 4 : 0;
+            const C = CLIPS[P.atkI];
+            P.atkDur = C.dur; P.atkT = C.dur; P.atkHit = false; P.comboWin = .55;
+            if (C.jump) { P.vy = C.jump; P.y = Math.max(P.y, .01); }
+            const t = nearest(9, P.x, P.z); if (t) { const want = Math.atan2(t.x - P.x, t.z - P.z); let d = want - P.face; d = Math.atan2(Math.sin(d), Math.cos(d)); if (ml < .2 || Math.abs(d) < 1.3) P.face = want; }
+            S.noise(.08, .05, 5000);
           }
           if (P.atkT > 0) {
             P.atkT -= dt;
-            const k = 1 - P.atkT / P.atkDur;
-            // pequeño paso adelante al golpear
-            if (k > .25 && k < .5) { P.x += Math.sin(P.face) * 7 * dt; P.z += Math.cos(P.face) * 7 * dt; }
-            if (!P.atkHit && k > (P.atkI === 2 ? .45 : .36)) {
+            const C = CLIPS[P.atkI], tt = P.atkDur - P.atkT;
+            // paso adelante durante el golpe
+            if (tt > C.act[0] && tt < C.act[0] + .12) { P.x += Math.sin(P.face) * C.lunge * dt; P.z += Math.cos(P.face) * C.lunge * dt; }
+            if (!P.atkHit && tt >= C.hit) {
               P.atkHit = true;
-              const fx0 = Math.sin(P.face), fz0 = Math.cos(P.face);
-              const spread = P.atkI === 2 ? 2.2 : 1.25, range = TUNE.comboRange + (P.atkI === 2 ? .8 : 0);
-              fx.slash([P.x, 2.6 + P.y, P.z], P.face - .38, P.atkI === 2 ? 0xffd23f : (P.atkI ? 0x7df3ff : 0xff4fd8), range * .8, P.atkI === 2 ? .3 : .2, P.atkI === 1 ? -.35 : (P.atkI === 0 ? .35 : 0));
-              for (let a = -spread; a <= spread; a += spread / 4) { const ang = P.face + a; fx.burst([P.x + Math.sin(ang) * 2.6, 2.6 + (P.atkI === 1 ? -a * .3 : a * .3), P.z + Math.cos(ang) * 2.6], 1, { colors: [P.atkI === 2 ? 0xffd23f : 0xffffff, 0xff4fd8], speed: .5, life: .22, size: .45, add: true, grav: 0 }); }
-              if (P.atkI === 2) { fx.ring([P.x, 1.2, P.z], 0xffd23f, range, .3); fx.slash([P.x, 2.2 + P.y, P.z], P.face + 2.2, 0xffd23f, range * .8, .3, 0); fx.slash([P.x, 2.2 + P.y, P.z], P.face - 2.6, 0xffd23f, range * .8, .3, 0); punch = .4; }
-              S.noise(.1, .09, 4500); S.tone(P.atkI === 2 ? 500 : 700, 300, .1, 'sawtooth', .02);
+              const fx0 = Math.sin(P.face), fz0 = Math.cos(P.face), fin = P.atkI === 3;
+              const range = TUNE.comboRange + C.range;
+              // corte de viento en media luna (blanco, estilo anime)
+              const tilt = [.45, -.5, 1.25, 0][P.atkI];
+              fx.slash([P.x, 2.7 + P.y, P.z], P.face - .38, 0xffffff, range * .95, fin ? .32 : .2, tilt);
+              fx.slash([P.x, 2.7 + P.y, P.z], P.face - .38, fin ? 0xffd23f : (P.atkI % 2 ? 0x7df3ff : 0xff8ae8), range * .8, fin ? .3 : .18, tilt);
+              if (fin) { fx.ring([P.x, .4, P.z], 0xffffff, range + 1.5, .35, { thin: true }); fx.slash([P.x, 2.2 + P.y, P.z], P.face + 2.2, 0xffd23f, range, .3, 0); fx.slash([P.x, 2.2 + P.y, P.z], P.face - 2.6, 0xffd23f, range, .3, 0); punch = .5; }
+              S.noise(.12, .1, 4500); S.tone(fin ? 420 : 760, 260, .12, 'sawtooth', .02);
+              let hits = 0;
               for (const e of enemies) {
                 if (e.dead || e.spawn < 1) continue;
-                const dx = e.x - P.x, dz = e.z - P.z, d = Math.hypot(dx, dz) - e.r;
+                const dx = e.x - P.x, dz = e.z - P.z, dd = Math.hypot(dx, dz), d = dd - e.r;
                 if (d > range) continue;
-                const ang = Math.acos(clamp((dx * fx0 + dz * fz0) / (Math.hypot(dx, dz) || 1), -1, 1));
-                if (ang < spread * .55 + .35 || d < .6) { hurtEnemy(e, TUNE.combo[P.atkI] * P.buff, dx / (d + e.r || 1), dz / (d + e.r || 1), P.atkI === 2 ? 13 : 5, Math.random() < .12); hitstop = Math.max(hitstop, P.atkI === 2 ? .09 : .045); shake = Math.max(shake, P.atkI === 2 ? .75 : .35); }
+                const ang = Math.acos(clamp((dx * fx0 + dz * fz0) / (dd || 1), -1, 1));
+                if (ang < C.spread * .6 + .3 || d < .6) { hits++; hurtEnemy(e, TUNE.combo[P.atkI] * P.buff, dx / (dd || 1), dz / (dd || 1), fin ? 15 : (P.atkI === 2 ? 9 : 4), Math.random() < .12); }
               }
+              if (hits) { hitstop = Math.max(hitstop, fin ? .11 : (P.atkI === 2 ? .07 : .05)); shake = Math.max(shake, fin ? .9 : .4); if (fin || P.atkI === 2) impactT = fin ? .1 : .05; }
             }
           }
           // Rayo Píxel
@@ -585,7 +633,7 @@
           spawnT -= dt;
           const alive = enemies.filter(e => !e.dead).length;
           if (queue.length && spawnT <= 0 && alive < WAVES[waveI].cap) {
-            const type = queue.shift(), pt = type === 'boss' ? [0, -5] : PORTALS[(Math.random() * 4) | 0];
+            const type = queue.shift(), pt = type === 'boss' ? [0, -10] : PORTALS[(Math.random() * PORTALS.length) | 0];
             const e = makeEnemy(type, pt[0], pt[1]); if (type === 'boss') { boss = e; e.y = 18; }
             spawnT = 1.1; updateLeft();
           }
@@ -657,24 +705,16 @@
         hero.animate(dt, P.dashT > 0 ? 1 : sp, (H, A) => {
           const B = A.body;
           // postura de combate con la espada lista
-          H.armR.rot = [-.55, 0, .25]; H.armL.rot[2] -= .15;
+          if (sp > .6 && P.atkT <= 0) { H.armR.rot = [1.05, 0, .3]; H.armL.rot = [1, 0, -.3]; B.rot[0] = .3; H.head.rot[0] = -.25; } else { H.armR.rot = [-.55 + Math.sin(A.walk) * .2 * sp, 0, .25]; H.armL.rot[2] -= .15; }
           if (P.dead) { B.rot[0] = -Math.min(1.4, P.deadT * 3); B.pos[1] = .3; H.armR.rot = [0, 0, 1]; return; }
           if (state === 'intro') { H.armR.rot = [-.4, 0, 2.5 + Math.sin(A.t * 2) * .1]; H.armL.rot[2] = -.5; B.rot[1] = Math.sin(A.t * .8) * .1; }
           if (state === 'won') { H.armR.rot = [-.2, 0, 2.9 + Math.sin(A.t * 10) * .1]; H.armL.rot[2] = -2.6 - Math.sin(A.t * 10) * .2; B.pos[1] = Math.abs(Math.sin(A.t * 6)) * .6; B.rot[1] = A.t * 2; }
           if (P.dashT > 0) { B.rot[0] = .6; H.armL.rot = [1.2, 0, -.3]; H.armR.rot = [1.3, 0, .3]; H.legL.rot[0] = .8; H.legR.rot[0] = -.6; }
           if (P.atkT > 0) {
-            const k = atkK, wind = ease.out(clamp(k / .3, 0, 1)), strike = ease.out(clamp((k - .3) / .25, 0, 1)), rec = clamp((k - .7) / .3, 0, 1);
-            if (P.atkI === 0) {        // corte diagonal de derecha a izquierda
-              H.armR.rot = [lerp(lerp(-.55, -2.6, wind), -.6, strike), lerp(0, -.5, strike), lerp(lerp(.25, 1.1, wind), -.5, strike)];
-              B.rot[1] = lerp(lerp(0, .7, wind), -.6, strike) * (1 - rec); H.legL.rot[0] = -.4 * strike; H.legR.rot[0] = .3 * strike;
-            } else if (P.atkI === 1) { // revés de izquierda a derecha
-              H.armR.rot = [lerp(lerp(-.55, -1.4, wind), -1.5, strike), lerp(lerp(0, -1, wind), 1, strike), lerp(lerp(.25, -.6, wind), 1.3, strike)];
-              B.rot[1] = lerp(lerp(0, -.8, wind), .7, strike) * (1 - rec); H.legL.rot[0] = .3 * strike; H.legR.rot[0] = -.4 * strike;
-            } else {                   // giro final en el aire
-              H.armR.rot = [-1.5, 0, 1.4]; H.armL.rot = [0, 0, -1.4];
-              B.rot[1] = ease.inOut(clamp((k - .15) / .7, 0, 1)) * TAU; B.rot[0] = -.15;
-            }
-            H.head.rot[1] = -B.rot[1] * .5;
+            const C = CLIPS[P.atkI], tt = P.atkDur - P.atkT, p = samplePose(C, tt);
+            H.armR.rot = p.armR; H.armL.rot = p.armL; H.torso.rot = p.torso; B.rot = p.body.slice(); H.legL.rot = p.legL; H.legR.rot = p.legR;
+            if (C.spin) B.rot[1] = -TAU * ease.inOut(clamp((tt - C.spin[0]) / (C.spin[1] - C.spin[0]), 0, 1));
+            H.head.rot[1] = -H.torso.rot[1] * .5;
           }
           if (P.beamT > 0) { H.armL.rot = [-2.5, .5, .2]; H.armR.rot = [-1, 0, .6]; H.head.rot[0] = .05; B.rot[0] = -.12; H.legL.rot[0] = -.3; H.legR.rot[0] = .3; }
           if (P.slam) { const up = P.vy > 0; H.armR.rot = up ? [-2.9, 0, .2] : [-1, 0, .2]; H.armL.rot = up ? [-2.8, 0, -.2] : [-1.1, 0, -.2]; H.legL.rot[0] = -.9; H.legR.rot[0] = -.5; B.rot[0] = up ? -.2 : .35; }
@@ -683,11 +723,20 @@
           H.lens.forEach(l => { l.alpha = P.beamT > 0 ? .95 : (P.cd.beam <= 0 ? .25 + Math.sin(A.t * 4) * .15 : 0); });
         });
         P.waveT = Math.max(0, P.waveT - dt);
+        hero.root.update(null);
+        { const w = blade.world, ax = [w[4] * .5, w[5] * .5, w[6] * .5], c0 = [w[12], w[13], w[14]];
+          const tip = [c0[0] + ax[0] * 1.1, c0[1] + ax[1] * 1.1, c0[2] + ax[2] * 1.1], base = [c0[0] - ax[0] * .7, c0[1] - ax[1] * .7, c0[2] - ax[2] * .7];
+          const C = CLIPS[P.atkI], tt = P.atkDur - P.atkT, on = P.atkT > 0 && tt > C.act[0] && tt < C.act[1];
+          trail.update(base, tip, on || P.ultT > 0, dt); trail2.update([lerp(base[0], tip[0], .5), lerp(base[1], tip[1], .5), lerp(base[2], tip[2], .5)], tip, on, dt); }
+        impactT = Math.max(0, impactT - dt);
+        R.grade.impact = impactT > 0 ? (impactT > .035 ? 1 : .6) : 0;
+        speedK = lerp(speedK, (P.dashT > 0 || P.ultT > 0 ? 1 : 0) + (P.atkT > 0 && P.atkI === 3 ? .7 : 0), Math.min(1, dt * 10));
+        R.grade.speed = Math.min(1, speedK); { const p = R.project([P.x, 3 + P.y, P.z]); R.grade.speedC = [clamp(p.x / R.W, .2, .8), clamp(1 - p.y / R.H, .2, .8)]; }
         for (const e of enemies) poseEnemy(e, dt);
         portalNodes.forEach((p, i) => { p.rot[1] = time * (1 + i * .2); p.alpha = .4 + Math.sin(time * 3 + i) * .15; });
-        floaters.forEach(f => { f.g.pos[1] = f.y + Math.sin(time * .8 + f.ph) * .8; f.g.rot[1] = time * .1 + f.ph; });
+        clouds.pos[0] = Math.sin(time * .02) * 20;
         embers.update(dt, time); sparks.update(dt, time);
-        if (Math.random() < dt * 30) { const t = torches[(Math.random() * torches.length) | 0]; fx.burst(t, 1, { colors: [0xffd23f, 0xff7a2a, 0xff4a1a], speed: .8, life: .6, size: .35, add: true, grav: -5, floor: -99 }); }
+        if (torches.length && Math.random() < dt * 30) { const t = torches[(Math.random() * torches.length) | 0]; fx.burst(t, 1, { colors: [0xffd23f, 0xff7a2a, 0xff4a1a], speed: .8, life: .6, size: .35, add: true, grav: -5, floor: -99 }); }
 
         /* --- jaula del regalo --- */
         if (state === 'won') {
@@ -695,7 +744,7 @@
           bars.forEach((b, i) => { b.pos[1] = 2.1 + ease.out(k) * (6 + i % 3); b.alpha = 1 - k; b.rot[2] = k * (i % 2 ? 2 : -2); });
           cageTop.pos[1] = 4.9 + ease.out(k) * 9; cageTop.alpha = 1 - k; lock.alpha = 1 - k; lock.pos[1] = 2.6 - k * 3;
           giftBox.pos[1] = .5 + Math.sin(winT * 3) * .3 + k * 1.2; giftBox.rot[1] = winT * 1.4;
-          if (winT > .6 && winT < .7) fx.burst([0, 3, -14], 40, { colors: [0xffd23f, 0x6ee07a, 0xff4fd8, 0x7df3ff, 0xffffff], speed: 12, life: 1.6, size: .35, add: true, grav: 6 });
+          if (winT > .6 && winT < .7) fx.burst([0, 3, CAGE_Z], 40, { colors: [0xffd23f, 0x6ee07a, 0xff4fd8, 0x7df3ff, 0xffffff], speed: 12, life: 1.6, size: .35, add: true, grav: 6 });
         } else giftBox.rot[1] = time * .6;
       }
 
@@ -845,7 +894,7 @@
 
       /* ---------- dibujar ---------- */
       const cam = { pos: [0, 20, 20], target: [0, 0, 0], fov: 52 };
-      let punch = 0, combo = 0, comboT = 0, comboShown = 0;
+      let punch = 0, combo = 0, comboT = 0, comboShown = 0, impactT = 0, speedK = 0;
       function render(dt) {
         R.resize();
         const asp = R.W / R.H;
@@ -863,19 +912,19 @@
           if (lookT > 1.3 && ml > .2 && P.dashT <= 0) { const d = Math.atan2(Math.sin(P.face - camYaw), Math.cos(P.face - camYaw)); if (Math.abs(d) < 2.4) camYaw += d * Math.min(1, dt * 1.1); }
           // suavizado estable a cualquier velocidad de fotogramas (estilo SmoothDamp)
           const sd = (cur, tgt, vk, st) => { const om = 2 / st, x = om * dt, ex = 1 / (1 + x + .48 * x * x + .235 * x * x * x), ch = cur - tgt, tp = ((camS[vk] || 0) + om * ch) * dt; camS[vk] = ((camS[vk] || 0) - om * tp) * ex; return tgt + (ch + tp) * ex; };
-          camS.x = sd(camS.x, P.x, 'vx', .16); camS.z = sd(camS.z, P.z, 'vz', .16); camY = lerp(camY, 3.4 + P.y * .6, Math.min(1, dt * 6));
-          let dist = asp > 1 ? 12.5 : 16.5; if (boss && !boss.dead) dist += 4; if (state === 'won') dist += 2;
+          camS.x = sd(camS.x, P.x, 'vx', .16); camS.z = sd(camS.z, P.z, 'vz', .16); camY = lerp(camY, 4.3 + P.y * .7, Math.min(1, dt * 7));
+          let dist = asp > 1 ? 11 : 14.5; if (boss && !boss.dead) dist += 4.5; if (state === 'won') dist += 3; if (P.ultT > 0) dist += 3;
           const cp = Math.cos(camPitch), fx = Math.sin(camYaw), fz = Math.cos(camYaw);
           // la cámara no atraviesa los pilares del borde: se acerca si hace falta
-          for (let i = 0; i < 12; i++) { const cx = camS.x - fx * cp * dist, cz = camS.z - fz * cp * dist; if (Math.hypot(cx, cz) < 18.6 || dist < 5) break; dist *= .9; }
+          for (let i = 0; i < 12; i++) { const cx = camS.x - fx * cp * dist, cz = camS.z - fz * cp * dist; if (Math.hypot(cx, cz) < 70 || dist < 5) break; dist *= .9; }
           camDist = lerp(camDist || dist, dist, Math.min(1, dt * (dist < (camDist || dist) ? 12 : 3))); dist = camDist;
-          cam.target = [camS.x + fx * 2.5 + shx * .3, camY + shy * .3, camS.z + fz * 2.5];
+          cam.target = [camS.x + fx * 4 + shx * .3, camY + shy * .3, camS.z + fz * 4];
           cam.pos = [camS.x - fx * cp * dist + shx, camY + Math.sin(camPitch) * dist + shy, camS.z - fz * cp * dist];
           cam.shadowCenter = [camS.x + fx * 6, 0, camS.z + fz * 6];
         }
-        cam.shiftY = state === 'intro' ? -.3 : -.1;
-        R.grade.tiltC = state === 'intro' ? .62 : .48; R.grade.tilt = state === 'intro' ? .55 : .22;
-        punch = Math.max(0, punch - dt * 3); cam.fov = (asp > 1 ? 52 : 62) - ease.out(punch) * 6;
+        cam.shiftY = state === 'intro' ? -.3 : -.3;
+        R.grade.tiltC = state === 'intro' ? .62 : .42; R.grade.tilt = state === 'intro' ? .55 : .5;
+        punch = Math.max(0, punch - dt * 3); cam.fov = (asp > 1 ? 62 : 70) - ease.out(punch) * 7 + speedK * 6;
         R.render(scene, cam);
         // números flotantes
         for (let i = nums.length - 1; i >= 0; i--) {

@@ -285,9 +285,11 @@ precision mediump float;
 `;
   const VS = `precision highp float;
 attribute vec3 aPos;attribute vec3 aNor;attribute vec3 aCol;
-uniform mat4 uVP;uniform mat4 uM;uniform mat4 uLVP;uniform mat3 uN;
+uniform mat4 uVP;uniform mat4 uM;uniform mat4 uLVP;uniform mat3 uN;uniform float uWind;uniform float uTime;
 varying vec3 vN;varying vec3 vC;varying vec3 vW;varying vec4 vL;
-void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vN=uN*aNor;vC=aCol;vL=uLVP*w;gl_Position=uVP*w;}`;
+void main(){vec4 w=uM*vec4(aPos,1.0);
+if(uWind>0.0){float h=max(aPos.y,0.0);float s=sin(uTime*1.9+w.x*0.31+w.z*0.17)+0.45*sin(uTime*3.7+w.x*0.83-w.z*0.6);w.x+=s*0.32*h*h*uWind;w.z+=s*0.14*h*h*uWind;}
+vW=w.xyz;vN=uN*aNor;vC=aCol;vL=uLVP*w;gl_Position=uVP*w;}`;
   const FS = HIGH + `
 varying vec3 vN;varying vec3 vC;varying vec3 vW;varying vec4 vL;
 uniform vec3 uColor;uniform vec3 uL;uniform vec3 uSky;uniform vec3 uGnd;uniform vec3 uSun;uniform vec3 uFog;uniform vec3 uCam;
@@ -356,8 +358,8 @@ void main(){
   col+=uSunCol*(pow(sd,6.0)*0.35+pow(sd,60.0)*0.6)*uSunK;
   col=mix(col,uSunCol*1.6,smoothstep(0.9993,0.9997,sd)*uSunK);
   if(uStars>0.0&&y>-0.05){vec3 c=floor(dir*260.0);float s=hash(c);float tw=0.6+0.4*sin(uTime*3.0+s*80.0);col+=vec3(step(0.9972,s))*tw*uStars*smoothstep(-0.05,0.25,y);}
-  if(uClouds>0.0&&y>0.0){vec2 p=dir.xz/(y+0.12)*1.3+vec2(uTime*0.02,0.0);float n=fbm(p);float c=smoothstep(0.5,0.78,n)*smoothstep(0.0,0.18,y)*uClouds;
-    vec3 cc=mix(uCloudCol*0.82,uCloudCol*1.08,smoothstep(0.55,0.85,fbm(p+vec2(0.15,0.2))));col=mix(col,cc+uSunCol*pow(sd,4.0)*0.25,c);}
+  if(uClouds>0.0&&y>0.0){vec2 p=dir.xz/(y+0.1)*0.9+vec2(uTime*0.012,0.0);float n=fbm(p)*0.75+fbm(p*2.7+3.0)*0.25;float c=smoothstep(0.52-uClouds*0.08,0.66,n)*smoothstep(0.0,0.14,y);
+    float lit=smoothstep(0.5,0.8,fbm(p-vec2(0.06,0.09)*1.0));vec3 cc=mix(uCloudCol*vec3(0.74,0.8,0.92),uCloudCol*1.12,lit);col=mix(col,cc+uSunCol*pow(sd,5.0)*0.3,c*min(1.0,uClouds*1.2));}
   gl_FragColor=vec4(col,1.0);}`;
   const DOWN = HIGH + `varying vec2 vUv;uniform sampler2D uT;uniform vec2 uPx;uniform float uThr;
 void main(){vec3 c=(texture2D(uT,vUv+uPx*vec2(-1,-1)).rgb+texture2D(uT,vUv+uPx*vec2(1,-1)).rgb+texture2D(uT,vUv+uPx*vec2(-1,1)).rgb+texture2D(uT,vUv+uPx*vec2(1,1)).rgb)*0.25;
@@ -369,6 +371,7 @@ c+=(texture2D(uT,vUv+uDir*1.3846154).rgb+texture2D(uT,vUv-uDir*1.3846154).rgb)*0
 c+=(texture2D(uT,vUv+uDir*3.2307692).rgb+texture2D(uT,vUv-uDir*3.2307692).rgb)*0.0702703;
 gl_FragColor=vec4(c,1.0);}`;
   const COMP = HIGH + `varying vec2 vUv;uniform sampler2D uS;uniform sampler2D uQ;uniform sampler2D uB1;uniform sampler2D uB2;uniform vec2 uPx;uniform vec2 uRes;
+uniform float uImpact;uniform float uSpeed;uniform vec2 uSpeedC;
 uniform float uExp;uniform float uSat;uniform float uCon;uniform vec3 uTint;uniform vec3 uLift;uniform float uBloom;uniform float uTilt;uniform float uTiltC;uniform float uVig;uniform float uGrain;uniform float uTime;uniform float uFlash;uniform vec3 uFlashCol;
 vec3 fxaa(vec2 uv){
   vec3 L=vec3(0.299,0.587,0.114);
@@ -394,6 +397,11 @@ void main(){
   c=(c-0.5)*uCon+0.5;c=c*uTint+uLift*(1.0-c);
   vec2 v=(vUv-0.5)*vec2(1.0,1.2);c*=1.0-uVig*smoothstep(0.35,0.95,length(v));
   c+=(rnd(vUv*uRes+uTime)-0.5)*uGrain;
+  if(uSpeed>0.0){vec2 d=vUv-uSpeedC;d.x*=uRes.x/uRes.y;float a=atan(d.y,d.x);float r=length(d);
+    float id=floor(a*38.0);float n=fract(sin(id*12.9898+floor(uTime*24.0)*7.13)*43758.5453);
+    float w=abs(fract(a*38.0)-0.5);float ln=step(0.78,n)*smoothstep(0.5,0.1,w)*smoothstep(0.28+n*0.25,0.75,r);
+    c=mix(c,vec3(1.0),ln*uSpeed*0.75);}
+  if(uImpact>0.0){float li=dot(c,vec3(0.3,0.59,0.11));vec3 inv=vec3(1.0-smoothstep(0.32,0.46,li));c=mix(c,inv,uImpact);}
   c=mix(c,uFlashCol,uFlash);
   gl_FragColor=vec4(clamp(c,0.0,1.0),1.0);}`;
 
@@ -426,7 +434,7 @@ void main(){
       p.u = {}; (names || []).forEach(k => { p.u[k] = gl.getUniformLocation(p, k); }); return p;
     };
     this.prog = prog;
-    this.pr = prog(VS, FS, ['uVP', 'uM', 'uN', 'uLVP', 'uColor', 'uL', 'uSky', 'uGnd', 'uSun', 'uFog', 'uCam', 'uEmis', 'uAlpha', 'uFN', 'uFF', 'uShine', 'uAoY', 'uSM', 'uSh', 'uTx']);
+    this.pr = prog(VS, FS, ['uWind', 'uTime', 'uVP', 'uM', 'uN', 'uLVP', 'uColor', 'uL', 'uSky', 'uGnd', 'uSun', 'uFog', 'uCam', 'uEmis', 'uAlpha', 'uFN', 'uFF', 'uShine', 'uAoY', 'uSM', 'uSh', 'uTx']);
     this.u = this.pr.u;
     this.olPr = prog(OVS, OFS, ['uVP', 'uM', 'uN', 'uW', 'uCam', 'uC']);
     this.skyPr = prog(QVS, SKY, ['uIVP', 'uCam', 'uTop', 'uMid', 'uBot', 'uSunDir', 'uSunCol', 'uSunK', 'uStars', 'uClouds', 'uCloudCol', 'uTime']);
@@ -481,7 +489,7 @@ void main(){
     const p = this.pp = {};
     p.down = this.prog(QVS, DOWN, ['uT', 'uPx', 'uThr']);
     p.blur = this.prog(QVS, BLUR, ['uT', 'uDir']);
-    p.comp = this.prog(QVS, COMP, ['uS', 'uQ', 'uB1', 'uB2', 'uPx', 'uRes', 'uExp', 'uSat', 'uCon', 'uTint', 'uLift', 'uBloom', 'uTilt', 'uTiltC', 'uVig', 'uGrain', 'uTime', 'uFlash', 'uFlashCol']);
+    p.comp = this.prog(QVS, COMP, ['uImpact', 'uSpeed', 'uSpeedC', 'uS', 'uQ', 'uB1', 'uB2', 'uPx', 'uRes', 'uExp', 'uSat', 'uCon', 'uTint', 'uLift', 'uBloom', 'uTilt', 'uTiltC', 'uVig', 'uGrain', 'uTime', 'uFlash', 'uFlashCol']);
     p.w = 0; p.h = 0;
   };
   Renderer.prototype.sizePost = function (w, h) {
@@ -512,12 +520,18 @@ void main(){
   };
   Renderer.prototype.buf = function (g) {
     let b = g.bufs[this.id];
+    if (b && g.dynamic && g.dirty !== b.ver) {
+      const gl = this.gl; b.ver = g.dirty;
+      gl.bindBuffer(gl.ARRAY_BUFFER, b.p); gl.bufferData(gl.ARRAY_BUFFER, g.pos, gl.DYNAMIC_DRAW);
+      gl.bindBuffer(gl.ARRAY_BUFFER, b.n); gl.bufferData(gl.ARRAY_BUFFER, g.nor, gl.DYNAMIC_DRAW);
+      gl.bindBuffer(gl.ARRAY_BUFFER, b.c); gl.bufferData(gl.ARRAY_BUFFER, g.col, gl.DYNAMIC_DRAW);
+    }
     if (!b) {
       const gl = this.gl; b = { p: gl.createBuffer(), n: gl.createBuffer(), c: null };
       gl.bindBuffer(gl.ARRAY_BUFFER, b.p); gl.bufferData(gl.ARRAY_BUFFER, g.pos, gl.STATIC_DRAW);
       gl.bindBuffer(gl.ARRAY_BUFFER, b.n); gl.bufferData(gl.ARRAY_BUFFER, g.nor, gl.STATIC_DRAW);
       if (g.col) { b.c = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b.c); gl.bufferData(gl.ARRAY_BUFFER, g.col, gl.STATIC_DRAW); }
-      g.bufs[this.id] = b;
+      b.ver = g.dirty; g.bufs[this.id] = b;
     }
     return b;
   };
@@ -604,7 +618,7 @@ void main(){
     gl.uniform3f(u.uSun, e.sun[0] * this.envSun, e.sun[1] * this.envSun, e.sun[2] * this.envSun);
     gl.uniform3fv(u.uFog, e.fog); gl.uniform3fv(u.uCam, cam.pos);
     gl.uniform1f(u.uFN, e.fogNear); gl.uniform1f(u.uFF, e.fogFar); gl.uniform1f(u.uAoY, e.aoY);
-    gl.uniform1f(u.uSh, useSh ? 1 : 0);
+    gl.uniform1f(u.uSh, useSh ? 1 : 0); gl.uniform1f(u.uTime, (now - this.t0) / 1000); gl.uniform1f(u.uWind, 0); this._wind = 0;
     if (useSh) { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.sm.tex); gl.uniform1i(u.uSM, 0); gl.uniform1f(u.uTx, 1.3 / this.sm.size); }
     for (const n of drawList) if (!n.outline) this.drawNode(n);
     if (olList.length) {
@@ -652,7 +666,7 @@ void main(){
         gl.uniform2fv(U.uPx, px(p.scene)); gl.uniform2f(U.uRes, p.scene.w, p.scene.h);
         gl.uniform1f(U.uExp, gr.exp); gl.uniform1f(U.uSat, gr.sat); gl.uniform1f(U.uCon, gr.con); gl.uniform3fv(U.uTint, gr.tint); gl.uniform3fv(U.uLift, gr.lift);
         gl.uniform1f(U.uBloom, gr.bloom); gl.uniform1f(U.uTilt, gr.tilt); gl.uniform1f(U.uTiltC, gr.tiltC); gl.uniform1f(U.uVig, gr.vig);
-        gl.uniform1f(U.uGrain, gr.grain); gl.uniform1f(U.uTime, (now % 10000) / 1000); gl.uniform1f(U.uFlash, gr.flash); gl.uniform3fv(U.uFlashCol, gr.flashCol);
+        gl.uniform1f(U.uGrain, gr.grain); gl.uniform1f(U.uTime, (now % 10000) / 1000); gl.uniform1f(U.uFlash, gr.flash); gl.uniform3fv(U.uFlashCol, gr.flashCol); gl.uniform1f(U.uImpact, gr.impact || 0); gl.uniform1f(U.uSpeed, gr.speed || 0); gl.uniform2fv(U.uSpeedC, gr.speedC || [.5, .5]);
       });
       gl.enable(gl.DEPTH_TEST); gl.depthMask(true);
       gl.activeTexture(gl.TEXTURE0);
@@ -666,6 +680,7 @@ void main(){
     gl.vertexAttribPointer(2, 3, gl.FLOAT, false, 0, 0);
     gl.uniformMatrix4fv(u.uM, false, n.world); gl.uniformMatrix3fv(u.uN, false, normalMat(NM, n.world));
     gl.uniform3fv(u.uColor, n.color); gl.uniform1f(u.uEmis, n.emis); gl.uniform1f(u.uAlpha, n.alpha); gl.uniform1f(u.uShine, n.shine);
+    const wd = n.wind || 0; if (wd !== this._wind) { gl.uniform1f(u.uWind, wd); this._wind = wd; }
     gl.drawArrays(gl.TRIANGLES, 0, g.count);
   };
   Renderer.prototype.project = function (p) {
@@ -780,6 +795,54 @@ void main(){
     }
   };
 
+  /* ---------- estela de espada (cinta que sigue a la hoja y se desvanece) ---------- */
+  function Trail(scene, color, len) {
+    this.len = len || 16; this.pts = []; this.col = rgb(color || 0xffffff); this.on = false; this.fade = 0;
+    const n = (this.len - 1) * 6;
+    const g = new Geo(new Float32Array(n * 3), new Float32Array(n * 3).fill(0), new Float32Array(n * 3)); g.dynamic = true; g.dirty = 1;
+    for (let i = 1; i < g.nor.length; i += 3) g.nor[i] = 1;
+    this.geo = g; this.node = new Node(g, 0xffffff, { emis: 1, add: true, cast: false }); scene.add(this.node);
+  }
+  Trail.prototype.push = function (a, b) { this.pts.unshift([a, b]); if (this.pts.length > this.len) this.pts.pop(); };
+  Trail.prototype.update = function (a, b, active, dt) {
+    if (active) { this.fade = 1; this.push(a, b); } else { this.fade = Math.max(0, this.fade - dt * 6); if (this.pts.length) { this.pts.pop(); } }
+    const g = this.geo, P = g.pos, C = g.col, pts = this.pts; let o = 0;
+    for (let i = 0; i < this.len - 1; i++) {
+      const p0 = pts[i], p1 = pts[i + 1];
+      if (!p0 || !p1) { for (let k = 0; k < 18; k++) { P[o * 3 + k % 18] = 0; } for (let k = 0; k < 6; k++) { C[(o + k) * 3] = C[(o + k) * 3 + 1] = C[(o + k) * 3 + 2] = 0; P[(o + k) * 3] = P[(o + k) * 3 + 1] = P[(o + k) * 3 + 2] = 0; } o += 6; continue; }
+      const f0 = (1 - i / (this.len - 1)) * this.fade, f1 = (1 - (i + 1) / (this.len - 1)) * this.fade;
+      const q = [[p0[0], f0 * .25], [p0[1], f0], [p1[1], f1], [p0[0], f0 * .25], [p1[1], f1], [p1[0], f1 * .25]];
+      for (const [v, f] of q) { P[o * 3] = v[0]; P[o * 3 + 1] = v[1]; P[o * 3 + 2] = v[2]; C[o * 3] = this.col[0] * f; C[o * 3 + 1] = this.col[1] * f; C[o * 3 + 2] = this.col[2] * f; o++; }
+    }
+    g.dirty++; this.node.visible = pts.length > 1;
+  };
+
+  /* ---------- hierba alta que se mueve con el viento ---------- */
+  function grassField(o) {
+    o = Object.assign({ n: 12000, r: 30, inner: 0, h: 1.1, w: .16, root: 0x2f7a2a, tip: 0xa8e66a, seed: 2, height: null, clumps: true }, o);
+    const R = rng(o.seed), P = new Float32Array(o.n * 9), N = new Float32Array(o.n * 9), C = new Float32Array(o.n * 9);
+    const cr = rgb(o.root), ct = rgb(o.tip);
+    for (let i = 0; i < o.n; i++) {
+      let a = R() * TAU, r = o.inner + Math.sqrt(R()) * (o.r - o.inner);
+      const x = Math.cos(a) * r + (o.cx || 0), z = Math.sin(a) * r + (o.cz || 0);
+      const y = o.height ? o.height(x, z) : 0, h = o.h * (.55 + R() * .8) * (o.clumps ? (.7 + .6 * Math.abs(Math.sin(x * .21) * Math.cos(z * .17))) : 1);
+      const ang = R() * TAU, bx = Math.cos(ang) * o.w, bz = Math.sin(ang) * o.w, lean = (R() - .5) * .5;
+      const tipx = x + Math.cos(ang + 1.57) * lean, tipz = z + Math.sin(ang + 1.57) * lean;
+      const v = [[x - bx, y, z - bz, 0], [x + bx, y, z + bz, 0], [tipx, y + h, tipz, 1]];
+      const k = .8 + R() * .35;
+      for (let j = 0; j < 3; j++) {
+        const q = i * 9 + j * 3; P[q] = v[j][0]; P[q + 1] = v[j][1] - (j < 2 ? 0 : 0); P[q + 2] = v[j][2];
+        N[q] = 0; N[q + 1] = 1; N[q + 2] = 0;
+        const t = v[j][3]; C[q] = Math.min(.999, lerp(cr[0], ct[0], t) * k); C[q + 1] = Math.min(.999, lerp(cr[1], ct[1], t) * k); C[q + 2] = Math.min(.999, lerp(cr[2], ct[2], t) * k);
+      }
+    }
+    // la altura local de cada vértice sobre el suelo se guarda en y relativa (para el viento): usamos un nodo por campo a y=0
+    const g = new Geo(P, N, C);
+    // viento: el shader usa aPos.y como altura; restamos el suelo para que solo se mueva la punta
+    if (o.height) { for (let i = 0; i < o.n; i++) { for (let j = 0; j < 3; j++) { const q = i * 9 + j * 3; g.pos[q + 1] -= 0; } } }
+    return new Node(g, 0xffffff, { wind: 1, cast: false, shine: .05, vary: false });
+  }
+
   /* ---------- decorado reutilizable ---------- */
   function cloud(g, x, y, z, s, col) {
     const c = col || 0xffffff;
@@ -812,96 +875,102 @@ void main(){
   function avatar(o) {
     o = Object.assign({ skin: 0xf6d2bd, shirt: 0x3a6df0, pants: 0x262a40, shoes: 0x1c1c26, hairCol: 0x3a2418, hair: 'short' }, o || {});
     const root = group(), body = group(); root.add(body);
-    const P = {};
+    const P = {}, rb = .07, pl = { shine: .38 };
+    // piernas 1×2×1 (cadera en y=2)
     const leg = side => {
-      const piv = group().at(side * .5, 1.9, 0); body.add(piv);
-      box(piv, .9, 1.6, .94, o.dress ? o.skin : o.pants, 0, -.8, 0, { r: .2 });
-      box(piv, .98, .4, 1.14, o.shoes, 0, -1.72, .07, { r: .17, shine: .6 });
-      box(piv, 1.0, .1, 1.16, 0xffffff, 0, -1.88, .07, { r: .04 });
-      if (o.dress) box(piv, .94, .16, .98, 0xffffff, 0, -1.44, 0, { r: .07 });
+      const piv = group().at(side * .5, 2, 0); body.add(piv);
+      box(piv, 1, 2, 1, o.dress ? o.skin : o.pants, 0, -1, 0, { r: rb, shine: .35 });
+      if (o.dress) { box(piv, 1.02, .5, 1.02, 0xffffff, 0, -1.55, 0, { r: .05 }); }
+      box(piv, 1.04, .32, 1.1, o.shoes, 0, -1.84, .05, { r: .06, shine: .7 });
       return piv;
     };
     P.legL = leg(-1); P.legR = leg(1);
-    P.torso = group().at(0, 2.85, 0); body.add(P.torso);
-    box(P.torso, 2, 1.9, 1, o.shirt, 0, 0, 0, { r: .26 });
+    // torso 2×2×1 (centro en y=3)
+    P.torso = group().at(0, 3, 0); body.add(P.torso);
+    box(P.torso, 2, 2, 1, o.shirt, 0, 0, 0, { r: rb, shine: .35 });
     if (o.dress) {
-      mesh(P.torso, geo.skirt, o.shirt, 2.6, 1.1, 1.75, 0, -1.25, 0, { shine: .5 });
-      box(P.torso, 2.06, .2, 1.06, o.belt || 0xffffff, 0, -.78, 0, { r: .08, shine: .7 });
-      mesh(P.torso, geo.oct, 0xf2c14e, .26, .26, .12, 0, -.78, .56, { emis: .3, shine: 1 });
-      box(P.torso, 1.2, .14, .06, o.shirt, 0, .9, .5, { r: .05 });
+      mesh(P.torso, geo.skirt, o.shirt, 2.7, 1.15, 1.8, 0, -1.2, 0, { shine: .45 });
+      box(P.torso, 2.06, .2, 1.06, o.belt || 0xffffff, 0, -.82, 0, { r: .05, shine: .7 });
+      mesh(P.torso, geo.oct, 0xf2c14e, .26, .26, .12, 0, -.82, .56, { emis: .3, shine: 1 });
+      box(P.torso, 1.1, .12, .05, 0x9a0c1e, 0, .95, .5, { r: .02 });
     } else {
-      box(P.torso, .7, .3, .08, 0xffffff, 0, .78, .5, { r: .1 });     // cuello
-      box(P.torso, 2.04, .24, 1.04, 0x1c1c26, 0, -.86, 0, { r: .1 }); // cinturón
-      mesh(P.torso, geo.ball, 0xffd23f, .3, .3, .1, 0, .1, .52, { emis: .4 });
+      box(P.torso, .8, .32, .06, 0xffffff, 0, .84, .5, { r: .03 });
+      box(P.torso, 2.03, .22, 1.03, 0x1c1c26, 0, -.9, 0, { r: .04 });
+      box(P.torso, .26, 1.6, .05, 0x2a4ab0, 0, .05, .51, { r: .02 });
     }
-    if (o.necklace) { box(P.torso, .9, .05, .04, 0xd8dbe6, 0, .62, .52, { r: 0, emis: .3 }); mesh(P.torso, geo.oct, 0xf2c14e, .22, .26, .08, 0, .45, .53, { emis: .45, shine: 1 }); }
+    if (o.necklace) { box(P.torso, .9, .05, .04, 0xd8dbe6, 0, .7, .52, { r: 0, emis: .3 }); mesh(P.torso, geo.oct, 0xf2c14e, .22, .26, .08, 0, .52, .53, { emis: .45, shine: 1 }); }
+    // brazos 1×2×1 (hombro en y=3.5)
     const arm = side => {
-      const piv = group().at(side * 1.47, 3.7, 0); body.add(piv);
-      box(piv, .88, 1.85, .9, o.sleeves ? o.shirt : o.skin, 0, -.82, 0, { r: .26 });
-      if (o.sleeves === 'short') box(piv, .94, .72, .96, o.shirt, 0, -.25, 0, { r: .22 });
-      if (o.bracelet) box(piv, .96, .16, .98, side < 0 ? 0x16161c : 0xc9cbd6, 0, -1.4, 0, { r: .07, shine: .9 });
+      const piv = group().at(side * 1.5, 3.5, 0); body.add(piv);
+      box(piv, 1, 2, 1, o.sleeves ? o.shirt : o.skin, 0, -.5, 0, { r: rb, shine: .35 });
+      if (o.sleeves === 'short') box(piv, 1.03, .85, 1.03, o.shirt, 0, .08, 0, { r: .06 });
+      if (o.bracelet) box(piv, 1.05, .16, 1.05, side < 0 ? 0x16161c : 0xc9cbd6, 0, -1.15, 0, { r: .05, shine: .9 });
       return piv;
     };
     P.armL = arm(-1); P.armR = arm(1);
-    P.head = group().at(0, 4.42, 0); body.add(P.head);
-    box(P.head, 1.32, 1.26, 1.26, o.skin, 0, 0, 0, { r: .36 });
-    const eye = x => { const e = group().at(x, .08, .63); P.head.add(e); box(e, .17, .27, .06, 0x1b1420, 0, 0, 0, { r: .07, shine: .9 }); box(e, .06, .07, .03, 0xffffff, .03, .06, .035, { r: 0, emis: 1 }); return e; };
-    P.eyes = [eye(-.27), eye(.27)];
-    box(P.head, .22, .05, .04, o.hairCol, -.27, .3, .63, { r: 0, rot: [0, 0, .12] }); box(P.head, .22, .05, .04, o.hairCol, .27, .3, .63, { r: 0, rot: [0, 0, -.12] });
-    P.mouth = mesh(P.head, geo.arc, 0x5b2330, .5, .4, .5, 0, -.18, .6, { rot: [Math.PI / 2, 0, Math.PI * .69], shine: 0 });
-    if (o.blush) { mesh(P.head, geo.ball, 0xff9fb0, .22, .1, .04, -.46, -.12, .63, { alpha: .75 }); mesh(P.head, geo.ball, 0xff9fb0, .22, .1, .04, .46, -.12, .63, { alpha: .75 }); }
-    const H = o.hairCol, HL = o.hairHi || H, hs = { shine: .55 };
+    P.hand = group().at(0, -1.45, 0); P.armR.add(P.hand);
+    // cabeza: cubo muy redondeado (como la cabeza clásica de Roblox), cuello en y=4
+    P.head = group().at(0, 4, 0); body.add(P.head);
+    const H0 = group().at(0, .62, 0); P.head.add(H0); P.hc = H0;
+    box(H0, 1.25, 1.22, 1.22, o.skin, 0, 0, 0, { r: .4, shine: .4 });
+    const eye = x => { const e = group().at(x, .1, .615); H0.add(e); mesh(e, geo.ballS, 0x141018, .2, .32, .06, 0, 0, 0, { shine: .9 }); mesh(e, geo.ballS, 0xffffff, .07, .08, .03, .03, .07, .03, { emis: 1 }); return e; };
+    P.eyes = [eye(-.24), eye(.24)];
+    P.mouth = mesh(H0, geo.arc, 0x3a1420, .48, .4, .48, 0, -.17, .58, { rot: [Math.PI / 2, 0, Math.PI * .69], shine: 0 });
+    if (o.blush) { mesh(H0, geo.ballS, 0xff9fb0, .22, .1, .04, -.42, -.1, .6, { alpha: .7 }); mesh(H0, geo.ballS, 0xff9fb0, .22, .1, .04, .42, -.1, .6, { alpha: .7 }); }
+    // pelo de anime: mechones en punta
+    const HC = o.hairCol, HL = o.hairHi || HC;
+    const strand = (x, y, z, len, w, rx, rz, col, ry) => mesh(H0, geo.cone4, col, w, len, w * .55, x, y, z, { rot: [rx, ry || 0, rz], shine: .55 });
+    box(H0, 1.36, .48, 1.34, HC, 0, .5, -.02, { r: .22, shine: .55 });
+    box(H0, 1.34, .9, .3, HC, 0, .25, -.55, { r: .12, shine: .55 });
     if (o.hair === 'long') {
-      box(P.head, 1.46, .4, 1.42, H, 0, .62, -.02, { r: .2, shine: .55 });
-      box(P.head, 1.46, 2.3, .38, H, 0, -.45, -.6, { r: .18, shine: .55 });
-      box(P.head, .26, 1.95, 1.22, H, -.72, -.35, -.04, { r: .12, shine: .55 }); box(P.head, .26, 1.95, 1.22, H, .72, -.35, -.04, { r: .12, shine: .55 });
-      box(P.head, .3, 1.55, .24, H, -.57, -.15, .62, { r: .12, shine: .55 }); box(P.head, .3, 1.55, .24, H, .57, -.15, .62, { r: .12, shine: .55 });
-      box(P.head, .12, 1.5, .26, HL, -.46, -.12, .63, { r: .05, shine: .7 }); box(P.head, .12, 1.5, .26, HL, .46, -.12, .63, { r: .05, shine: .7 });
-      box(P.head, .9, .16, .22, H, 0, .52, .62, { r: .07 });
-      box(P.head, .14, 1.9, .38, HL, -.4, -.5, -.64, { r: .06, shine: .7 }); box(P.head, .14, 1.9, .38, HL, .35, -.5, -.64, { r: .06, shine: .7 });
-      box(P.head, 1.3, .5, .3, H, 0, -1.6, -.52, { r: .14, shine: .55, rot: [.25, 0, 0] });
+      // flequillo
+      [[-.48, .62, .5, -.2], [-.24, .7, .56, -.08], [0, .74, .58, 0], [.24, .7, .56, .08], [.48, .62, .5, .2]].forEach(([x, l, w, rz], i) => strand(x, .2, .62, l, w, Math.PI + .12, rz, i % 2 ? HL : HC));
+      // mechones laterales largos
+      [-1, 1].forEach(s => { strand(s * .66, -.55, .25, 2.1, .5, Math.PI, s * -.06, HC); strand(s * .7, -.4, -.15, 2.2, .55, Math.PI, s * -.1, s > 0 ? HL : HC); strand(s * .56, -.25, .5, 1.5, .34, Math.PI + .05, s * -.04, HL); });
+      // melena de atrás
+      for (let i = 0; i < 7; i++) { const x = -.6 + i * .2, l = 2.3 + Math.sin(i * 1.7) * .3; strand(x, -.75, -.66, l, .48, Math.PI - .08, (x) * -.12, i === 2 || i === 5 ? HL : HC); }
+      box(H0, 1.4, .3, .5, HC, 0, .62, .2, { r: .14, shine: .55 });
     } else {
-      box(P.head, 1.44, .44, 1.4, H, 0, .6, -.02, { r: .2, shine: .5 });
-      box(P.head, 1.44, .82, .32, H, 0, .25, -.6, { r: .14, shine: .5 });
-      box(P.head, .22, .62, 1.12, H, -.71, .3, -.1, { r: .1 }); box(P.head, .22, .62, 1.12, H, .71, .3, -.1, { r: .1 });
-      box(P.head, .76, .24, .26, H, -.2, .52, .62, { r: .1, rot: [0, 0, .12] }); box(P.head, .5, .2, .24, H, .38, .55, .6, { r: .08, rot: [0, 0, -.2] });
+      // pelo de punta hacia atrás y arriba
+      [[-.45, .15, -.35, 1, -.6, .5], [-.15, .3, -.4, 1.1, -.9, .1], [.2, .25, -.45, 1.05, -.8, -.25], [.5, .1, -.3, .9, -.5, -.6], [0, .45, .1, .9, -.4, 0], [-.4, .4, .2, .8, -.2, .6], [.4, .4, .15, .8, -.25, -.6], [-.25, .0, -.6, .9, -1.6, .2], [.25, 0, -.6, .9, -1.6, -.2]]
+        .forEach(([x, y, z, l, rx, rz]) => strand(x, y + .45, z, l, .5, rx, rz, HC));
+      [[-.4, -.2], [-.1, -.05], [.22, .1], [.45, .25]].forEach(([x, rz]) => strand(x, .32, .6, .55, .38, Math.PI + .25, rz, HC));
     }
+    if (o.cap) { box(H0, 1.46, .32, 1.42, o.cap, 0, .8, 0, { r: .12 }); box(H0, 1.1, .1, .6, o.cap, 0, .66, .9, { r: .04 }); }
     if (o.glasses) {
-      P.glasses = group().at(0, .12, .67); P.head.add(P.glasses);
+      P.glasses = group().at(0, .12, .66); H0.add(P.glasses);
       box(P.glasses, 1.5, .3, .07, 0x111116, 0, .02, 0, { r: 0, shine: 1 });
       box(P.glasses, .44, .12, .07, 0x111116, -.32, -.18, 0, { r: 0 }); box(P.glasses, .44, .12, .07, 0x111116, .32, -.18, 0, { r: 0 });
       [[-.5, .06], [-.38, -.06], [-.26, .06], [.14, .06], [.26, -.06], [.38, .06]].forEach(([x, y]) => box(P.glasses, .1, .1, .03, 0xffffff, x, y, .045, { r: 0, emis: .6 }));
       P.lens = [box(P.glasses, .56, .26, .02, o.glassGlow || 0xff4fd8, -.3, 0, .06, { r: 0, emis: 1, add: true, alpha: 0 }), box(P.glasses, .56, .26, .02, o.glassGlow || 0x7df3ff, .3, 0, .06, { r: 0, emis: 1, add: true, alpha: 0 })];
     }
     if (o.cape) {
-      P.cape = group().at(0, 3.75, -.55); body.add(P.cape);
-      box(P.cape, 2.1, 3.0, .14, o.cape, 0, -1.45, 0, { r: .06, shine: .6 });
-      box(P.cape, 2.12, .2, .16, o.capeTrim || 0xf2c14e, 0, -2.9, 0, { r: .05, emis: .3, shine: 1 });
-      mesh(P.cape, geo.ball, o.capeTrim || 0xf2c14e, .34, .34, .2, -.85, .05, .14, { emis: .4 }); mesh(P.cape, geo.ball, o.capeTrim || 0xf2c14e, .34, .34, .2, .85, .05, .14, { emis: .4 });
+      // gabardina/capa de dos paneles que ondean (como en los juegos de anime de Roblox)
+      P.cape = group().at(0, 3.85, -.55); body.add(P.cape);
+      P.capeL = group().at(-.52, 0, 0); P.capeR = group().at(.52, 0, 0); P.cape.add(P.capeL, P.capeR);
+      box(P.capeL, 1.05, 3.4, .12, o.cape, 0, -1.65, 0, { r: .04, shine: .5 }); box(P.capeR, 1.05, 3.4, .12, o.cape, 0, -1.65, 0, { r: .04, shine: .5 });
+      box(P.capeL, 1.07, .16, .14, o.capeTrim || 0xf2c14e, 0, -3.3, 0, { r: .03, emis: .3 }); box(P.capeR, 1.07, .16, .14, o.capeTrim || 0xf2c14e, 0, -3.3, 0, { r: .03, emis: .3 });
+      box(P.cape, 2.3, .3, .5, o.cape, 0, .05, .3, { r: .1 });
     }
-    P.shadow = mesh(root, geo.cyl20, 0x000000, 2.4, .02, 2.4, 0, .03, 0, { alpha: .16, cast: false });
+    P.shadow = mesh(root, geo.cyl20, 0x000000, 2.6, .02, 2.6, 0, .03, 0, { alpha: .18, cast: false });
 
-    root.outlined(o.outline || 0x1a1230, .045);
-    const A = { root, body, P, t: Math.random() * 10, walk: 0, blink: 2, look: 0, rate: o.blend || 16, prev: null };
+    const A = { root, body, P, t: Math.random() * 10, walk: 0, blink: 2, look: 0, rate: o.blend || 16, prev: null, capeV: 0, capeA: .12 };
     const JOINTS = [P.legL, P.legR, P.armL, P.armR, P.head, P.torso, body];
     const wrapA = a => Math.atan2(Math.sin(a), Math.cos(a));
     A.animate = function (dt, speed, pose) {
-      A.t += dt; A.walk += dt * (6 + speed * 6) * (speed > .02 ? 1 : 0);
-      const k = clamp(speed, 0, 1), sw = Math.sin(A.walk) * .75 * k;
+      A.t += dt; A.walk += dt * (6.5 + speed * 6.5) * (speed > .02 ? 1 : 0);
+      const k = clamp(speed, 0, 1), sw = Math.sin(A.walk) * .85 * k;
       const breathe = Math.sin(A.t * 2.2);
       P.legL.rot = [sw, 0, 0]; P.legR.rot = [-sw, 0, 0];
-      P.armL.rot = [-sw * .9, 0, -.07 - breathe * .03 - k * .05]; P.armR.rot = [sw * .9, 0, .07 + breathe * .03 + k * .05];
-      P.head.rot = [Math.sin(A.t * .9) * .03, Math.sin(A.t * .5) * .12 * (1 - k), Math.sin(A.t * .7) * .03];
-      P.torso.rot = [k * .08, Math.sin(A.walk) * .08 * k, 0];
+      P.armL.rot = [-sw * .9, 0, -.06 - breathe * .03 - k * .05]; P.armR.rot = [sw * .9, 0, .06 + breathe * .03 + k * .05];
+      P.head.rot = [Math.sin(A.t * .9) * .03 - k * .05, Math.sin(A.t * .5) * .12 * (1 - k), Math.sin(A.t * .7) * .03];
+      P.torso.rot = [k * .1, Math.sin(A.walk) * .1 * k, 0];
       P.torso.scl = [1, 1 + breathe * .012, 1];
-      body.pos = [0, Math.abs(Math.sin(A.walk)) * .22 * k + breathe * .02, 0];
-      P.head.rot[0] -= k * .06;
-      body.rot = [0, 0, Math.sin(A.walk) * .03 * k];
-      if (P.cape) P.cape.rot[0] = .12 + k * .6 + Math.sin(A.t * 6) * .06 * (.3 + k);
-      A.blink -= dt; const b = A.blink < 0; if (A.blink < -.12) A.blink = 1.8 + Math.random() * 2.6;
-      P.eyes.forEach(e => { e.scl[1] = b ? .15 : 1; });
+      body.pos = [0, Math.abs(Math.cos(A.walk)) * .22 * k + breathe * .02, 0];
+      body.rot = [k * .08, 0, Math.sin(A.walk) * .035 * k];
+      A.blink -= dt; const bl = A.blink < 0; if (A.blink < -.12) A.blink = 1.8 + Math.random() * 2.6;
+      P.eyes.forEach(e => { e.scl[1] = bl ? .15 : 1; });
       if (pose) pose(P, A);
-      // transiciones suaves entre posturas (nada salta de golpe)
       const kb = A.snap || !A.prev ? 1 : 1 - Math.exp(-A.rate * dt);
       if (!A.prev) A.prev = JOINTS.map(j => ({ r: j.rot.slice(), p: j.pos.slice() }));
       JOINTS.forEach((j, i) => {
@@ -909,6 +978,13 @@ void main(){
         for (let a = 0; a < 3; a++) { pv.r[a] = pv.r[a] + wrapA(j.rot[a] - pv.r[a]) * kb; j.rot[a] = pv.r[a]; }
         if (j === body) { pv.p[1] += (j.pos[1] - pv.p[1]) * kb; j.pos[1] = pv.p[1]; }
       });
+      // capa con muelle (sigue al cuerpo con inercia)
+      if (P.cape) {
+        const target = .1 + k * .75 + (A.capeKick || 0) + Math.sin(A.t * 7) * .05 * (.4 + k);
+        A.capeV += ((target - A.capeA) * 60 - A.capeV * 9) * Math.min(dt, .033); A.capeA += A.capeV * Math.min(dt, .033);
+        P.capeL.rot = [A.capeA + Math.sin(A.t * 9) * .04 * k, 0, -.06]; P.capeR.rot = [A.capeA + Math.sin(A.t * 9 + 1) * .04 * k, 0, .06];
+        A.capeKick = Math.max(0, (A.capeKick || 0) - dt * 2);
+      }
       A.snap = false;
     };
     return A;
@@ -940,5 +1016,5 @@ void main(){
     return { unlock: ensure, tone, noise };
   }
 
-  G.M3 = { TAU, clamp, lerp, smooth, ease, rng, rgb, geo, Node, group, box, mesh, bake, Renderer, FX, Motes, avatar, sfx, Geo, cloud, flower, tuft, rock, bush, scatter, terrain };
+  G.M3 = { TAU, clamp, lerp, smooth, ease, rng, rgb, geo, Node, group, box, mesh, bake, Renderer, FX, Motes, avatar, sfx, Geo, cloud, flower, tuft, rock, bush, scatter, terrain, Trail, grassField };
 })(window);

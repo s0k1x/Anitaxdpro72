@@ -671,3 +671,42 @@ body.in-game #rotate{display:none!important}
   .gift-actions{grid-area:a;justify-content:flex-start;margin:0}
   .gift-hint{bottom:8%}
 }
+
+/* =====================================================
+   INTERFAZ DEL COMBATE · paneles de cristal estilo anime
+   ===================================================== */
+.g-hp{position:relative;gap:10px;max-width:330px;padding:8px 14px 8px 12px;border-radius:4px 14px 4px 14px;background:linear-gradient(100deg,rgba(10,22,44,.62),rgba(10,22,44,.32));border:1px solid rgba(160,230,255,.45);box-shadow:0 0 18px rgba(80,200,255,.18),inset 0 0 12px rgba(120,220,255,.12);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.g-hp::before{content:"";position:absolute;left:-1px;top:6px;bottom:6px;width:3px;background:#7df3ff;box-shadow:0 0 10px #7df3ff;border-radius:2px}
+.g-hp-name{font:700 15px var(--display);letter-spacing:.02em;color:#fff;text-shadow:0 0 8px rgba(125,243,255,.6)}
+.g-lv{font:700 11px var(--sans);color:#bff6ff;padding:2px 6px;border:1px solid rgba(160,230,255,.5);border-radius:3px;letter-spacing:.06em}
+.g-hp-bar{height:9px;border-radius:1px;background:rgba(0,10,24,.6);border:1px solid rgba(160,230,255,.35);transform:skewX(-20deg)}
+.g-hp-bar i{background:linear-gradient(90deg,#3cf0a0,#a4ff7a);box-shadow:0 0 10px rgba(120,255,160,.7)}
+.g-hp.low .g-hp-bar i{background:linear-gradient(90deg,#ff3d6a,#ff9a6a)}
+.g-hp b{font:700 13px var(--sans);color:#e8fbff}
+.g-ult{max-width:330px;padding-left:4px}
+.g-ult span{color:#ffe9a0;letter-spacing:.14em;font-size:10px}
+.g-ult-bar{height:5px;border-radius:1px;transform:skewX(-20deg);background:rgba(0,10,24,.55);border:1px solid rgba(255,226,122,.4)}
+.g-wave b{font:700 15px var(--display);color:#fff;text-shadow:0 0 10px rgba(125,243,255,.8)}
+.g-wave span{color:#d8f6ff}
+/* botones: círculos de cristal con borde blanco e icono */
+.sk{width:62px;height:62px;border-radius:50%;border:2px solid rgba(255,255,255,.85);color:#fff;background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.28),rgba(16,26,56,.5) 70%);box-shadow:0 0 0 1px rgba(0,0,0,.25),0 8px 20px rgba(0,0,0,.35),inset 0 0 14px rgba(255,255,255,.18);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:transform .08s,box-shadow .2s}
+.sk span{font:700 9.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.sk svg{width:24px;height:24px;filter:drop-shadow(0 0 6px rgba(255,255,255,.55))}
+.sk.held{transform:scale(.9);box-shadow:0 0 0 1px rgba(0,0,0,.25),0 0 22px rgba(255,255,255,.55),inset 0 0 18px rgba(255,255,255,.35)}
+.sk::after{inset:2px;font:800 20px var(--display);text-shadow:0 0 8px rgba(0,0,0,.8);background:conic-gradient(rgba(6,10,26,.62) var(--cd),transparent 0)}
+.sk-atk{width:94px;height:94px;border-color:#fff;color:#fff;background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.32),rgba(255,120,220,.28) 55%,rgba(40,20,70,.55) 80%);box-shadow:0 0 0 1px rgba(0,0,0,.25),0 0 22px rgba(255,140,230,.45),inset 0 0 18px rgba(255,255,255,.22)}
+.sk-atk svg{width:38px;height:38px}
+.sk-atk.held{box-shadow:0 0 34px rgba(255,140,230,.9),inset 0 0 22px rgba(255,255,255,.4)}
+.sk-beam{background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.28),rgba(255,79,216,.32) 60%,rgba(40,10,50,.5) 85%);color:#fff;border-color:rgba(255,255,255,.85);box-shadow:0 0 14px rgba(255,79,216,.35)}
+.sk-wave{background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.28),rgba(80,210,255,.32) 60%,rgba(10,30,60,.5) 85%);color:#fff;border-color:rgba(255,255,255,.85);box-shadow:0 0 14px rgba(80,210,255,.35)}
+.sk-dash{background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.28),rgba(160,140,255,.32) 60%,rgba(20,16,60,.5) 85%);color:#fff}
+.sk-ult{background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.18),rgba(30,26,60,.55) 70%);color:rgba(255,255,255,.55);border-color:rgba(255,255,255,.4);box-shadow:none}
+.sk-ult.ready{background:radial-gradient(circle at 50% 35%,#fff7c8,#ffd23f 45%,#ff8ae8 90%);color:#5a1040;border-color:#fff;animation:ultReady 1s ease-in-out infinite}
+.g-combo b{font:800 46px/1 var(--display);background:linear-gradient(180deg,#fff,#bff6ff 50%,#7df3ff);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 0 10px rgba(125,243,255,.8)) drop-shadow(0 3px 0 rgba(10,30,60,.9))}
+.g-toast{background:linear-gradient(90deg,rgba(10,22,44,.0),rgba(10,22,44,.78) 20%,rgba(10,22,44,.78) 80%,rgba(10,22,44,0));border:0;border-top:1px solid rgba(160,230,255,.5);border-bottom:1px solid rgba(160,230,255,.5);border-radius:0;padding:10px 48px;font:700 16px var(--display);letter-spacing:.04em;text-shadow:0 0 12px rgba(125,243,255,.8)}
+.g-boss span{font:700 16px var(--display);letter-spacing:.2em;text-transform:uppercase;text-shadow:0 0 12px rgba(255,79,216,.9)}
+.g-boss-bar{height:10px;border-radius:1px;transform:skewX(-20deg);border-color:rgba(255,140,230,.7)}
+.g-card{background:linear-gradient(160deg,rgba(14,26,52,.86),rgba(8,14,32,.92));border:1px solid rgba(160,230,255,.45);border-radius:6px 22px 6px 22px;box-shadow:0 0 30px rgba(80,200,255,.2),0 24px 60px rgba(0,0,0,.5);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.g-card .g-kicker{color:#7df3ff;letter-spacing:.3em}
+.g-num{font-family:var(--display);text-shadow:0 0 8px rgba(0,0,0,.6),0 2px 0 rgba(20,10,60,.9)}
+@media (orientation:landscape) and (max-height:520px){.g-boss{left:auto;right:96px;width:min(38vw,340px)}}
