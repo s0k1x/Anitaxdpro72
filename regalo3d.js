@@ -17,7 +17,9 @@
       try { R = new M.Renderer(canvas, { dpr: 2 }); } catch (e) { resolve(); return; }
       const S = M.sfx();
       const scene = group(), fx = new FX(scene);
-      R.setEnv({ sky: 0xe8dcff, gnd: 0x4a2a7a, sun: 0xfff2e0, fog: 0x120a40, fogNear: 30, fogFar: 80, light: [.4, .9, .5], amb: .66, sunK: .65 });
+      R.setEnv({ sky: 0xe8dcff, gnd: 0x4a2a7a, sun: 0xfff2e0, fog: 0x1a0e4a, fogNear: 30, fogFar: 90, light: [.4, .9, .5], amb: .66, sunK: .7,
+        skyTop: 0x05021a, skyMid: 0x2c1b72, skyBot: 0x120a40, sunDisc: 0, stars: 1, clouds: 0 });
+      R.grade = Object.assign(R.grade, { exp: 1.12, sat: 1.12, bloom: 1.1, tilt: .5, tiltC: .55, vig: .45 });
       const st = group();
       mesh(st, geo.cyl20, 0x2c1b72, 9, .8, 9, 0, -.4, 0);
       mesh(st, geo.cyl20, 0x3a2a8a, 7.4, .3, 7.4, 0, .1, 0);
@@ -28,6 +30,7 @@
       box(body, 3.2, 2.8, 3.2, 0x6ee07a, 0, 1.4, 0);
       box(body, .55, 2.82, 3.24, 0xffd23f, 0, 1.4, 0, { emis: .25 }); box(body, 3.24, 2.82, .55, 0xffd23f, 0, 1.4, 0, { emis: .25 });
       const lid = group().at(0, 2.8, 0); gift.add(lid);
+      setTimeout(() => gift.outlined(0x1a0a3a, .06), 0);
       box(lid, 3.6, .7, 3.6, 0x4ac05a, 0, .35, 0);
       box(lid, .6, .74, 3.64, 0xffd23f, 0, .35, 0, { emis: .25 }); box(lid, 3.64, .74, .6, 0xffd23f, 0, .35, 0, { emis: .25 });
       box(lid, 1.1, .8, .5, 0xffd23f, -.55, 1, 0, { rot: [0, 0, .5], emis: .25 }); box(lid, 1.1, .8, .5, 0xffd23f, .55, 1, 0, { rot: [0, 0, -.5], emis: .25 });

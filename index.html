@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=DM+Sans:wght@400;500;700&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body class="locked">
 
@@ -151,6 +151,7 @@
   <div class="g-hurt" id="gHurt" aria-hidden="true"></div>
   <div class="g-dmg" id="gDmg" aria-hidden="true"></div>
   <div class="g-joyzone" id="gJoyZone" aria-hidden="true"></div>
+  <div class="g-lookzone" id="gLookZone" aria-hidden="true"></div>
   <div class="g-stick" id="gStick" aria-hidden="true"><i id="gKnob"></i></div>
 
   <div class="g-top">
@@ -191,6 +192,11 @@
     </button>
   </div>
 
+  <div class="g-rotate" id="gRotate">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M11 18.5h2"/></svg>
+    <b>Gira el móvil</b><span>El combate se juega mejor en horizontal.</span>
+    <button class="btn btn--blue btn--sm" id="gRotateSkip" type="button"><span class="button_top">Jugar en vertical</span></button>
+  </div>
   <div class="g-card" id="gIntro">
     <p class="g-kicker">Nivel final</p>
     <h2>Recupera tu regalo</h2>
@@ -202,7 +208,7 @@
       <li><i class="pw pw-dash"></i><span><b>Esquiva</b> Un acelerón en el que nada te hace daño.</span></li>
       <li><i class="pw pw-ult"></i><span><b>Lluvia de Estrellas</b> Golpea y recoge gemas para llenar el Poder Estelar. Cuando brille el botón Ultra, caerán meteoritos sobre todos.</span></li>
     </ul>
-    <p class="g-keys">Muévete arrastrando el dedo en la mitad izquierda. Huye de los círculos rojos y de los slimes cuando se aplastan: van a saltar. En ordenador: WASD, J, K, L, U y espacio.</p>
+    <p class="g-keys">Muévete arrastrando el dedo en la mitad izquierda y gira la cámara deslizando arriba a la derecha. Huye de los círculos rojos y de los slimes cuando se aplastan: van a saltar. En ordenador: WASD, J, K, L, U y espacio.</p>
     <button class="btn btn--purple" id="gStart" type="button"><span class="button_top">¡A luchar!</span></button>
   </div>
   <div class="g-card hidden" id="gLose">
@@ -386,10 +392,10 @@
   </div>
 </div>
 
-<script src="motor3d.js"></script>
-<script src="obby.js"></script>
-<script src="juego.js"></script>
-<script src="regalo3d.js"></script>
-<script src="script.js"></script>
+<script src="motor3d.js?v=5"></script>
+<script src="obby.js?v=5"></script>
+<script src="juego.js?v=5"></script>
+<script src="regalo3d.js?v=5"></script>
+<script src="script.js?v=5"></script>
 </body>
 </html>

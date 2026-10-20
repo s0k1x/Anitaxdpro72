@@ -407,128 +407,31 @@ main.show{opacity:1}
 }
 
 /* =====================================================
-   La tarjeta de texto cambia de diseño en cada universo
-   (siempre sobre un panel oscuro/opaco o con texto de alto contraste)
+   TARJETA DE CADA ETAPA · estilo de subtítulo de cine, abajo,
+   cristal translúcido con el color del mundo
    ===================================================== */
+#intro #scene,#intro #sceneMeasure{top:auto;bottom:calc(58px + env(safe-area-inset-bottom,0px));left:14px;right:14px;max-width:520px;margin:0 auto;text-align:left;text-shadow:none}
+@media (min-width:600px){#intro #scene,#intro #sceneMeasure{left:50%;right:auto;width:520px;margin-left:-260px}}
+#intro .scene-card{position:relative;padding:15px 18px 17px 20px;border-radius:20px;overflow:hidden;
+  background:linear-gradient(160deg,rgba(26,20,54,.66) 0%,rgba(10,8,24,.8) 100%);
+  -webkit-backdrop-filter:blur(18px) saturate(1.5);backdrop-filter:blur(18px) saturate(1.5);
+  border:1px solid rgba(255,255,255,.14);box-shadow:0 24px 60px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.14);
+  transform:translateY(18px) scale(.98);filter:blur(4px);opacity:0;transition:opacity .6s ease,transform .7s cubic-bezier(.2,.9,.2,1),filter .6s ease}
+#intro .scene-card.in{opacity:1;transform:none;filter:none}
+#intro .scene-card.out{opacity:0;transform:translateY(-10px);filter:blur(4px)}
+#intro .scene-card::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;background:var(--uni,#c9bcff);box-shadow:0 0 14px var(--uni,#c9bcff)}
+#intro .scene-card::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 100% 0%,color-mix(in srgb,var(--uni,#c9bcff) 18%,transparent),transparent 60%)}
+#intro .sc-stage{display:inline-flex;align-items:center;gap:8px;margin:0 0 8px;padding:0;background:none;border:0;font:700 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--uni,#c9bcff);text-shadow:none}
+#intro .sc-stage::before{content:"";display:block;width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor;animation:none}
+#intro .sc-stage::after{display:none}
+#intro .sc-when{font:500 12.5px/1.2 var(--sans);letter-spacing:.04em;text-transform:none;color:rgba(235,230,255,.62);margin:0 0 6px}
+#intro .sc-title{font:700 clamp(24px,6.8vw,32px)/1.06 var(--display);letter-spacing:-.03em;text-transform:none;color:#fff;text-shadow:none;margin:0 0 9px}
+#intro .sc-text{font:400 15.5px/1.5 var(--sans);font-style:normal;color:rgba(242,238,255,.9);max-width:none;min-height:0;text-shadow:none}
+#intro .sc-text::after{content:"";display:inline-block;width:2px;height:1em;margin-left:2px;vertical-align:-2px;background:var(--uni,#c9bcff);animation:blinkc 1s steps(2) infinite}
 @keyframes blinkc{50%{opacity:0}}
-/* 1 · Obby Creator — panel de juego, chunky */
-#intro[data-uni="obby"] .scene-card{background:rgba(6,20,54,.9);border:3px solid #ffffff;border-radius:12px;padding:15px 17px 17px;box-shadow:0 6px 0 rgba(0,0,0,.4)}
-#intro[data-uni="obby"] .sc-stage{display:inline-flex;width:max-content;background:#ffd23f;color:#2a1d00;padding:3px 10px;border-radius:6px;font-weight:800;margin-bottom:10px}
-#intro[data-uni="obby"] .sc-stage::before{display:none}
-#intro[data-uni="obby"] .sc-when{color:#bfe3ff}
-#intro[data-uni="obby"] .sc-title{font-size:clamp(26px,8vw,40px);color:#fff}
-#intro[data-uni="obby"] .sc-text{font-family:var(--sans);font-style:normal;font-size:clamp(15.5px,4.2vw,18px);line-height:1.5;color:#f6faff}
-/* 2 · Llamada — neón */
-#intro[data-uni="llamada"] .scene-card{background:rgba(14,0,38,.88);border:1px solid #ff7ad9;border-radius:14px;padding:15px 17px 17px;box-shadow:0 0 22px rgba(255,122,217,.4),inset 0 0 18px rgba(125,243,255,.12)}
-#intro[data-uni="llamada"] .sc-stage{color:#7df3ff;text-shadow:0 0 10px rgba(125,243,255,.8)}
-#intro[data-uni="llamada"] .sc-when{color:#ffc3f1}
-#intro[data-uni="llamada"] .sc-title{text-transform:uppercase;font-weight:800;font-size:clamp(24px,7vw,36px);letter-spacing:.01em;color:#fff;text-shadow:0 0 14px rgba(255,122,217,.9),0 0 2px #fff}
-#intro[data-uni="llamada"] .sc-text{font-family:var(--sans);font-style:normal;font-size:clamp(15.5px,4.2vw,18px);color:#ffeafb;line-height:1.5}
-#intro[data-uni="llamada"] #scene{text-shadow:none}
-/* 3 · Hora dorada — papel cálido */
-#intro[data-uni="corazon"] #scene,#intro[data-uni="corazon"] #sceneMeasure{text-shadow:none}
-#intro[data-uni="corazon"] .scene-card{background:rgba(255,246,236,.96);border-radius:20px;padding:17px 20px 20px;box-shadow:0 16px 36px rgba(70,10,50,.4)}
-#intro[data-uni="corazon"] .sc-stage{color:#a63a63}
-#intro[data-uni="corazon"] .sc-when{color:#7a3f58}
-#intro[data-uni="corazon"] .sc-title{font-family:var(--serif);font-style:italic;font-weight:400;font-size:clamp(30px,8.6vw,44px);letter-spacing:-.02em;color:#2e0f26}
-#intro[data-uni="corazon"] .sc-text{font-style:normal;font-size:clamp(17px,4.6vw,20px);color:#3f2236}
-/* 4 · Western — rótulos de película, abajo */
-#intro[data-uni="rieles"] #scene,#intro[data-uni="rieles"] #sceneMeasure{top:auto;bottom:calc(7.5% + 16px);left:20px;right:20px;max-width:none;text-align:center}
-#intro[data-uni="rieles"] .sc-stage{justify-content:center;color:#f0c27c}
-#intro[data-uni="rieles"] .sc-stage::before{background:#f0c27c}
-#intro[data-uni="rieles"] .sc-when{color:#f2e3c4;letter-spacing:.22em}
-#intro[data-uni="rieles"] .sc-title{font-family:var(--serif);font-weight:600;font-style:normal;text-transform:uppercase;letter-spacing:.07em;font-size:clamp(24px,7vw,34px);color:#fff4dc;text-shadow:0 2px 0 #000,0 0 16px #000}
-#intro[data-uni="rieles"] .sc-text{margin:0 auto;max-width:34ch;font-size:clamp(16px,4.4vw,19px);color:#fff;text-shadow:0 1px 0 #000,0 0 10px #000,0 0 3px #000}
-/* 5 · Terror VHS — terminal */
-#intro[data-uni="exito"] #scene{text-shadow:none}
-#intro[data-uni="exito"] .scene-card{background:rgba(0,0,0,.9);border:1px solid #ff4f66;border-left-width:5px;padding:14px 16px 16px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
-#intro[data-uni="exito"] .sc-stage,#intro[data-uni="exito"] .sc-when,#intro[data-uni="exito"] .sc-title,#intro[data-uni="exito"] .sc-text{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
-#intro[data-uni="exito"] .sc-stage{color:#ff6b7f;text-transform:uppercase}
-#intro[data-uni="exito"] .sc-stage::before{content:"●";width:auto;height:auto;background:none;animation:blinkc 1s steps(2) infinite}
-#intro[data-uni="exito"] .sc-when{color:#8ff0a8;letter-spacing:.06em}
-#intro[data-uni="exito"] .sc-title{font-weight:700;font-size:clamp(21px,6vw,29px);letter-spacing:-.02em;color:#f4fff6}
-#intro[data-uni="exito"] .sc-text{font-style:normal;font-size:clamp(13.5px,3.7vw,15.5px);line-height:1.55;color:#bfffd2}
-#intro[data-uni="exito"] .sc-text::after{content:"▌";animation:blinkc 1s steps(2) infinite}
-/* 6 · Invierno — sobrio, centrado */
-#intro[data-uni="distancia"] #scene,#intro[data-uni="distancia"] #sceneMeasure{text-align:center;left:30px;right:30px}
-#intro[data-uni="distancia"] .scene-card{background:rgba(8,14,30,.78);border-radius:18px;padding:16px 18px 18px}
-#intro[data-uni="distancia"] .sc-stage{justify-content:center;color:#cfe0ff}
-#intro[data-uni="distancia"] .sc-title{font-weight:500;font-size:clamp(28px,8vw,40px);letter-spacing:-.03em;color:#fff}
-#intro[data-uni="distancia"] .sc-text{margin:0 auto;font-size:clamp(17.5px,4.8vw,20.5px);color:#f1f5ff}
-/* 7 · Cosmos — título grande con brillo */
-#intro[data-uni="reencuentro"] #scene,#intro[data-uni="reencuentro"] #sceneMeasure{text-align:center;left:24px;right:24px}
-#intro[data-uni="reencuentro"] .scene-card{background:rgba(4,0,26,.76);border-radius:20px;padding:16px 18px 18px;box-shadow:0 0 34px rgba(125,255,216,.18)}
-#intro[data-uni="reencuentro"] .sc-stage{justify-content:center;color:#7dffd8}
-#intro[data-uni="reencuentro"] .sc-title{font-size:clamp(36px,10.5vw,56px);font-weight:700;color:#fff;text-shadow:0 0 26px rgba(125,255,216,.55),0 0 2px #fff}
-#intro[data-uni="reencuentro"] .sc-text{margin:0 auto;font-size:clamp(17.5px,4.8vw,20.5px);color:#f6f0ff}
-#intro[data-uni="reencuentro"] #scene{text-shadow:none}
-
-
-/* =====================================================
-   Cada universo tiene su propia tarjeta (tipografía, color y posición)
-   Todas con panel opaco: contraste alto sobre cualquier fondo
-   ===================================================== */
-@keyframes blink{50%{opacity:0}}
-
-/* 1 · mundo de bloques: panel azul marino con borde blanco y sombra 3D */
-#intro[data-uni="obby"] #scene{text-shadow:none}
-#intro[data-uni="obby"] .scene-card{background:#071a45;border:3px solid #fff;border-radius:10px;padding:14px 16px 16px;box-shadow:0 6px 0 #02102e,0 16px 30px rgba(0,0,0,.35)}
-#intro[data-uni="obby"] .sc-stage{display:inline-flex;background:#ffd23f;color:#2b1d00;padding:3px 10px;border-radius:5px;font-weight:800;margin-bottom:10px}
-#intro[data-uni="obby"] .sc-stage::before{display:none}
-#intro[data-uni="obby"] .sc-when{color:#d3e9ff}
-#intro[data-uni="obby"] .sc-title{font-size:clamp(26px,7.8vw,40px);color:#fff}
-#intro[data-uni="obby"] .sc-text{font-family:var(--sans);font-style:normal;font-size:clamp(15px,4.2vw,18px);line-height:1.5;color:#f2f8ff;max-width:none}
-
-/* 2 · neón: panel morado oscuro con borde rosa brillante */
-#intro[data-uni="llamada"] #scene{text-shadow:none}
-#intro[data-uni="llamada"] .scene-card{background:rgba(16,0,44,.9);border:1.5px solid #ff7ad9;border-radius:14px;padding:14px 16px 16px;box-shadow:0 0 26px rgba(255,122,217,.38)}
-#intro[data-uni="llamada"] .sc-stage{color:#7df3ff}
-#intro[data-uni="llamada"] .sc-stage::before{background:#7df3ff;box-shadow:0 0 8px #7df3ff}
-#intro[data-uni="llamada"] .sc-when{color:#ffd6f6}
-#intro[data-uni="llamada"] .sc-title{text-transform:uppercase;font-weight:800;font-size:clamp(23px,6.8vw,34px);color:#fff;text-shadow:0 0 14px rgba(255,122,217,.9),0 0 3px #fff}
-#intro[data-uni="llamada"] .sc-text{font-family:var(--sans);font-style:normal;font-size:clamp(15px,4.2vw,18px);color:#fff1fc;line-height:1.5;max-width:none}
-
-/* 3 · hora dorada: hoja de papel crema con letra oscura */
-#intro[data-uni="corazon"] #scene{text-shadow:none}
-#intro[data-uni="corazon"] .scene-card{background:rgba(255,247,238,.97);border-radius:20px;padding:16px 20px 18px;box-shadow:0 18px 38px rgba(70,12,60,.4)}
-#intro[data-uni="corazon"] .sc-stage{color:#a3305c}
-#intro[data-uni="corazon"] .sc-when{color:#6b3a50}
-#intro[data-uni="corazon"] .sc-title{color:#33102a;font-family:var(--serif);font-style:italic;font-weight:400;font-size:clamp(30px,8.6vw,44px);letter-spacing:-.02em}
-#intro[data-uni="corazon"] .sc-text{color:#43202f;font-family:var(--serif);font-style:normal;font-size:clamp(17px,4.7vw,20px);max-width:none}
-
-/* 4 · cine: rótulo abajo, como subtítulos de película */
-#intro[data-uni="rieles"] #scene,#intro[data-uni="rieles"] #sceneMeasure{top:auto;bottom:calc(7.5% + 24px);left:18px;right:18px;max-width:none;text-align:center;text-shadow:none}
-#intro[data-uni="rieles"] .scene-card{background:none}
-#intro[data-uni="rieles"] .sc-stage{justify-content:center;color:#f0c27c}
-#intro[data-uni="rieles"] .sc-stage::before{width:16px}
-#intro[data-uni="rieles"] .sc-stage::after{content:"";width:16px;height:1px;background:currentColor}
-#intro[data-uni="rieles"] .sc-when{color:#f6e8cc;letter-spacing:.22em}
-#intro[data-uni="rieles"] .sc-title{font-family:var(--serif);font-weight:600;text-transform:uppercase;letter-spacing:.07em;font-size:clamp(22px,6.6vw,32px);color:#fff6e0;text-shadow:0 2px 0 #000,0 0 18px #000}
-#intro[data-uni="rieles"] .sc-text{margin:0 auto;font-size:clamp(16px,4.4vw,19px);color:#fff;text-shadow:0 1px 0 #000,0 0 10px #000;max-width:34ch}
-
-/* 5 · cinta VHS: terminal negro con letra verde y rojo */
-#intro[data-uni="exito"] #scene{text-shadow:none}
-#intro[data-uni="exito"] .scene-card{background:rgba(0,0,0,.92);border:1px solid #ff4f66;border-left:4px solid #ff4f66;padding:12px 14px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
-#intro[data-uni="exito"] .sc-stage{color:#ff6a7e;font-family:inherit}
-#intro[data-uni="exito"] .sc-stage::before{content:"● REC";width:auto;height:auto;background:none;animation:blink 1s steps(2) infinite}
-#intro[data-uni="exito"] .sc-when{color:#8dffae;font-family:inherit}
-#intro[data-uni="exito"] .sc-title{font-family:inherit;font-size:clamp(20px,5.8vw,28px);font-weight:700;letter-spacing:-.01em;color:#f4fff6}
-#intro[data-uni="exito"] .sc-text{font-family:inherit;font-style:normal;font-size:clamp(13px,3.6vw,15px);color:#b8ffcb;max-width:none;line-height:1.55}
-
-/* 6 · invierno: tarjeta serena y centrada */
-#intro[data-uni="distancia"] #scene,#intro[data-uni="distancia"] #sceneMeasure{left:30px;right:30px;text-align:center;text-shadow:none}
-#intro[data-uni="distancia"] .scene-card{background:rgba(9,15,34,.84);border:1px solid rgba(207,224,255,.32);border-radius:16px;padding:16px 18px 18px}
-#intro[data-uni="distancia"] .sc-stage{justify-content:center;color:#d4e3ff}
-#intro[data-uni="distancia"] .sc-title{font-weight:500;font-size:clamp(26px,7.4vw,38px);color:#fff}
-#intro[data-uni="distancia"] .sc-text{margin:0 auto;color:#f0f5ff;font-size:clamp(17px,4.6vw,20px);max-width:none}
-
-/* 7 · cosmos: título grande con resplandor */
-#intro[data-uni="reencuentro"] #scene,#intro[data-uni="reencuentro"] #sceneMeasure{left:26px;right:26px;text-align:center;text-shadow:none}
-#intro[data-uni="reencuentro"] .scene-card{background:rgba(6,0,30,.82);border:1px solid rgba(125,255,216,.5);border-radius:20px;padding:16px 18px 18px;box-shadow:0 0 34px rgba(125,255,216,.22)}
-#intro[data-uni="reencuentro"] .sc-stage{justify-content:center;color:#7dffd8}
-#intro[data-uni="reencuentro"] .sc-title{font-size:clamp(34px,10vw,52px);text-shadow:0 0 26px rgba(125,255,216,.55),0 0 2px #fff}
-#intro[data-uni="reencuentro"] .sc-text{margin:0 auto;color:#f7f1ff;max-width:none}
-
+#introCount{font:600 12px var(--sans);letter-spacing:.14em;color:rgba(255,255,255,.85);text-shadow:0 1px 8px rgba(0,0,0,.5)}
+.intro-bar{left:14px;right:80px;bottom:calc(30px + env(safe-area-inset-bottom,0px));height:3px;border-radius:3px;background:rgba(255,255,255,.18)}
+.intro-bar i{border-radius:3px;box-shadow:0 0 10px var(--uni,#c9bcff)}
 
 /* =====================================================
    HISTORIA EN 3D · etiquetas, teletransporte y marcadores
@@ -542,13 +445,20 @@ main.show{opacity:1}
 .w3-pill span{color:#bdb6d6}
 .w3-pill b{font:800 18px var(--display);font-variant-numeric:tabular-nums;color:#ffe27a}
 /* pantalla de "teletransportando" entre mundos (al estilo de las pantallas de carga de Roblox) */
-.w3-tp{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#0b0820;opacity:0;pointer-events:none;transition:opacity .35s ease}
+.w3-tp{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:#07051a;opacity:0;pointer-events:none;transition:opacity .5s ease;overflow:hidden}
 .w3-tp.on{opacity:1}
-.w3-tp-spin{width:46px;height:46px;border-radius:10px;border:5px solid #fff;margin-bottom:16px;animation:tpSpin 1s cubic-bezier(.6,0,.4,1) infinite}
-@keyframes tpSpin{to{transform:rotate(360deg)}}
-.w3-tp-k{color:#a9a3c4;font:500 14px var(--sans)}
-.w3-tp-w{color:#fff;font:700 clamp(28px,8.5vw,44px)/1.05 var(--display);letter-spacing:-.03em;text-align:center;padding:0 24px}
-.w3-tp.no-label .w3-tp-k,.w3-tp.no-label .w3-tp-w{display:none}
+.w3-tp-glow{position:absolute;left:50%;top:50%;width:140vmax;height:140vmax;margin:-70vmax 0 0 -70vmax;background:radial-gradient(closest-side,color-mix(in srgb,var(--uni,#c9bcff) 38%,transparent),transparent 70%);animation:tpGlow 3s ease-in-out infinite}
+@keyframes tpGlow{50%{transform:scale(1.12)}}
+.w3-tp-n{position:relative;font:800 clamp(90px,34vw,170px)/.9 var(--display);letter-spacing:-.06em;color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.55);margin-bottom:6px}
+.w3-tp.on .w3-tp-n{animation:tpIn .7s cubic-bezier(.2,.9,.2,1) both}
+.w3-tp-k{position:relative;color:rgba(255,255,255,.6);font:600 12px var(--sans);letter-spacing:.2em;text-transform:uppercase}
+.w3-tp-w{position:relative;color:#fff;font:700 clamp(30px,9vw,46px)/1.05 var(--display);letter-spacing:-.03em;text-align:center;padding:0 24px}
+.w3-tp.on .w3-tp-w{animation:tpIn .7s .08s cubic-bezier(.2,.9,.2,1) both}
+@keyframes tpIn{from{opacity:0;transform:translateY(16px);filter:blur(6px)}}
+.w3-tp-bar{position:relative;width:min(200px,50vw);height:3px;margin-top:22px;border-radius:3px;background:rgba(255,255,255,.15);overflow:hidden}
+.w3-tp-bar i{position:absolute;inset:0;width:40%;border-radius:3px;background:var(--uni,#c9bcff);animation:tpBar 1s ease-in-out infinite}
+@keyframes tpBar{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+.w3-tp.no-label .w3-tp-k,.w3-tp.no-label .w3-tp-w,.w3-tp.no-label .w3-tp-n{display:none}
 .w3-flash{position:absolute;inset:0;z-index:4;background:#fff;opacity:0;pointer-events:none;transition:opacity .45s ease}
 .w3-flash.on{opacity:1}
 
@@ -698,7 +608,7 @@ input,textarea{-webkit-user-select:text;user-select:text}
 @media (prefers-reduced-motion:reduce){.ticket,.ticket::after{animation:none}}
 
 /* viñeta cinematográfica sobre las escenas 3D */
-.w3-vig{position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(120% 90% at 50% 55%,transparent 55%,rgba(8,4,24,.45) 100%)}
+.w3-vig{display:none}
 .w3-tag{backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);background:rgba(10,8,22,.5);border:1px solid rgba(255,255,255,.18);box-shadow:0 4px 12px rgba(0,0,0,.25)}
 #game::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;background:radial-gradient(130% 95% at 50% 50%,transparent 58%,rgba(6,2,20,.55) 100%)}
 
@@ -724,3 +634,40 @@ input,textarea{-webkit-user-select:text;user-select:text}
 @keyframes ultFx{0%{opacity:0}8%{opacity:1}70%{opacity:.6}100%{opacity:0}}
 .g-ehp{position:absolute;left:0;top:0;width:44px;height:6px;border-radius:4px;background:rgba(8,4,28,.85);border:1px solid rgba(255,255,255,.35);overflow:hidden;transition:opacity .3s}
 .g-ehp i{display:block;height:100%;background:linear-gradient(90deg,#ff4f6a,#ffb07a);transition:width .15s}
+
+/* combate en tercera persona y en horizontal */
+body.in-game #rotate{display:none!important}
+.g-lookzone{position:absolute;right:0;top:0;width:50%;height:56%;z-index:3;touch-action:none}
+.g-rotate{position:absolute;inset:0;z-index:20;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;background:rgba(7,4,24,.94);color:#fff}
+.g-rotate svg{width:62px;height:62px;color:#c9bcff;animation:rotland 2.4s ease-in-out infinite}
+@keyframes rotland{0%,25%{transform:rotate(0)}65%,100%{transform:rotate(-90deg)}}
+.g-rotate b{font:700 24px var(--display)}
+.g-rotate span{color:#c9c3e2;font-size:15px;margin-bottom:10px}
+@media (orientation:portrait) and (pointer:coarse){#game:not(.rot-ok) .g-rotate{display:flex}}
+@media (orientation:landscape) and (max-height:520px){
+  .g-card{width:min(92vw,720px);max-height:calc(100% - 20px);padding:14px 18px 16px}
+  #gIntro{bottom:10px}
+  .g-card h2{font-size:24px;margin-bottom:4px}
+  .g-card p{margin-bottom:6px;font-size:14px}
+  .g-powers{grid-template-columns:1fr 1fr;gap:6px 14px;margin:2px 0 8px}
+  .g-powers li{font-size:12.5px}
+  .g-skills{transform:scale(.86);transform-origin:100% 100%}
+  .g-top{right:auto;width:300px}
+  .g-boss{left:28%;right:28%;top:calc(10px + env(safe-area-inset-top,0px))}
+  .g-combo{top:auto;bottom:40%;right:auto;left:16px;text-align:left}
+  .g-toast{top:58px}
+}
+
+/* regalo en horizontal: tarjeta a la izquierda, texto y cupones a la derecha */
+@media (orientation:landscape) and (max-height:520px){
+  #gift{align-items:center}
+  .gift-inner{display:grid;grid-template-columns:auto minmax(240px,340px);grid-template-areas:"k k" "t t" "c n" "c tk" "c a";column-gap:22px;row-gap:8px;width:min(96vw,760px);max-height:100%;overflow:auto;padding:10px 4px;align-items:center}
+  .gift-kicker{grid-area:k;text-align:center}
+  .gift-title{grid-area:t;font-size:30px}
+  .rbx-wrap{grid-area:c;width:min(42vw,330px);margin:0}
+  .gift-note{grid-area:n;text-align:left;font-size:14px;margin:0}
+  .tickets{grid-area:tk;width:100%}
+  .gift-code{grid-area:tk}
+  .gift-actions{grid-area:a;justify-content:flex-start;margin:0}
+  .gift-hint{bottom:8%}
+}

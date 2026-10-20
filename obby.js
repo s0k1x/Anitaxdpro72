@@ -9,7 +9,7 @@
   'use strict';
   const M = G.M3;
   if (!M) return;
-  const { TAU, clamp, lerp, smooth, ease, geo, group, box, mesh, bake, FX, Motes, avatar, cloud, flower, tuft, rock, bush, scatter, rgb } = M;
+  const { TAU, clamp, lerp, smooth, ease, geo, group, box, mesh, bake, FX, Motes, avatar, cloud, flower, tuft, rock, bush, scatter, rgb, terrain, Node } = M;
 
   let current = null;
   function skip() { if (current) current.skip(); }
@@ -73,7 +73,10 @@
   // isla flotante: césped con borde, tierra y roca
   function island(g, x, y, z, w, d, top, dirt, o) {
     o = o || {};
-    box(g, w, .9, d, top, x, y - .45, z, { r: .4 });
+    const lighten = c => { const k = rgb(c); return (Math.min(255, k[0] * 255 * 1.12 + 10) << 16) | (Math.min(255, k[1] * 255 * 1.1 + 10) << 8) | Math.min(255, k[2] * 255 * 1.08 + 8); };
+    const T = new Node(terrain(w - .2, d - .2, o.seg || 36, { a: top, b: o.top2 || lighten(top), c: o.patch, amp: o.amp == null ? .28 : o.amp, scale: .16, edge: 1.4, flatR: o.flatR || 0, seed: o.seed || (x * 3 + z) }), 0xffffff, { shine: .12, vary: false });
+    T.at(x, y, z); g.add(T);
+    box(g, w, .9, d, o.side || top, x, y - .62, z, { r: .4 });
     box(g, w - .3, 1.8, d - .3, dirt || 0x9a6a4a, x, y - 1.6, z, { r: .5 });
     mesh(g, geo.cone6, o.rock || 0x7a6a7a, w * 1.05, o.deep || 5, d * 1.05, x, y - 2.5 - (o.deep || 5) / 2, z, { rot: [Math.PI, .3, 0] });
     for (let i = 0; i < Math.max(4, w / 3); i++) { const a = i / Math.max(4, w / 3) * TAU; rock(g, x + Math.cos(a) * w * .42, y - 3.5, z + Math.sin(a) * d * .42, .9 + (i % 3) * .3, o.rock || 0x7a6a7a); }
@@ -119,12 +122,12 @@
     min: 7.5,
     look: { accent: '#ffd23f' },
     sky: 'radial-gradient(60% 40% at 78% 18%,rgba(255,250,220,.95) 0%,rgba(255,250,220,0) 60%),linear-gradient(180deg,#4aa6ff 0%,#8fd0ff 50%,#dff4ff 100%)',
-    env: { sky: 0xdff1ff, gnd: 0x6a8a5a, sun: 0xfff3dc, fog: 0xc6e6ff, fogNear: 50, fogFar: 170, light: [.55, .85, .5], amb: .66, sunK: .78, shadowArea: 24 },
+    env: { sky: 0xdff1ff, gnd: 0x6a8a5a, sun: 0xfff3dc, fog: 0xbfe2ff, fogNear: 55, fogFar: 190, light: [.55, .85, .5], amb: .66, sunK: .8, shadowArea: 24,
+      skyTop: 0x2a78e0, skyMid: 0xc4e6ff, skyBot: 0x9ccdf2, sunDir: [-.45, .42, -.78], sunCol: 0xfff1cc, sunDisc: 1, clouds: .8, cloudCol: 0xffffff },
+    grade: { exp: 1.08, sat: 1.16, con: 1.05, tint: [1, 1, .97], bloom: .5, tilt: .95, vig: .28 },
     build(c) {
       const st = group();
-      island(st, 0, 0, 0, 34, 30, 0x5cc96a, 0x9a6a4a, { deep: 9 });
-      // césped en losetas (como el suelo de Roblox) con tonos variados
-      for (let x = -15; x <= 15; x += 3) for (let z = -13; z <= 13; z += 3) box(st, 2.9, .12, 2.9, GRASS[(x * 7 + z * 3 & 0xff) % 3], x, .05, z, { r: .05 });
+      island(st, 0, 0, 0, 34, 30, 0x58c46a, 0x9a6a4a, { deep: 9, top2: 0x8ade7a, patch: 0x4aae5e, flatR: 8, side: 0x6ab85a, seg: 44 });
       // la zona de construcción
       box(st, 9, .14, 8, 0xd8cfc0, 0, .1, -2, { r: .1 });
       for (let i = 0; i < 4; i++) box(st, .35, .9, .35, 0xffd23f, -4.2 + (i % 2) * 8.4, .45, -5.8 + (i > 1 ? 7.6 : 0), { r: .12 });
@@ -213,10 +216,12 @@
     min: 7,
     look: { accent: '#ff7ad9' },
     sky: 'radial-gradient(50% 35% at 25% 20%,rgba(255,255,255,.7) 0%,rgba(255,255,255,0) 70%),linear-gradient(180deg,#ff9fd6 0%,#d3bfff 48%,#b6e6ff 100%)',
-    env: { sky: 0xffeaf8, gnd: 0x8a74b0, sun: 0xfff2f8, fog: 0xead9ff, fogNear: 45, fogFar: 140, light: [-.45, .85, .55], amb: .68, sunK: .66, shadowArea: 24 },
+    env: { sky: 0xffeaf8, gnd: 0x8a74b0, sun: 0xfff2f8, fog: 0xf2d8f4, fogNear: 50, fogFar: 170, light: [-.45, .85, .55], amb: .68, sunK: .68, shadowArea: 24,
+      skyTop: 0x9a7cf0, skyMid: 0xffd8ef, skyBot: 0xf6c8e8, sunDir: [.5, .35, -.8], sunCol: 0xfff0f8, sunDisc: .8, clouds: .85, cloudCol: 0xfff2fb },
+    grade: { exp: .97, sat: 1.18, con: 1.1, tint: [1.02, .97, 1.02], lift: [0, 0, .01], bloom: .35, tilt: .9, vig: .3 },
     build(c) {
       const st = group();
-      island(st, 0, 0, 0, 36, 28, 0x8fe39a, 0xb08a6a, { rock: 0x9a84b0, deep: 8 });
+      island(st, 0, 0, 0, 36, 28, 0x86df92, 0xb08a6a, { rock: 0x9a84b0, deep: 8, top2: 0xaef0a6, patch: 0xc8f2b0, flatR: 13, amp: .2, seg: 44 });
       // caminito de baldosas
       for (let z = -12; z <= 13; z += 1.6) box(st, 3.2, .12, 1.3, z % 3.2 ? 0xfff2dc : 0xf6e2c4, 0, .06, z, { r: .1 });
       for (let x = -15; x <= 15; x += 1.6) if (Math.abs(x) > 2) box(st, 1.3, .12, 2.6, 0xfff2dc, x, .06, 5.8, { r: .1 });
@@ -312,10 +317,13 @@
     min: 7,
     look: { accent: '#ffb48a' },
     sky: 'radial-gradient(45% 30% at 22% 62%,rgba(255,236,170,.95) 0%,rgba(255,200,140,0) 70%),linear-gradient(180deg,#46307a 0%,#c45a8a 38%,#ff8a7a 62%,#ffc890 82%,#ffe6b8 100%)',
-    env: { sky: 0xffcfb8, gnd: 0x5a3a5a, sun: 0xffb27a, fog: 0xffb69a, fogNear: 40, fogFar: 140, light: [-.85, .42, .32], amb: .6, sunK: .95, shadowArea: 26 },
+    env: { sky: 0xffcfb8, gnd: 0x5a3a5a, sun: 0xffb27a, fog: 0xf7a68e, fogNear: 45, fogFar: 160, light: [-.85, .42, .32], amb: .6, sunK: .95, shadowArea: 26,
+      skyTop: 0x2c2468, skyMid: 0xff9a7c, skyBot: 0xe0806a, sunDir: [-.8, .1, -.6], sunCol: 0xffd08a, sunDisc: 1.5, clouds: .6, cloudCol: 0xffb4a0 },
+    grade: { exp: 1.1, sat: 1.15, con: 1.06, tint: [1.05, .97, .94], lift: [.015, 0, .02], bloom: .85, tilt: .85, vig: .35 },
     build(c) {
       const st = group();
-      box(st, 140, 1, 70, 0x7bc46a, 0, -.5, 0, { r: 0 });
+      box(st, 140, 1, 70, 0x5a9a4e, 0, -.7, 0, { r: 0 });
+      { const T = new Node(terrain(140, 70, 70, { a: 0x6cb85e, b: 0x8ccc6a, c: 0x5aa456, amp: 0, seed: 3 }), 0xffffff, { shine: .1, vary: false }); T.at(0, -.02, 0); st.add(T); }
       box(st, 140, .06, 7, 0x3a3a46, 0, .03, 0, { r: 0, shine: .6 });
       for (let x = -70; x < 70; x += 4) box(st, 2, .06, .25, 0xffe28a, x, .07, 0, { r: 0 });
       for (let x = -3; x <= 3; x += 1.2) box(st, .7, .07, 6.4, 0xffffff, 18 + x, .07, 0, { r: 0 });   // paso de cebra
@@ -333,7 +341,6 @@
       const parked = (x, z, col) => { const g = group().at(x, 0, z); st.add(g); box(g, 5, 1.1, 2.6, col, 0, 1, 0, { r: .45, shine: .9 }); box(g, 2.8, 1, 2.3, col, -.3, 2, 0, { r: .4, shine: .9 }); box(g, 2.6, .8, 2.36, 0x2a3a5a, -.3, 2.05, 0, { r: .35, shine: 1 }); [[-1.6, 1.2], [1.6, 1.2], [-1.6, -1.2], [1.6, -1.2]].forEach(([a, b]) => mesh(g, geo.cyl, 0x1c1c22, 1, .45, 1, a, .5, b, { rot: [Math.PI / 2, 0, 0] })); };
       parked(-24, -4.9, 0xff5a6a); parked(30, 4.9, 0xffd23f);
       c.scene.add(bake(st, 3));
-      sun(c, -70, 18, -40, 10, 0xfff0b0, 0xffb070);
       const drift = cloudLayer(c, [[-40, 26, -60, 2.6], [0, 32, -70, 3], [40, 24, -60, 2.4], [70, 20, -40, 2]], 0xffc9b8, .3);
       // el coche
       const car = group(); c.scene.add(car);
@@ -384,15 +391,16 @@
     min: 6.5,
     look: { accent: '#f0c27c' },
     sky: 'radial-gradient(40% 26% at 72% 70%,rgba(255,220,150,.95) 0%,rgba(255,150,80,0) 70%),linear-gradient(180deg,#141038 0%,#4a2458 36%,#c45a3a 70%,#f2a05a 88%,#ffd08a 100%)',
-    env: { sky: 0xd88a6a, gnd: 0x4a2a2a, sun: 0xffa060, fog: 0xc8704a, fogNear: 35, fogFar: 140, light: [.85, .32, .25], amb: .55, sunK: 1, shadowArea: 22 },
+    env: { sky: 0xd88a6a, gnd: 0x4a2a2a, sun: 0xffa060, fog: 0xd8805a, fogNear: 40, fogFar: 170, light: [.85, .32, .25], amb: .55, sunK: 1, shadowArea: 22,
+      skyTop: 0x161040, skyMid: 0xf08a5a, skyBot: 0xd8784a, sunDir: [.75, .07, -.66], sunCol: 0xffc070, sunDisc: 1.6, clouds: .35, cloudCol: 0xd87a6a, stars: .35 },
+    grade: { exp: 1.1, sat: 1.12, con: 1.08, tint: [1.06, .95, .88], lift: [.015, .005, .025], bloom: .9, tilt: .75, vig: .45 },
     build(c) {
       const st = group();
-      box(st, 260, 1, 120, 0xd9a066, 0, -.5, 0, { r: 0 });
+      { const T = new Node(terrain(260, 120, 80, { a: 0xd99a5e, b: 0xeab878, c: 0xc8844e, amp: 1.8, scale: .045, flatZ: 4.5, seed: 9 }), 0xffffff, { shine: .1, vary: false }); T.at(0, 0, 0); st.add(T); }
       for (let i = 0; i < 16; i++) mesh(st, geo.ball, 0xe0aa70, 22 + (i % 3) * 8, 5 + (i % 4), 14, -110 + i * 15, -1.2, (i % 2 ? -1 : 1) * (28 + (i % 3) * 6));
       box(st, 260, .3, 3.4, 0x9a7a5a, 0, .15, 0, { r: .1 });
       [-1, 1].forEach(sd => box(st, 260, .28, .22, 0x9a9aa8, 0, .45, sd * .8, { r: .06, shine: 1 }));
       c.scene.add(bake(st, 4));
-      sun(c, 120, 10, -90, 14, 0xffe0a0, 0xff9a50);
       const moving = [];
       const add = (n, sp, w) => { moving.push({ n, sp, w }); return n; };
       for (let i = 0; i < 46; i++) add(box(c.scene, .55, .22, 2.8, 0x5a3a2a, -70 + i * 3, .32, 0, { r: .05 }), 1, 138);
@@ -471,7 +479,9 @@
     min: 7.5,
     look: { accent: '#ff6b7f' },
     sky: 'linear-gradient(180deg,#07060c 0%,#120a14 100%)',
-    env: { sky: 0x7a6a8a, gnd: 0x2a1828, sun: 0xffd8a0, fog: 0x07060c, fogNear: 18, fogFar: 56, light: [-.25, .9, -.45], amb: .46, sunK: .45, shadowArea: 18 },
+    env: { sky: 0x7a6a8a, gnd: 0x2a1828, sun: 0xffd8a0, fog: 0x0a0610, fogNear: 18, fogFar: 56, light: [-.25, .9, -.45], amb: .46, sunK: .45, shadowArea: 18,
+      skyTop: 0x050408, skyMid: 0x0e0810, skyBot: 0x080508, sunDisc: 0, clouds: 0 },
+    grade: { exp: 1.2, sat: .95, con: 1.12, tint: [1.02, .95, 1.03], bloom: 1, tilt: .5, vig: .6, grain: .05 },
     build(c) {
       const st = group(), L = 46;
       box(st, 9, .4, L, 0x3a2a26, 0, -.2, -L / 2 + 8, { r: 0 });
@@ -497,7 +507,7 @@
       }
       c.scene.add(bake(st, 5));
       const lamps = [];
-      for (let z = 6; z > -12; z -= 7) {
+      for (let z = 6; z > -5; z -= 7) {
         mesh(c.scene, geo.cyl, 0x1c1c22, .05, 1.2, .05, 0, 6.4, z);
         const sh = mesh(c.scene, geo.custom(14, .25, .7), 0x2a1a1a, 1.2, .6, 1.2, 0, 5.7, z);
         const b = mesh(c.scene, geo.ballS, 0xfff2c0, .6, .6, .6, 0, 5.4, z, { emis: 1 });
@@ -523,7 +533,7 @@
           lamps.forEach((l, i) => { const on = lit || !(flick && i % 2); l.b.emis = on ? 1 : .1; l.h.alpha = lit ? .14 : (on ? .1 : .02); l.b.color = rgb(lit ? 0xfff6d8 : (on ? 0xffd8a0 : 0x5a3030)); });
           c.R.envAmb = lit ? .72 : (flick ? .26 : .46);
           if (t > 2.1) { const k = clamp((t - 2.1) / .8, 0, 1); end.rot[1] = -k * 1.4; end.pos[0] = -k * 1.2; light.alpha = k; }
-          if (t > ON && !lit) { lit = true; c.R.setEnv({ fog: 0x3a2030, fogNear: 28, fogFar: 90 }); c.cv.style.background = 'radial-gradient(60% 50% at 50% 40%,#7a2a4a 0%,#2a1020 100%)'; c.fx.burst([0, 3, -25], 50, { colors: [0xffcf3a, 0xffffff], speed: 10, life: 1.1, size: .3, add: true }); c.chime(true); pill.classList.add('on'); }
+          if (t > ON && !lit) { lit = true; c.R.setEnv({ fog: 0x3a1a2e, fogNear: 28, fogFar: 90, skyTop: 0x2a0a1a, skyMid: 0x7a2a4a, skyBot: 0x3a1020, grade: { tint: [1.08, .98, .92], exp: 1.25, sat: 1.1 } }); c.fx.burst([0, 3, -25], 50, { colors: [0xffcf3a, 0xffffff], speed: 10, life: 1.1, size: .3, add: true }); c.chime(true); pill.classList.add('on'); }
           if (lit) {
             const j = t - ON;
             coins.forEach(q => {
@@ -548,16 +558,17 @@
     min: 6.5,
     look: { accent: '#cfe0ff' },
     sky: 'radial-gradient(30% 22% at 75% 20%,rgba(230,240,255,.5) 0%,rgba(230,240,255,0) 70%),linear-gradient(180deg,#0a1028 0%,#1e2c58 50%,#4a5a8e 100%)',
-    env: { sky: 0xc8d6f8, gnd: 0x2a3050, sun: 0xd8e4ff, fog: 0x2e3e68, fogNear: 30, fogFar: 110, light: [.35, .8, .5], amb: .6, sunK: .6, shadowArea: 26 },
+    env: { sky: 0xc8d6f8, gnd: 0x2a3050, sun: 0xd8e4ff, fog: 0x2a3a66, fogNear: 35, fogFar: 140, light: [.35, .8, .5], amb: .6, sunK: .62, shadowArea: 26,
+      skyTop: 0x040818, skyMid: 0x2a3a6a, skyBot: 0x1a2448, sunDir: [.45, .38, -.8], sunCol: 0xd8e6ff, sunDisc: .9, stars: 1, clouds: .3, cloudCol: 0x5a6a98 },
+    grade: { exp: 1.12, sat: .92, con: 1.05, tint: [.94, 1, 1.08], lift: [0, .02, .05], bloom: .75, tilt: .8, vig: .45 },
     build(c) {
       const bg = group(); stars(bg, 140, 140); c.scene.add(bake(bg, 6));
-      sun(c, 60, 45, -90, 8, 0xeef4ff, 0xc8d8ff);
       // aurora
       const aur = [];
       for (let i = 0; i < 16; i++) aur.push(box(c.scene, 5, 22, .2, i % 2 ? 0x6affc8 : 0x8a7aff, -40 + i * 5, 14, -55, { r: 0, emis: 1, add: true, alpha: .12, cast: false }));
       const mk = sd => {
         const g = group().at(sd * 3.9, 0, 0); c.scene.add(g); const s = group();
-        island(s, 0, 0, 0, 8.4, 8.4, 0xf4f8ff, 0x5a6a8a, { rock: 0x5a6a8a, deep: 6 });
+        island(s, 0, 0, 0, 8.4, 8.4, 0xeef4ff, 0x5a6a8a, { rock: 0x5a6a8a, deep: 6, top2: 0xffffff, patch: 0xd8e4f8, flatR: 3, amp: .3, side: 0xe4ecfa });
         mesh(s, geo.cyl20, 0xffffff, 1.6, .9, 1.6, sd * -2.6, .3, -1.4); mesh(s, geo.custom(10, .1, .5), 0xffd88a, .3, .5, .3, sd * -2.6, 1.1, -1.4, { emis: 1 });
         for (let i = 0; i < 6; i++) mesh(s, geo.ballS, 0xffffff, 1.2, .7, 1.2, Math.cos(i) * 3.4, -.15, Math.sin(i * 1.7) * 3.4);   // nieve que cae por el borde
         pine(s, sd * 2, -2, .75, true); pine(s, sd * -2.3, -2.6, .55, true);
@@ -602,7 +613,9 @@
     min: 7,
     look: { accent: '#7dffd8' },
     sky: 'radial-gradient(30% 20% at 22% 22%,rgba(220,210,255,.45) 0%,rgba(220,210,255,0) 70%),linear-gradient(180deg,#04001a 0%,#160846 45%,#3a1a6a 78%,#6a3a9a 100%)',
-    env: { sky: 0xc0b0ff, gnd: 0x2a1a4a, sun: 0xeee6ff, fog: 0x24104e, fogNear: 45, fogFar: 160, light: [.45, .85, .35], amb: .62, sunK: .62, shadowArea: 26 },
+    env: { sky: 0xc0b0ff, gnd: 0x2a1a4a, sun: 0xeee6ff, fog: 0x2e1660, fogNear: 50, fogFar: 180, light: [.45, .85, .35], amb: .64, sunK: .64, shadowArea: 26,
+      skyTop: 0x03001a, skyMid: 0x3c1c72, skyBot: 0x2a1258, sunDir: [-.5, .42, -.76], sunCol: 0xeee2ff, sunDisc: .9, stars: 1, clouds: .25, cloudCol: 0x6a4aa8 },
+    grade: { exp: 1.12, sat: 1.12, con: 1.05, tint: [1, .97, 1.05], bloom: .95, tilt: .75, vig: .35 },
     build(c) {
       const st = group();
       const cols = [0xff5ea8, 0x7b5cff, 0x3ad0ff, 0x6ee07a, 0xffd23f, 0xff8a3a];
@@ -615,7 +628,6 @@
       for (let i = 0; i < 4; i++) box(st, 2.2, .1, 11, 0xf4f0ff, -3.3 + i * 2.2, .02, 0, { r: 0 });
       stars(st, 200, 140);
       c.scene.add(bake(st, 10));
-      mesh(c.scene, geo.ball, 0xf6f0ff, 9, 9, 9, -50, 40, -90, { emis: 1, cast: false }); mesh(c.scene, geo.ball, 0xc8b8ff, 20, 20, 20, -50, 40, -90, { emis: 1, add: true, alpha: .12, cast: false });
       const drift = cloudLayer(c, [[-30, -16, -20, 3], [20, -18, -30, 3.4], [-10, -20, 20, 3], [30, -14, 15, 2.6], [-40, -12, 10, 2.8], [0, -22, -50, 3.6], [45, -20, -40, 3]], 0xc8b0f0, .2);
       const stepsL = [[-9, -6, 2], [-7, -3.5, 3.5], [-5.5, -1.2, 2.2]], stepsR = [[9, -6, -2], [7, -3.5, -3.5], [5.5, -1.2, -2.2]];
       [...stepsL, ...stepsR].forEach(([x, y, z], i) => box(c.scene, 2.6, .6, 2.6, cols[(i + 2) % cols.length], x, y - .3, z, { r: .25, shine: .6 }));
@@ -659,11 +671,12 @@
   WORLDS.portal = {
     look: { accent: '#c9bcff', id: 'reencuentro' },
     sky: 'radial-gradient(50% 40% at 50% 38%,rgba(160,120,255,.5) 0%,rgba(160,120,255,0) 70%),linear-gradient(180deg,#05001a 0%,#20104a 55%,#4a2a8a 100%)',
-    env: { sky: 0xc9bcff, gnd: 0x2a1a4a, sun: 0xe0d8ff, fog: 0x20104a, fogNear: 35, fogFar: 130, light: [.3, .85, .45], amb: .64, sunK: .6, shadowArea: 22 },
+    env: { sky: 0xc9bcff, gnd: 0x2a1a4a, sun: 0xe0d8ff, fog: 0x2a1458, fogNear: 40, fogFar: 150, light: [.3, .85, .45], amb: .66, sunK: .62, shadowArea: 22,
+      skyTop: 0x05001a, skyMid: 0x3e2484, skyBot: 0x24104e, sunDisc: 0, stars: 1, clouds: .2, cloudCol: 0x6a4ab0 },
+    grade: { exp: 1.12, sat: 1.15, con: 1.05, tint: [1, .97, 1.06], bloom: 1.05, tilt: .7, vig: .35 },
     build(c) {
       const st = group();
-      island(st, 0, 0, 0, 22, 18, 0x6a5aa8, 0x3a2a6a, { rock: 0x4a3a7a, deep: 8 });
-      for (let x = -9; x <= 9; x += 3) for (let z = -7; z <= 7; z += 3) box(st, 2.9, .1, 2.9, (x + z) % 2 ? 0x7a6ab8 : 0x6e5eae, x, .05, z, { r: .05 });
+      island(st, 0, 0, 0, 22, 18, 0x6a5aa8, 0x3a2a6a, { rock: 0x4a3a7a, deep: 8, top2: 0x8a76d0, patch: 0x5a4a98, flatR: 8, amp: .2 });
       for (let i = 0; i < 10; i++) { const a = i / 10 * TAU; mesh(st, geo.gem, i % 2 ? 0xc9bcff : 0x7df3ff, 1, 2 + (i % 3) * .8, 1, Math.cos(a) * 9.4, 1 + (i % 3) * .4, Math.sin(a) * 7.8, { emis: .5, rot: [.1, a, .15] }); }
       mesh(st, geo.thin, 0x9b82ff, 12, .5, 12, 0, .1, -4, { emis: .8 }); mesh(st, geo.thin, 0x7df3ff, 9, .5, 9, 0, .1, -4, { emis: .8 });
       stars(st, 140, 120);
@@ -727,7 +740,7 @@
       const ui = document.createElement('div'); ui.className = 'w3-ui'; host.insertBefore(ui, cv.nextSibling);
       const tag = txt => { const d = document.createElement('div'); d.className = 'w3-tag'; d.textContent = txt; ui.appendChild(d); return d; };
       const tagMe = tag(opts.names && opts.names.me || 'Yo'), tagHer = tag(opts.names && opts.names.her || 'Ella');
-      const tp = document.createElement('div'); tp.className = 'w3-tp'; tp.innerHTML = '<div class="w3-tp-spin"></div><p class="w3-tp-k">Teletransportando a</p><p class="w3-tp-w"></p>'; host.appendChild(tp);
+      const tp = document.createElement('div'); tp.className = 'w3-tp'; tp.innerHTML = '<div class="w3-tp-glow"></div><p class="w3-tp-n"></p><p class="w3-tp-k">Teletransportando a</p><p class="w3-tp-w"></p><div class="w3-tp-bar"><i></i></div>'; host.appendChild(tp);
       const flash = document.createElement('div'); flash.className = 'w3-flash'; host.appendChild(flash);
       const vig = document.createElement('div'); vig.className = 'w3-vig'; host.insertBefore(vig, ui);
 
@@ -753,6 +766,7 @@
         const avail = clamp((botFree - topFree) / R.H, .3, 1);
         const centerPx = (topFree + botFree) / 2;
         cam.shiftY = clamp(2 * centerPx / R.H - 1, -.65, .65);
+        R.grade.tiltC = clamp(1 - centerPx / R.H, .2, .8);
         const fitDist = (spec.fit / 2) / Math.tan(hf / 2);
         const d = Math.max(spec.dist, fitDist) * clamp(.72 / avail, .95, 1.75);
         const cp = Math.cos(spec.pitch), yaw = spec.yaw;
@@ -775,8 +789,9 @@
         const W = WORLDS[name] || WORLDS.obby;
         C.scene = group(); C.fx = new FX(C.scene); C.t = 0;
         C.scene.add(C.me.root); C.scene.add(C.her.root);
-        R.setEnv(W.env); R.envAmb = W.env.amb; R.envSun = W.env.sunK;
-        cv.style.background = W.sky;
+        R.setEnv(Object.assign({ sunDir: null, stars: 0, clouds: 0, sunDisc: 0 }, W.env)); R.envAmb = W.env.amb; R.envSun = W.env.sunK;
+        R.grade = Object.assign({ exp: 1.12, sat: 1.08, con: 1.04, tint: [1, 1, 1], lift: [0, 0, 0], bloom: .55, tilt: 0, tiltC: .5, vig: .35, grain: .025, flash: 0, flashCol: [1, 1, 1] }, W.grade || {});
+        cv.style.background = '#000';
         const look = Object.assign({ id: name }, W.look);
         if (opts.onUniverse) opts.onUniverse(look);
         cardBox = opts.cardBox ? opts.cardBox(idx) : cardBox;
@@ -784,17 +799,18 @@
       }
 
       async function goto(name, idx, label) {
+        tp.querySelector('.w3-tp-n').textContent = idx < N ? String(idx + 1).padStart(2, '0') : '';
         if (world) {
           tp.querySelector('.w3-tp-w').textContent = label || '';
           tp.classList.toggle('no-label', !label);
-          tp.classList.add('on'); await tween(.42, () => {});
+          tp.classList.add('on'); await tween(.55, () => {});
           teardown();
         }
         buildWorld(name, idx);
         tp.querySelector('.w3-tp-w').textContent = label || '';
         if (skipFlag) return;
         if (!tp.classList.contains('on') && label) { tp.classList.add('on'); tp.classList.toggle('no-label', false); await tween(.6, () => {}); }
-        await tween(.35, () => {});
+        await tween(.6, () => {});
         tp.classList.remove('on');
       }
 
