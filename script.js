@@ -53,7 +53,10 @@ const DATA = {
       "https://roblox.cashstar.com/gift-card/view/LAAdDK2M1Hf61k7cYfUGXXp3L/",
       "https://roblox.cashstar.com/gift-card/view/JV8e1RRfTMIrx0PRWTPCmwbZD/"
     ],
-    codigo: ""
+    codigo: "",
+    // Cada victoria desbloquea una tarjeta: la 1ª al ganar, la 2ª al volver a ganar en Modo Pesadilla.
+    // Pon false para enseñar todas las tarjetas desde la primera victoria.
+    unaPorVictoria: true
   },
 
   // Velocidad de la animación: 1 = normal (~1 min). 2 = el doble de pausada, 3 = muy pausada (~3 min)...
@@ -402,10 +405,29 @@ function showGift(first) {
     $('cardAmount').textContent = R.importe || '10 €';
     $('cardTo').textContent = DATA.nombre; $('cardFrom').textContent = DATA.yoNombre || '';
     // cupones dorados, uno por enlace
+    let cleanupGift = null;
     const tk = $('giftTickets'); tk.innerHTML = '';
+    const unlocked = R.unaPorVictoria === false ? enlaces.length : Math.max(1, Math.min(enlaces.length, victorias()));
+    const fresh = first && R.unaPorVictoria !== false && victorias() > 1 ? unlocked - 1 : -1;
+    const replay = $('giftReplay');
+    const startReplay = async () => {
+      if (cleanupGift) cleanupGift(); g.classList.add('fade-out'); await wait(600); g.classList.add('hidden'); g.classList.remove('fade-out');
+      await playGame(true); $('game').classList.add('hidden'); await showGift(true); resolve();
+    };
+    replay.classList.toggle('hidden', unlocked >= enlaces.length && R.unaPorVictoria !== false ? false : false);
+    replay.querySelector('.button_top').textContent = unlocked < enlaces.length ? 'Jugar otra vez y ganar la tarjeta ' + (unlocked + 1) : 'Jugar otra vez (Modo Pesadilla)';
+    replay.onclick = startReplay;
+    const sc = $('giftScore');
+    if (first && lastResult && lastResult.score) { sc.classList.remove('hidden'); sc.textContent = 'Rango ' + lastResult.rank + ' · ' + lastResult.score.toLocaleString('es-ES') + ' puntos' + (lastResult.newBest ? ' · ¡nuevo récord!' : ''); } else sc.classList.add('hidden');
+    if (fresh >= 0) $('giftKicker').textContent = '¡Nueva tarjeta desbloqueada!';
     enlaces.forEach((url, i) => {
+      if (i >= unlocked) {
+        const a = document.createElement('button'); a.type = 'button'; a.className = 'ticket locked'; a.style.setProperty('--d', (1500 + i * 220) + 'ms');
+        a.innerHTML = `<span class="ticket-coin" aria-hidden="true"></span><span class="ticket-txt"><b>Tarjeta ${i + 1}</b><small>Bloqueada · gana el Modo Pesadilla</small></span><span class="ticket-go" aria-hidden="true">▶</span>`;
+        a.onclick = startReplay; tk.appendChild(a); return;
+      }
       const a = document.createElement('a');
-      a.className = 'ticket'; a.href = url; a.target = '_blank'; a.rel = 'noopener';
+      a.className = 'ticket' + (i === fresh ? ' new' : ''); a.href = url; a.target = '_blank'; a.rel = 'noopener';
       a.style.setProperty('--d', (1500 + i * 220) + 'ms');
       a.innerHTML = `<span class="ticket-coin" aria-hidden="true">★</span>
         <span class="ticket-txt"><b>Tarjeta ${enlaces.length > 1 ? i + 1 : ''}</b><small>Toca para abrirla y canjearla</small></span>
@@ -415,7 +437,7 @@ function showGift(first) {
     });
     tk.classList.toggle('hidden', !enlaces.length);
     $('giftNote').textContent = enlaces.length
-      ? (enlaces.length > 1 ? 'Tienes ' + enlaces.length + ' tarjetas regalo. Abre cada una y canjéala en tu cuenta de Roblox.' : 'Abre tu tarjeta regalo y canjéala en tu cuenta de Roblox.')
+      ? (unlocked < enlaces.length ? 'Has desbloqueado ' + unlocked + ' de ' + enlaces.length + ' tarjetas. Vuelve a ganar en Modo Pesadilla para conseguir la siguiente.' : (enlaces.length > 1 ? 'Tienes ' + enlaces.length + ' tarjetas regalo. Abre cada una y canjéala en tu cuenta de Roblox.' : 'Abre tu tarjeta regalo y canjéala en tu cuenta de Roblox.'))
       : R.codigo
       ? 'Copia el código y canjéalo en tu cuenta de Roblox. ¡Te lo has ganado!'
       : 'Una tarjeta regalo de ' + (R.importe || '10 €') + ' para gastar en Robux. ¡Te lo has ganado!';
@@ -445,8 +467,9 @@ function showGift(first) {
     const leave = () => { touching = false; };
     g.addEventListener('pointermove', move); g.addEventListener('pointerup', leave); g.addEventListener('pointercancel', leave); g.addEventListener('pointerleave', leave);
     (function idle(now) { if (!running) return; if (!touching) tilt(.5 + Math.sin(now / 1500) * .32, .5 + Math.cos(now / 1900) * .28); requestAnimationFrame(idle); })(performance.now());
+    cleanupGift = () => { running = false; g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', leave); g.removeEventListener('pointercancel', leave); g.removeEventListener('pointerleave', leave); };
     $('giftNext').onclick = async () => {
-      running = false; g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', leave); g.removeEventListener('pointercancel', leave); g.removeEventListener('pointerleave', leave);
+      cleanupGift();
       g.classList.add('fade-out'); await wait(700); g.classList.add('hidden'); document.body.classList.remove('in-game'); resolve();
     };
   });
@@ -454,16 +477,23 @@ function showGift(first) {
 
 const GIFT_KEY = 'homenaje_regalo_ganado';
 const gifted = () => { try { return !!localStorage.getItem(GIFT_KEY); } catch (e) { return false; } };
-async function playGame() {
+const VICT_KEY = 'homenaje_victorias';
+const victorias = () => { try { return +localStorage.getItem(VICT_KEY) || (gifted() ? 1 : 0); } catch (e) { return 0; } };
+let lastResult = null;
+async function playGame(hard) {
+  // la música de la web se pausa durante el combate (el juego tiene su propia música de batalla)
+  const wasPlaying = !music.paused; if (wasPlaying) music.pause();
   document.body.classList.add('in-game');
   $('game').classList.remove('hidden', 'fade-out');
   // reinicia el destello de teletransporte
   const fl = $('game').querySelector('.g-flash'); fl.style.animation = 'none'; void fl.offsetWidth; fl.style.animation = '';
   try {
-    await Juego.play({ root: $('game'), startCp: +params.get('oleada') || 0 });
-    try { localStorage.setItem(GIFT_KEY, '1'); } catch (e) {}
+    lastResult = await Juego.play({ root: $('game'), startCp: +params.get('oleada') || 0, hard: !!hard });
+    // una victoria por partida (no se puede contar dos veces)
+    try { const v = victorias() + 1; localStorage.setItem(VICT_KEY, String(v)); localStorage.setItem(GIFT_KEY, '1'); } catch (e) {}
   } catch (err) { console.error(err); }   // si algo fallara, nunca se queda sin su regalo
   document.body.classList.remove('in-game');
+  if (wasPlaying) music.play().catch(() => {});
 }
 
 /* ---------- Revelar la página ---------- */
@@ -556,6 +586,7 @@ music.addEventListener('pause', syncIcon);
 // Si no se encuentra cancion.mp3, se esconde el botón y la web sigue sin sonido.
 music.addEventListener('error', () => { musicOk = false; musicBtn.classList.add('hidden'); });
 musicBtn.addEventListener('click', () => {
+  if (document.body.classList.contains('in-game') && window.Juego && Juego.toggleMusic) { const onNow = Juego.toggleMusic(); musicBtn.classList.toggle('is-off', !onNow); return; }
   if (music.paused) music.play().catch(() => {}); else music.pause();
 });
 

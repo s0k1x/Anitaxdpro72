@@ -830,3 +830,66 @@ body.in-game #rotate{display:none!important}
 .g-bars::before{top:0}.g-bars::after{bottom:0}
 .g-bars.on::before,.g-bars.on::after{height:13%}
 #game.ulting .g-top,#game.ulting .g-skills,#game.ulting .g-combo,#game.ulting .g-boss,#game.ulting .g-ehp{opacity:0;transition:opacity .2s}
+
+/* puntuación, rango y premios bloqueados */
+.g-score{position:absolute;z-index:4;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%);text-align:center;pointer-events:none}
+.g-score span{display:block;font:700 9.5px var(--sans);letter-spacing:.3em;color:#bff6ff;opacity:.85}
+.g-score b{display:block;font:800 22px/1.1 var(--display);color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 0 12px rgba(125,243,255,.8),0 2px 0 rgba(10,30,60,.9)}
+#game:has(.g-boss:not(.hidden)) .g-score{top:calc(46px + env(safe-area-inset-top,0px))}
+.g-num.score{color:#ffe27a;font-size:18px}
+.g-rankrow{display:flex;align-items:center;gap:16px;justify-content:center;text-align:left;margin-bottom:8px}
+.g-rankrow h2{margin-bottom:2px}
+.g-rank{flex:none;width:74px;height:74px;display:grid;place-items:center;font:800 56px/1 var(--display);font-style:italic;color:#fff;border-radius:6px 18px 6px 18px;background:linear-gradient(135deg,#ffe27a,#ff8ae8 55%,#7df3ff);text-shadow:0 3px 0 rgba(40,10,60,.6);box-shadow:0 0 30px rgba(255,200,120,.5);animation:rankIn .8s cubic-bezier(.2,1.6,.4,1) both}
+.g-rank[data-r="A"]{background:linear-gradient(135deg,#ffb3ec,#9b82ff)}
+.g-rank[data-r="B"]{background:linear-gradient(135deg,#7df3ff,#4a7ad8)}
+.g-rank[data-r="C"],.g-rank[data-r="D"]{background:linear-gradient(135deg,#c9c3e2,#6a6488)}
+@keyframes rankIn{from{transform:scale(2.6) rotate(-12deg);opacity:0}}
+.g-scorefinal{font:700 16px var(--display);color:#ffe27a;margin:0!important}
+.g-best{font-size:13px;color:#bff6ff!important;margin:0!important}
+.gift-score{color:#ffe27a;font:700 14px var(--sans);text-align:center;margin-top:-4px}
+.ticket.locked{filter:grayscale(.85) brightness(.75);cursor:pointer}
+.ticket.locked .ticket-coin::before{content:"🔒";font-size:16px}
+.ticket.locked .ticket-coin{font-size:0}
+.ticket.new{animation:ticketIn .6s cubic-bezier(.2,.9,.2,1.2) var(--d,1500ms) both,ticketGlow 1.4s ease-in-out infinite}
+@keyframes ticketGlow{50%{box-shadow:0 6px 0 #a8700a,0 0 34px rgba(255,226,122,.9)}}
+@media (orientation:landscape) and (max-height:520px){
+  .gift-actions{gap:8px}
+  .gift-actions .btn .button_top{padding:8px 14px;font-size:14px}
+  .g-rank{width:60px;height:60px;font-size:44px}
+}
+@media (orientation:portrait){.g-score{left:auto;right:14px;top:calc(70px + env(safe-area-inset-top,0px));transform:none;text-align:right}}
+
+/* =====================================================
+   CONTROLES 2.0 · arco de botones, joystick visible, pausa y calidad
+   ===================================================== */
+.g-skills{width:250px;height:200px}
+.sk-atk{right:0;bottom:0}
+.sk-beam{right:106px;bottom:2px}
+.sk-wave{right:98px;bottom:74px}
+.sk-jump{right:46px;bottom:118px;width:56px;height:56px}
+.sk-dash{right:-4px;bottom:104px}
+.sk-ult{right:178px;bottom:20px}
+.sk-lock{right:168px;bottom:96px;width:44px;height:44px}
+.sk-lock svg{width:20px;height:20px}
+.sk-jump svg{width:20px;height:20px}
+.sk-jump::after,.sk-lock::after{display:none}
+.g-stick{opacity:.32;transition:opacity .2s,left .15s,top .15s}
+.g-stick.on{opacity:1;transition:opacity .1s}
+.g-stick.idle i{background:rgba(201,188,255,.6)}
+#game.g-intro .g-stick,#game.ulting .g-stick{opacity:0}
+.g-pausebtn{position:absolute;z-index:6;top:calc(12px + env(safe-area-inset-top,0px));right:64px;width:44px;height:44px;border-radius:12px;border:1.5px solid rgba(255,255,255,.7);background:rgba(10,22,44,.5);color:#fff;display:grid;place-items:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);cursor:pointer}
+.g-pausebtn svg{width:20px;height:20px}
+#game.g-intro .g-pausebtn{display:none}
+.g-pause{z-index:9;text-align:left}
+.g-pause h2{text-align:left}
+.g-pause-btns{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
+.g-opt{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0;color:#e8fbff;font-weight:600;font-size:14px}
+.g-seg{display:flex;border:1px solid rgba(160,230,255,.5);border-radius:10px;overflow:hidden}
+.g-seg button{border:0;background:transparent;color:#d8f6ff;font:700 12.5px var(--sans);padding:8px 11px;cursor:pointer}
+.g-seg button.on{background:#7df3ff;color:#06222e}
+.g-help{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:6px;font-size:12.5px;color:#c9dfee}
+.g-help b{color:#fff}
+@media (orientation:landscape) and (max-height:520px){
+  .g-skills{transform:scale(.88);transform-origin:100% 100%}
+  .g-pause{max-height:calc(100% - 16px)}
+}

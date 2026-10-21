@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=DM+Sans:wght@400;500;700&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=11">
 </head>
 <body class="locked">
 
@@ -164,6 +164,7 @@
     <div class="g-ult"><span>Poder estelar</span><div class="g-ult-bar"><i id="gUltFill"></i></div></div>
     <div class="g-wave"><b id="gWave"></b><span id="gLeft"></span></div>
   </div>
+  <div class="g-score"><span>PUNTOS</span><b id="gScore">0</b></div>
   <div class="g-boss hidden" id="gBoss"><span>Ronin Carmesí</span><div class="g-boss-bar"><i id="gBossFill"></i></div></div>
   <div class="g-toast" id="gToast" role="status"></div>
   <div class="g-count" id="gCount" aria-hidden="true"></div>
@@ -190,6 +191,13 @@
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5l2.6 6.4 6.9.5-5.3 4.4 1.7 6.7L12 15.8l-5.9 3.7 1.7-6.7L2.5 8.4l6.9-.5z"/></svg>
       <span>Ultra</span>
     </button>
+    <button class="sk sk-jump" id="skJump" type="button" aria-label="Saltar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14l6-6 6 6M6 20l6-6 6 6"/></svg>
+      <span>Saltar</span>
+    </button>
+    <button class="sk sk-lock" id="skLock" type="button" aria-label="Cambiar de objetivo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>
+    </button>
     <button class="sk sk-dash" id="skDash" type="button" aria-label="Esquivar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6l6 6-6 6M13 6l6 6-6 6"/></svg>
       <span>Esquiva</span>
@@ -200,6 +208,23 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M11 18.5h2"/></svg>
     <b>Gira el móvil</b><span>El combate se juega mejor en horizontal.</span>
     <button class="btn btn--blue btn--sm" id="gRotateSkip" type="button"><span class="button_top">Jugar en vertical</span></button>
+  </div>
+  <button class="g-pausebtn" id="gPauseBtn" type="button" aria-label="Pausa"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg></button>
+  <div class="g-card g-pause hidden" id="gPause">
+    <p class="g-kicker">Pausa</p>
+    <h2>Un respiro</h2>
+    <div class="g-pause-btns">
+      <button class="btn btn--purple" id="gResume" type="button"><span class="button_top">Continuar</span></button>
+      <button class="btn btn--blue" id="gRestart" type="button"><span class="button_top">Reiniciar oleada</span></button>
+    </div>
+    <div class="g-opt"><span>Calidad gráfica</span><div class="g-seg" id="gQuality"><button data-q="auto">Auto</button><button data-q="alta">Alta</button><button data-q="media">Media</button><button data-q="baja">Baja</button></div></div>
+    <div class="g-opt"><span>Música</span><div class="g-seg" id="gMusicSeg"><button data-m="1">Sí</button><button data-m="0">No</button></div></div>
+    <ul class="g-help">
+      <li><b>Espada</b> combo de 4 · mantén pulsado · contra un enemigo lanzado: combo aéreo</li>
+      <li><b>Esquiva</b> justo antes de un golpe = cámara lenta y contraataque doble</li>
+      <li><b>Saltar</b> y atacar en el aire · <b>Objetivo</b> cambia de enemigo fijado</li>
+      <li>Ordenador: WASD · J espada · K tajo · L giro · espacio esquiva · E saltar · F objetivo · U ultra · Esc pausa</li>
+    </ul>
   </div>
   <div class="g-card" id="gIntro">
     <p class="g-kicker">Nivel final</p>
@@ -223,9 +248,8 @@
   </div>
   <div class="g-card hidden" id="gWin">
     <p class="g-kicker">¡Victoria!</p>
-    <h2>Tu regalo es libre</h2>
+    <div class="g-rankrow"><b class="g-rank" id="gRank">S</b><div><h2>Tu regalo es libre</h2><p class="g-scorefinal" id="gScoreFinal"></p><p class="g-best" id="gBest"></p></div></div>
     <p id="gWinStats"></p>
-    <p>Te lo has ganado tú solita. Ábrelo.</p>
     <button class="btn btn--purple" id="gWinBtn" type="button"><span class="button_top">Abrir mi regalo</span></button>
   </div>
 </div>
@@ -261,10 +285,12 @@
       </div>
     </div>
     <p class="gift-note" id="giftNote"></p>
+    <p class="gift-score hidden" id="giftScore"></p>
     <div class="tickets hidden" id="giftTickets"></div>
     <div class="gift-code hidden" id="giftCodeBox"><code id="giftCodeTxt"></code><button class="gift-copy" id="giftCopy" type="button">Copiar</button></div>
     <div class="gift-actions">
       <a class="btn btn--purple hidden" id="giftLink" target="_blank" rel="noopener"><span class="button_top">Canjear mis Robux</span></a>
+      <button class="btn btn--purple hidden" id="giftReplay" type="button"><span class="button_top">Jugar otra vez</span></button>
       <button class="btn btn--blue" id="giftNext" type="button"><span class="button_top">Ver todo lo que hay para ti</span></button>
     </div>
   </div>
@@ -396,10 +422,10 @@
   </div>
 </div>
 
-<script src="motor3d.js?v=9"></script>
-<script src="obby.js?v=9"></script>
-<script src="juego.js?v=9"></script>
-<script src="regalo3d.js?v=9"></script>
-<script src="script.js?v=9"></script>
+<script src="motor3d.js?v=11"></script>
+<script src="obby.js?v=11"></script>
+<script src="juego.js?v=11"></script>
+<script src="regalo3d.js?v=11"></script>
+<script src="script.js?v=11"></script>
 </body>
 </html>

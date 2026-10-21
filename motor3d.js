@@ -243,33 +243,53 @@
   }
 
   // Funde el decorado fijo en una sola malla (1 llamada de dibujo). Cada pieza varía un poco de tono.
-  function bake(grp, seed) {
-    grp.update(null);
+  function mergeNodes(list, seed, o) {
     const R = rng(seed || 7);
-    let total = 0; const list = [];
-    const walk = n => { if (!n.visible) return; if (n.geo) { list.push(n); total += n.geo.count; } n.children.forEach(walk); };
-    walk(grp);
+    let total = 0; for (const n of list) total += n.geo.count;
     const P = new Float32Array(total * 3), N = new Float32Array(total * 3), C = new Float32Array(total * 3);
-    let o = 0;
+    let k0 = 0;
     for (const n of list) {
       const m = n.world, g = n.geo, k = n.vary ? .92 + R() * .1 : 1, nm = normalMat(new Float32Array(9), m);
       const e = n.emis || 0, cap = e > 0 ? 9 : .999;
       const c = [Math.min(cap, n.color[0] * k), Math.min(cap, n.color[1] * k), Math.min(cap, n.color[2] * k)];
-      for (let i = 0; i < g.count; i++, o++) {
+      const f = e > 0 ? 1 + e * 1.4 : 1, gc = g.col;
+      for (let i = 0; i < g.count; i++, k0++) {
         const x = g.pos[i * 3], y = g.pos[i * 3 + 1], z = g.pos[i * 3 + 2];
-        P[o * 3] = m[0] * x + m[4] * y + m[8] * z + m[12]; P[o * 3 + 1] = m[1] * x + m[5] * y + m[9] * z + m[13]; P[o * 3 + 2] = m[2] * x + m[6] * y + m[10] * z + m[14];
+        P[k0 * 3] = m[0] * x + m[4] * y + m[8] * z + m[12]; P[k0 * 3 + 1] = m[1] * x + m[5] * y + m[9] * z + m[13]; P[k0 * 3 + 2] = m[2] * x + m[6] * y + m[10] * z + m[14];
         const nx = g.nor[i * 3], ny = g.nor[i * 3 + 1], nz = g.nor[i * 3 + 2];
-        let a = nm[0] * nx + nm[3] * ny + nm[6] * nz, b = nm[1] * nx + nm[4] * ny + nm[7] * nz, d = nm[2] * nx + nm[5] * ny + nm[8] * nz;
-        const l = Math.hypot(a, b, d) || 1; N[o * 3] = a / l; N[o * 3 + 1] = b / l; N[o * 3 + 2] = d / l;
-        // los objetos que brillan se guardan con un "plus" de color (el shader lo trata como emisivo)
-        const f = e > 0 ? 1 + e * 1.4 : 1, gc = g.col; const v0 = gc ? gc[i * 3] : 1, v1 = gc ? gc[i * 3 + 1] : 1, v2 = gc ? gc[i * 3 + 2] : 1;
-        C[o * 3] = c[0] * f * v0; C[o * 3 + 1] = c[1] * f * v1; C[o * 3 + 2] = c[2] * f * v2;
+        let a = nm[0] * nx + nm[3] * ny + nm[6] * nz, bb = nm[1] * nx + nm[4] * ny + nm[7] * nz, d = nm[2] * nx + nm[5] * ny + nm[8] * nz;
+        const l = Math.hypot(a, bb, d) || 1; N[k0 * 3] = a / l; N[k0 * 3 + 1] = bb / l; N[k0 * 3 + 2] = d / l;
+        const v0 = gc ? gc[i * 3] : 1, v1 = gc ? gc[i * 3 + 1] : 1, v2 = gc ? gc[i * 3 + 2] : 1;
+        C[k0 * 3] = c[0] * f * v0; C[k0 * 3 + 1] = c[1] * f * v1; C[k0 * 3 + 2] = c[2] * f * v2;
       }
     }
-    return new Node(new Geo(P, N, C), 0xffffff, { shine: .22 });
+    return new Node(new Geo(P, N, C), 0xffffff, Object.assign({ shine: .22 }, o || {}));
+  }
+  // Funde el decorado fijo en una sola malla (1 llamada de dibujo). Cada pieza varía un poco de tono.
+  function bake(grp, seed) {
+    grp.update(null);
+    const list = [];
+    const walk = n => { if (!n.visible) return; if (n.geo) list.push(n); n.children.forEach(walk); };
+    walk(grp);
+    return mergeNodes(list, seed);
+  }
+  // Funde las piezas rígidas opacas de un grupo (p. ej. la cabeza con todo el pelo) en una sola malla
+  // y deja intactas las que se animan por separado (skip). Mismo aspecto, muchas menos llamadas de dibujo.
+  function bakeInto(g, skip, o) {
+    const sv = [g.pos.slice(), g.rot.slice(), g.scl.slice()];
+    g.pos = [0, 0, 0]; g.rot = [0, 0, 0]; g.scl = [1, 1, 1]; g.update(null);
+    const list = [];
+    const walk = n => { for (const c of n.children.slice()) { if (skip && skip.has(c)) continue; if (c.geo && c.alpha >= 1 && !c.additive && c.visible && !c.children.length) list.push(c); else walk(c); } };
+    walk(g);
+    if (list.length > 1) {
+      const node = mergeNodes(list, 3, Object.assign({ vary: false, shine: .4 }, o || {}));
+      list.forEach(n => { if (n.parent) n.parent.remove(n); });
+      g.add(node);
+    }
+    g.pos = sv[0]; g.rot = sv[1]; g.scl = sv[2];
+    return g;
   }
 
-  /* ---------- renderizador ---------- */
   /* =========================================================
      RENDERIZADOR
      1) mapa de sombras  2) cielo + escena a una textura
@@ -294,7 +314,7 @@ vW=w.xyz;vN=uN*aNor;vC=aCol;vL=uLVP*w;gl_Position=uVP*w;}`;
 varying vec3 vN;varying vec3 vC;varying vec3 vW;varying vec4 vL;
 uniform vec3 uColor;uniform vec3 uL;uniform vec3 uSky;uniform vec3 uGnd;uniform vec3 uSun;uniform vec3 uFog;uniform vec3 uCam;
 uniform float uEmis;uniform float uAlpha;uniform float uFN;uniform float uFF;uniform float uShine;uniform float uAoY;
-uniform sampler2D uSM;uniform float uSh;uniform float uTx;
+uniform sampler2D uSM;uniform float uSh;uniform float uTx;uniform float uToon;
 float unpack(vec4 c){return dot(c,vec4(1.0/16777216.0,1.0/65536.0,1.0/256.0,1.0));}
 float tap(vec2 p,float z){return step(z,unpack(texture2D(uSM,p)));}
 float shadowF(float ndl){
@@ -319,10 +339,18 @@ void main(){
   float ao=mix(1.0,mix(0.55,1.0,clamp((vW.y-uAoY)/1.8,0.0,1.0)),1.0-max(n.y,0.0));
   float lit=warp*mix(0.35,1.0,sh)*smoothstep(-0.1,0.25,ndl+0.15);
   vec3 cool=mix(amb,amb*vec3(0.86,0.92,1.12),0.6);
-  vec3 col=base*(cool*ao+uSun*lit);
   vec3 H=normalize(uL+V);
   float spec=pow(max(dot(n,H),0.0),36.0)*uShine*sh;
   float fres=pow(1.0-max(dot(n,V),0.0),4.0);
+  if(uToon>0.5){
+    // sombreado anime: dos tonos con borde limpio, sombra fría, brillo duro y luz de contorno
+    float l=max(ndl,0.0)*mix(0.25,1.0,sh);
+    lit=smoothstep(0.08,0.16,l)*0.9+smoothstep(0.62,0.7,l)*0.18;
+    ao=mix(0.82,1.0,ao);
+    spec=step(0.93,max(dot(n,H),0.0))*uShine*0.8*sh;
+    fres=smoothstep(0.56,0.62,1.0-max(dot(n,V),0.0))*0.55*smoothstep(-0.4,0.3,ndl);
+  }
+  vec3 col=base*(cool*ao+uSun*lit);
   col+=uSun*spec*0.6;
   col+=uSky*fres*(0.12+uShine*0.25)+uSun*fres*max(n.y,0.0)*0.35*sh;
   float e=max(uEmis,glow);
@@ -421,7 +449,7 @@ void main(){
   let rid = 0;
   function Renderer(canvas, opts) {
     opts = opts || {};
-    this.id = ++rid; this.canvas = canvas; this.dprCap = opts.dpr || 2; this.dprNow = this.dprCap;
+    this.id = ++rid; this.canvas = canvas; this.dprCap = opts.dpr || 2; this.dprNow = this.dprCap; this.dprMin = opts.dprMin || 1; this.stats = {};
     const gl = canvas.getContext('webgl', { antialias: false, alpha: false, premultipliedAlpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: false }) ||
       canvas.getContext('experimental-webgl', { antialias: false, alpha: false });
     if (!gl) throw new Error('Sin WebGL');
@@ -434,7 +462,7 @@ void main(){
       p.u = {}; (names || []).forEach(k => { p.u[k] = gl.getUniformLocation(p, k); }); return p;
     };
     this.prog = prog;
-    this.pr = prog(VS, FS, ['uWind', 'uTime', 'uVP', 'uM', 'uN', 'uLVP', 'uColor', 'uL', 'uSky', 'uGnd', 'uSun', 'uFog', 'uCam', 'uEmis', 'uAlpha', 'uFN', 'uFF', 'uShine', 'uAoY', 'uSM', 'uSh', 'uTx']);
+    this.pr = prog(VS, FS, ['uToon', 'uWind', 'uTime', 'uVP', 'uM', 'uN', 'uLVP', 'uColor', 'uL', 'uSky', 'uGnd', 'uSun', 'uFog', 'uCam', 'uEmis', 'uAlpha', 'uFN', 'uFF', 'uShine', 'uAoY', 'uSM', 'uSh', 'uTx']);
     this.u = this.pr.u;
     this.olPr = prog(OVS, OFS, ['uVP', 'uM', 'uN', 'uW', 'uCam', 'uC']);
     this.skyPr = prog(QVS, SKY, ['uIVP', 'uCam', 'uTop', 'uMid', 'uBot', 'uSunDir', 'uSunCol', 'uSunK', 'uStars', 'uClouds', 'uCloudCol', 'uTime']);
@@ -560,9 +588,18 @@ void main(){
   Renderer.prototype.render = function (root, cam) {
     if (this.lost) return;
     const gl = this.gl, u = this.u, e = this.env;
+    this.stats = { draws: 0, tris: 0, shadowDraws: 0, olDraws: 0 };
     // calidad automática según lo que tarda cada fotograma
     const now = performance.now(); if (this.lastT) { const dt = Math.min(.2, (now - this.lastT) / 1000); this.ft = this.ft * .93 + dt * .07; } this.lastT = now;
-    if (this.ft > .029 && !G.__pruebaRapida) { this.slow += 1; if (this.slow > 90 && this.quality > 0) { this.quality--; this.slow = 0; if (this.quality === 1) this.dprNow = Math.min(this.dprNow, 1.4); else { this.shadows = false; this.dprNow = 1.15; } } } else this.slow = Math.max(0, this.slow - 1);
+    // resolución dinámica: si un fotograma tarda más de ~18 ms (menos de 55 FPS) baja la resolución poco a poco;
+    // si va sobrado la vuelve a subir. Solo si ya está al mínimo apaga las sombras.
+    this.frameN = (this.frameN || 0) + 1;
+    if (!G.__pruebaRapida && this.autoDRS !== false) {
+      this.drsT = (this.drsT || 0) + 1;
+      if (this.ft > .0182) this.slow++; else if (this.ft < .0155) this.slow = Math.max(-200, this.slow - 1); else this.slow = Math.max(0, this.slow - .5);
+      if (this.drsT > 45 && this.slow > 30) { this.drsT = 0; this.slow = 0; if (this.dprNow > this.dprMin + .01) this.dprNow = Math.max(this.dprMin, this.dprNow - .15); else if (this.shadows) { this.shadows = false; } else this.quality = Math.max(1, this.quality - 1); }
+      else if (this.drsT > 240 && this.slow < -150 && this.dprNow < this.dprCap) { this.drsT = 0; this.slow = 0; this.dprNow = Math.min(this.dprCap, this.dprNow + .1); }
+    }
     this.resize();
     perspective(this.P, (cam.fov || 50) * Math.PI / 180, this.W / this.H, cam.near || .2, cam.far || 600);
     this.P[8] += cam.shiftX || 0; this.P[9] += cam.shiftY || 0;
@@ -575,7 +612,8 @@ void main(){
     gl.enableVertexAttribArray(0);
     // 1) mapa de sombras
     const useSh = this.shadows && this.sm;
-    if (useSh) {
+    if (useSh && (this.frameN % (this.shadowEvery || 1) === 0 || !this._shOnce)) {
+      this._shOnce = true;
       const s = this.sm, a = e.shadowArea, c = cam.shadowCenter || cam.target, L = e.light;
       const tx = a * 2 / s.size, cx = Math.round(c[0] / tx) * tx, cz = Math.round(c[2] / tx) * tx;
       const eye = [cx + L[0] * 80, c[1] + L[1] * 80, cz + L[2] * 80];
@@ -588,7 +626,7 @@ void main(){
       for (const n of drawList) {
         if (!n.cast) continue;
         const b = this.buf(n.geo); gl.bindBuffer(gl.ARRAY_BUFFER, b.p); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-        gl.uniformMatrix4fv(s.prog.u.uM, false, n.world); gl.drawArrays(gl.TRIANGLES, 0, n.geo.count);
+        gl.uniformMatrix4fv(s.prog.u.uM, false, n.world); gl.drawArrays(gl.TRIANGLES, 0, n.geo.count); this.stats.shadowDraws++;
       }
     }
     // 2) cielo + escena (a una textura si hay postprocesado)
@@ -618,7 +656,7 @@ void main(){
     gl.uniform3f(u.uSun, e.sun[0] * this.envSun, e.sun[1] * this.envSun, e.sun[2] * this.envSun);
     gl.uniform3fv(u.uFog, e.fog); gl.uniform3fv(u.uCam, cam.pos);
     gl.uniform1f(u.uFN, e.fogNear); gl.uniform1f(u.uFF, e.fogFar); gl.uniform1f(u.uAoY, e.aoY);
-    gl.uniform1f(u.uSh, useSh ? 1 : 0); gl.uniform1f(u.uTime, (now - this.t0) / 1000); gl.uniform1f(u.uWind, 0); this._wind = 0;
+    gl.uniform1f(u.uSh, useSh ? 1 : 0); gl.uniform1f(u.uTime, (now - this.t0) / 1000); gl.uniform1f(u.uWind, 0); this._wind = 0; gl.uniform1f(u.uToon, 0); this._toon = 0;
     if (useSh) { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.sm.tex); gl.uniform1i(u.uSM, 0); gl.uniform1f(u.uTx, 1.3 / this.sm.size); }
     for (const n of drawList) if (!n.outline) this.drawNode(n);
     if (olList.length) {
@@ -630,9 +668,9 @@ void main(){
         gl.bindBuffer(gl.ARRAY_BUFFER, b.n); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
         gl.uniformMatrix4fv(op.u.uM, false, n.world); gl.uniformMatrix3fv(op.u.uN, false, normalMat(NM, n.world));
         gl.uniform1f(op.u.uW, n.outlineW || .05); gl.uniform3fv(op.u.uC, n.outline);
-        gl.drawArrays(gl.TRIANGLES, 0, n.geo.count);
+        gl.drawArrays(gl.TRIANGLES, 0, n.geo.count); this.stats.olDraws++;
       }
-      gl.depthMask(true); gl.useProgram(this.pr); gl.enableVertexAttribArray(2);
+      gl.depthMask(true); gl.useProgram(this.pr); gl.enableVertexAttribArray(2); this._toon = -1; this._wind = -1;
       for (const n of olList) this.drawNode(n);
     }
     if (transList.length) {
@@ -652,9 +690,12 @@ void main(){
       gl.disable(gl.DEPTH_TEST); gl.depthMask(false);
       gl.disableVertexAttribArray(1); gl.disableVertexAttribArray(2);
       const px = t => [1 / t.w, 1 / t.h];
-      this.pass(p.down, p.q, U => { this.tex(0, p.scene, U.uT); gl.uniform2fv(U.uPx, px(p.scene)); gl.uniform1f(U.uThr, 0); });
-      this.pass(p.blur, p.q2, U => { this.tex(0, p.q, U.uT); gl.uniform2f(U.uDir, 1 / p.q.w, 0); });
-      this.pass(p.blur, p.q, U => { this.tex(0, p.q2, U.uT); gl.uniform2f(U.uDir, 0, 1 / p.q.h); });
+      const tiltOn = gr.tilt > .01;   // sin desenfoque de maqueta se ahorran 3 pasadas
+      if (tiltOn) {
+        this.pass(p.down, p.q, U => { this.tex(0, p.scene, U.uT); gl.uniform2fv(U.uPx, px(p.scene)); gl.uniform1f(U.uThr, 0); });
+        this.pass(p.blur, p.q2, U => { this.tex(0, p.q, U.uT); gl.uniform2f(U.uDir, 1 / p.q.w, 0); });
+        this.pass(p.blur, p.q, U => { this.tex(0, p.q2, U.uT); gl.uniform2f(U.uDir, 0, 1 / p.q.h); });
+      }
       this.pass(p.down, p.b, U => { this.tex(0, p.scene, U.uT); gl.uniform2fv(U.uPx, px(p.scene)); gl.uniform1f(U.uThr, .8); });
       this.pass(p.blur, p.b2, U => { this.tex(0, p.b, U.uT); gl.uniform2f(U.uDir, 1.4 / p.b.w, 0); });
       this.pass(p.blur, p.b, U => { this.tex(0, p.b2, U.uT); gl.uniform2f(U.uDir, 0, 1.4 / p.b.h); });
@@ -662,7 +703,7 @@ void main(){
       this.pass(p.blur, p.c2, U => { this.tex(0, p.c, U.uT); gl.uniform2f(U.uDir, 2 / p.c.w, 0); });
       this.pass(p.blur, p.c, U => { this.tex(0, p.c2, U.uT); gl.uniform2f(U.uDir, 0, 2 / p.c.h); });
       this.pass(p.comp, null, U => {
-        this.tex(0, p.scene, U.uS); this.tex(1, p.q, U.uQ); this.tex(2, p.b, U.uB1); this.tex(3, p.c, U.uB2);
+        this.tex(0, p.scene, U.uS); this.tex(1, tiltOn ? p.q : p.scene, U.uQ); this.tex(2, p.b, U.uB1); this.tex(3, p.c, U.uB2);
         gl.uniform2fv(U.uPx, px(p.scene)); gl.uniform2f(U.uRes, p.scene.w, p.scene.h);
         gl.uniform1f(U.uExp, gr.exp); gl.uniform1f(U.uSat, gr.sat); gl.uniform1f(U.uCon, gr.con); gl.uniform3fv(U.uTint, gr.tint); gl.uniform3fv(U.uLift, gr.lift);
         gl.uniform1f(U.uBloom, gr.bloom); gl.uniform1f(U.uTilt, gr.tilt); gl.uniform1f(U.uTiltC, gr.tiltC); gl.uniform1f(U.uVig, gr.vig);
@@ -681,7 +722,8 @@ void main(){
     gl.uniformMatrix4fv(u.uM, false, n.world); gl.uniformMatrix3fv(u.uN, false, normalMat(NM, n.world));
     gl.uniform3fv(u.uColor, n.color); gl.uniform1f(u.uEmis, n.emis); gl.uniform1f(u.uAlpha, n.alpha); gl.uniform1f(u.uShine, n.shine);
     const wd = n.wind || 0; if (wd !== this._wind) { gl.uniform1f(u.uWind, wd); this._wind = wd; }
-    gl.drawArrays(gl.TRIANGLES, 0, g.count);
+    const tn = n.toon ? 1 : 0; if (tn !== this._toon) { gl.uniform1f(u.uToon, tn); this._toon = tn; }
+    gl.drawArrays(gl.TRIANGLES, 0, g.count); this.stats.draws++; this.stats.tris += g.count / 3;
   };
   Renderer.prototype.project = function (p) {
     const m = this.VP, x = p[0], y = p[1], z = p[2];
@@ -731,6 +773,7 @@ void main(){
   FX.prototype.burst = function (p, count, o) {
     o = o || {};
     const cols = (o.colors || [0xffffff]).map(rgb);
+    count = Math.min(count, Math.max(0, (this.max || 320) - this.list.length));
     for (let i = 0; i < count; i++) {
       const n = this.spawn(o.geo || (o.add ? geo.oct : geo.rbox(1, 1, 1, .22)));
       const a = Math.random() * TAU, el = (o.flat ? .1 : .25) + Math.random() * (o.flat ? .3 : .75), sp = (o.speed || 6) * (.45 + Math.random() * .7);
@@ -776,23 +819,28 @@ void main(){
     this.rings.forEach(r => { this.scene.remove(r.n); this.pool.push(r.n); }); this.rings = [];
   };
 
-  // Motas que flotan en el aire (polen, chispas, nieve...): dan vida a la escena
+  // Motas que flotan en el aire (polen, chispas, nieve...). Todas en UNA sola malla dinámica: 1 llamada de dibujo.
   function Motes(scene, o) {
     o = Object.assign({ n: 40, area: [30, 12, 30], center: [0, 4, 0], color: 0xffffff, size: .12, speed: .6, fall: 0, add: true, alpha: .8 }, o);
     this.o = o; this.items = [];
-    for (let i = 0; i < o.n; i++) {
-      const n = new Node(o.geo || geo.oct, o.color, { emis: 1, add: o.add, alpha: o.alpha, cast: false });
-      const s = o.size * (.5 + Math.random()); n.scl = [s, s, s]; scene.add(n);
-      this.items.push({ n, x: (Math.random() - .5) * o.area[0], y: Math.random() * o.area[1], z: (Math.random() - .5) * o.area[2], ph: Math.random() * TAU });
-    }
+    const tg = o.geo || geo.oct; this.tg = tg; const vc = tg.count;
+    const P = new Float32Array(o.n * vc * 3), N = new Float32Array(o.n * vc * 3), C = new Float32Array(o.n * vc * 3);
+    for (let i = 0; i < o.n; i++) for (let v = 0; v < vc; v++) { N.set([tg.nor[v * 3], tg.nor[v * 3 + 1], tg.nor[v * 3 + 2]], (i * vc + v) * 3); }
+    const g = new Geo(P, N, C); g.dynamic = true; g.dirty = 1; this.geo = g;
+    this.col = rgb(o.color);
+    this.node = new Node(g, 0xffffff, { emis: 1, add: o.add, alpha: o.add ? 1 : o.alpha, cast: false }); scene.add(this.node);
+    for (let i = 0; i < o.n; i++) this.items.push({ x: (Math.random() - .5) * o.area[0], y: Math.random() * o.area[1], z: (Math.random() - .5) * o.area[2], ph: Math.random() * TAU, s: o.size * (.5 + Math.random()) });
   }
   Motes.prototype.update = function (dt, t) {
-    const o = this.o;
-    for (const m of this.items) {
+    const o = this.o, tg = this.tg, vc = tg.count, P = this.geo.pos, C = this.geo.col, c = this.col;
+    for (let i = 0; i < this.items.length; i++) {
+      const m = this.items[i];
       m.y -= o.fall * dt; if (m.y < 0) m.y += o.area[1]; if (m.y > o.area[1]) m.y -= o.area[1];
-      m.n.pos = [o.center[0] + m.x + Math.sin(t * o.speed + m.ph) * 1.2, o.center[1] + m.y + Math.sin(t * o.speed * 1.3 + m.ph) * .4 - o.area[1] / 2, o.center[2] + m.z + Math.cos(t * o.speed + m.ph) * 1.2];
-      m.n.rot[1] = t + m.ph; m.n.alpha = o.alpha * (.5 + .5 * Math.sin(t * 2 + m.ph));
+      const x = o.center[0] + m.x + Math.sin(t * o.speed + m.ph) * 1.2, y = o.center[1] + m.y + Math.sin(t * o.speed * 1.3 + m.ph) * .4 - o.area[1] / 2, z = o.center[2] + m.z + Math.cos(t * o.speed + m.ph) * 1.2;
+      const b = (o.add ? o.alpha : 1) * (.5 + .5 * Math.sin(t * 2 + m.ph)), s = m.s, base = i * vc * 3;
+      for (let v = 0; v < vc; v++) { const k = base + v * 3; P[k] = x + tg.pos[v * 3] * s; P[k + 1] = y + tg.pos[v * 3 + 1] * s; P[k + 2] = z + tg.pos[v * 3 + 2] * s; C[k] = c[0] * b; C[k + 1] = c[1] * b; C[k + 2] = c[2] * b; }
     }
+    this.geo.dirty++;
   };
 
   /* ---------- estela de espada (cinta que sigue a la hoja y se desvanece) ---------- */
@@ -954,7 +1002,15 @@ void main(){
     }
     P.shadow = mesh(root, geo.cyl20, 0x000000, 2.6, .02, 2.6, 0, .03, 0, { alpha: .18, cast: false });
 
+    // optimización: cada articulación se dibuja en una sola llamada (antes ~70 piezas sueltas por personaje)
+    const keep = new Set([...P.eyes, ...(P.lens || [])]);
+    P.eyes.forEach(e => e.children.forEach(n => { n.cast = false; }));
+    [P.legL, P.legR, P.torso, P.armL, P.armR, H0].forEach(g => bakeInto(g, keep, { toon: 1 }));
+    if (P.cape) { bakeInto(P.capeL, null, { toon: 1 }); bakeInto(P.capeR, null, { toon: 1 }); bakeInto(P.cape, new Set([P.capeL, P.capeR]), { toon: 1 }); }
+    if (P.glasses) bakeInto(P.glasses, keep, { toon: 1 });
+    const markToon = n => { if (n.geo) n.toon = 1; n.children.forEach(markToon); }; markToon(body);
     const A = { root, body, P, t: Math.random() * 10, walk: 0, blink: 2, look: 0, rate: o.blend || 16, prev: null, capeV: 0, capeA: .12 };
+    A.rebakeHead = () => { bakeInto(H0, keep, { toon: 1 }); markToon(H0); };
     const JOINTS = [P.legL, P.legR, P.armL, P.armR, P.head, P.torso, body];
     const wrapA = a => Math.atan2(Math.sin(a), Math.cos(a));
     A.animate = function (dt, speed, pose) {
@@ -1016,5 +1072,5 @@ void main(){
     return { unlock: ensure, tone, noise };
   }
 
-  G.M3 = { TAU, clamp, lerp, smooth, ease, rng, rgb, geo, Node, group, box, mesh, bake, Renderer, FX, Motes, avatar, sfx, Geo, cloud, flower, tuft, rock, bush, scatter, terrain, Trail, grassField };
+  G.M3 = { TAU, clamp, lerp, smooth, ease, rng, rgb, geo, Node, group, box, mesh, bake, bakeInto, Renderer, FX, Motes, avatar, sfx, Geo, cloud, flower, tuft, rock, bush, scatter, terrain, Trail, grassField };
 })(window);
